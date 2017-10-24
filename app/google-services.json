@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "711742704581",
+    "firebase_url": "https://projectmeeting-183706.firebaseio.com",
+    "project_id": "projectmeeting-183706"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:711742704581:android:fa3da7ab8f3a95ec",
+        "android_client_info": {
+          "package_name": "edu.calbaptist.android.projectmeetings"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "711742704581-llerd66vh3u40pebn49ak4gggd7hbo05.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.calbaptist.android.projectmeetings",
+            "certificate_hash": "8cacb2de54b155ea0cf4d8b725d88d60a0509955"
+          }
+        },
+        {
+          "client_id": "711742704581-g9s56gibcaq265825g8ah5q45d6buq1l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvJPVDzRoeMW2oE8Yg6v47GsY6o-ijdAY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "711742704581-g9s56gibcaq265825g8ah5q45d6buq1l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
