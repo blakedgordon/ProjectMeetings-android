@@ -15,19 +15,28 @@
 
         <TextView
             android:id="@+id/status_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"/>
 
         <com.google.android.gms.common.SignInButton
             android:id="@+id/sign_in_button"
-            android:layout_width="wrap_content"
+            android:layout_width="150dp"
             android:layout_height="wrap_content" />
 
         <Button
-            android:layout_width="110dp"
+            android:layout_width="150dp"
             android:layout_height="wrap_content"
             android:text="@string/sign_out"
             android:id="@+id/sign_out_button" />
+
+        <Button
+            android:id="@+id/call_api_button"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/output_text"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"/>
 
     </LinearLayout>
 
