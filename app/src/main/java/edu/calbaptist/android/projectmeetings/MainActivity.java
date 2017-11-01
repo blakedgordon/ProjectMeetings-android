@@ -168,6 +168,8 @@ public class MainActivity extends AppCompatActivity
 
     private void signIn() {
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        Intent transferIntent = new Intent(getBaseContext(), FolderViewActivity.class);
+        transferIntent.putExtra("credentials", mCredential.toString());
         startActivityForResult(signInIntent, GOOGLE_SIGN_IN);
     }
 
@@ -231,7 +233,7 @@ public class MainActivity extends AppCompatActivity
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount user = result.getSignInAccount();
             firebaseAuthWithGoogle(user);
-
+            startActivity(new Intent(this, FolderViewActivity.class));
         } else {
             statusTextView.setText("Sign in w/ Google failed :(");
         }
