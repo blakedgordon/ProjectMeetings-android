@@ -308,7 +308,7 @@ public class MainActivity extends AppCompatActivity
 
         MakeRequestTask() {
             try {
-                mService = DriveFiles.getInstance().driveService;
+                mService = DriveFiles.getInstance().getDriveService();
             } catch (GooglePlayServicesAvailabilityException e) {
                 showGooglePlayServicesAvailabilityErrorDialog(e.connectionStatusCode);
             } catch (ChooseAccountException e) {
