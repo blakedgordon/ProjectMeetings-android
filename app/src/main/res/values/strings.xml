@@ -3,4 +3,6 @@
     <string name="sign_out">Sign Out</string>
     <string name="google_oauth_client_id">711742704581-llerd66vh3u40pebn49ak4gggd7hbo05.apps.googleusercontent.com</string>
     <string name="selectFolders">Select Default Folder</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="add_recording">Add Recording</string>
 </resources>
