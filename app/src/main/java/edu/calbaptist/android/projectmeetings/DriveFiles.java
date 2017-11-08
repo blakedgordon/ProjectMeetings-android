@@ -35,7 +35,7 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class DriveFiles implements EasyPermissions.PermissionCallbacks {
     private static DriveFiles instance = null;
-    public Drive driveService;
+    private Drive driveService;
     private GoogleAccountCredential mCredential;
 
     private static final int REQUEST_ACCOUNT_PICKER = 1000;
@@ -62,6 +62,10 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
             instance = new DriveFiles();
         }
         return instance;
+    }
+
+    public Drive getDriveService() {
+        return driveService;
     }
 
     public void shareFolderWith(String fileId, String email) {
