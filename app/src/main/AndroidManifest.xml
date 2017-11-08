@@ -22,7 +22,11 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".FolderViewActivity"></activity>
+        <activity android:name=".FolderViewActivity"/>
+        <activity
+            android:name=".NewRecordingActivity"
+            android:parentActivityName=".FolderViewActivity">
+        </activity>
     </application>
 
 </manifest>

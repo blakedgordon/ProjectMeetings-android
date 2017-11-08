@@ -3,6 +3,7 @@ package edu.calbaptist.android.projectmeetings;
 import android.accounts.Account;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -75,7 +76,8 @@ public class FolderViewActivity extends AppCompatActivity
                 return true;
             case R.id.add_recording:
                 // Navigate to the new recording activity
-                Toast.makeText(this, R.string.add_recording, Toast.LENGTH_SHORT).show();
+                Intent intent = NewRecordingActivity.newIntent(this);
+                startActivity(intent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
