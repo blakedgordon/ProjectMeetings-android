@@ -1,8 +1,10 @@
 package edu.calbaptist.android.projectmeetings;
 
+import android.accounts.Account;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -18,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -47,6 +50,7 @@ import edu.calbaptist.android.projectmeetings.Exceptions.RequestPermissionExcept
 import pub.devrel.easypermissions.EasyPermissions;
 
 import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_ACCOUNT_PICKER;
+import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_AUTHORIZATION;
 import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_GOOGLE_PLAY_SERVICES;
 import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_PERMISSION_GET_ACCOUNTS;
 
@@ -55,7 +59,7 @@ import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_PERMIS
  */
 
 public class FolderViewActivity extends AppCompatActivity
-        implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
+        implements GoogleApiClient.OnConnectionFailedListener{
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -81,12 +85,9 @@ public class FolderViewActivity extends AppCompatActivity
     }
 
     private TextView mFolderText;
-    ProgressDialog mProgress;
     private static final String TAG = "SignInActivity";
     GoogleAccountCredential mCredential;
-    private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA_READONLY };
-    private GoogleApiClient mGoogleApiClient;
-    private FirebaseAuth mAuth;
+    private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_FILE };
     private Button createFolder;
     public Drive driveService;
 
@@ -94,70 +95,35 @@ public class FolderViewActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Initialize credentials and service object.
+        String accountName = App.context.getSharedPreferences(
+                "edu.calbaptist.android.projectmeetings.Account_Name", Context.MODE_PRIVATE)
+                .getString("accountName", null);
+
+        mCredential = GoogleAccountCredential.usingOAuth2(
+                getApplicationContext(), Arrays.asList(SCOPES))
+                .setBackOff(new ExponentialBackOff());
+        mCredential.setSelectedAccountName(accountName);
+
         setContentView(R.layout.activity_folderview);
 
+        // Create New Folder
         createFolder = findViewById(R.id.CreateFolder);
         createFolder.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                File fileMetadata = new File();
-                fileMetadata.setName("Meetings Folder");
-                fileMetadata.setMimeType("application/vnd.google-apps.folder");
-                HttpTransport transport = AndroidHttp.newCompatibleTransport();
-                JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-                driveService = new com.google.api.services.drive.Drive.Builder(
-                        transport, jsonFactory, mCredential)
-                        .setApplicationName("Project Meetings")
-                        .build();
-                try {
-                    File file = driveService.files().create(fileMetadata)
-                            .setFields("id")
-                            .execute();
-                    System.out.println("Folder ID: " + file.getId());
-                    finish();
-                    startActivity(getIntent());
-                }
-                catch (IOException e){
-                    e.printStackTrace();
-                }
+                new requestCreateFolder().execute();
             }
         });
 
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build();
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-
-        mAuth = FirebaseAuth.getInstance();
+        //Activate AsyncTask located in private class
         new FolderViewActivity.MakeRequestTask().execute();
 
+        //Show folders (Hacked solution)
         mFolderText = (TextView) findViewById(R.id.display_text);
         mFolderText.setVerticalScrollBarEnabled(true);
         mFolderText.setMovementMethod(new ScrollingMovementMethod());
         mFolderText.setText("");
-
-        mProgress = new ProgressDialog(this);
-        mProgress.setMessage("Calling Drive API ...");
-
-        // Initialize credentials and service object.
-        mCredential = GoogleAccountCredential.usingOAuth2(
-                getApplicationContext(), Arrays.asList(SCOPES))
-                .setBackOff(new ExponentialBackOff());
-    }
-
-    @Override
-    public void onStart(){
-        super.onStart();
-    }
-
-    @Override
-    public void onClick(View view) {
-
     }
 
     @Override
@@ -239,7 +205,6 @@ public class FolderViewActivity extends AppCompatActivity
 
         @Override
         protected void onPostExecute(List<String> output) {
-            mProgress.hide();
             if (output == null || output.size() == 0) {
                 mFolderText.setText("No results returned.");
             } else {
@@ -249,7 +214,6 @@ public class FolderViewActivity extends AppCompatActivity
 
         @Override
         protected void onCancelled() {
-            mProgress.hide();
             if (mLastError != null) {
                 if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
                     showGooglePlayServicesAvailabilityErrorDialog(
@@ -269,4 +233,36 @@ public class FolderViewActivity extends AppCompatActivity
         }
     }
 
+    private class requestCreateFolder extends  AsyncTask<Void, Void, Void> {
+
+        requestCreateFolder(){
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            File fileMetadata = new File();
+            fileMetadata.setName("Meetings Folder");
+            fileMetadata.setMimeType("application/vnd.google-apps.folder");
+            HttpTransport transport = AndroidHttp.newCompatibleTransport();
+            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+            driveService = new com.google.api.services.drive.Drive.Builder(
+                    transport, jsonFactory, mCredential)
+                    .setApplicationName("Project Meetings")
+                    .build();
+            try {
+                File file = driveService.files().create(fileMetadata)
+                        .setFields("id")
+                        .execute();
+                System.out.println("Folder ID: " + file.getId());
+                finish();
+                startActivity(getIntent());
+            } catch (UserRecoverableAuthIOException e){
+                startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
 }

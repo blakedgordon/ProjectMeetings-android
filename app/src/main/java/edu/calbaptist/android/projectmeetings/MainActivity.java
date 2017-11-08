@@ -69,7 +69,6 @@ public class MainActivity extends AppCompatActivity
     private Button signOutButton;
     private TextView statusTextView;
     private GoogleApiClient mGoogleApiClient;
-
     private FirebaseAuth mAuth;
 
     private static final String TAG = "SignInActivity";
@@ -91,7 +90,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -168,8 +166,6 @@ public class MainActivity extends AppCompatActivity
 
     private void signIn() {
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        Intent transferIntent = new Intent(getBaseContext(), FolderViewActivity.class);
-        transferIntent.putExtra("credentials", mCredential.toString());
         startActivityForResult(signInIntent, GOOGLE_SIGN_IN);
     }
 
@@ -191,6 +187,9 @@ public class MainActivity extends AppCompatActivity
             case GOOGLE_SIGN_IN:
                 // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...)
                 GoogleSignInResult acct = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+                GoogleSignInAccount user = acct.getSignInAccount();
+                Intent transferIntent = new Intent();
+                transferIntent.putExtra("AccountEmail",user.getEmail());
                 handleSignInResult(acct);
                 break;
             case REQUEST_GOOGLE_PLAY_SERVICES:
