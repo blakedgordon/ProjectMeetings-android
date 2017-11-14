@@ -90,6 +90,19 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //auto sign in
+        SharedPreferences prefs = App.context.getSharedPreferences(
+                "edu.calbaptist.android.projectmeetings.Account_Name",
+                Context.MODE_PRIVATE);
+        if(prefs.getBoolean("isSignedIn",false)){
+            if(prefs.getBoolean("hasSelectedFolder",false)){
+                //TODO: Swttich activity to MeetingList
+            }
+            Intent transfer = new Intent(this,FolderViewActivity.class);
+            startActivity(transfer);
+        }
+
         setContentView(R.layout.activity_main);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -166,6 +179,12 @@ public class MainActivity extends AppCompatActivity
 
     private void signIn() {
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        SharedPreferences settings = App.context.getSharedPreferences(
+                "edu.calbaptist.android.projectmeetings.Account_Name",
+                Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean("isSignedIn", true);
+        editor.apply();
         startActivityForResult(signInIntent, GOOGLE_SIGN_IN);
     }
 
