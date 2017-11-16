@@ -16,13 +16,18 @@
         android:id="@+id/CreateFolder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Create new Folder"
+        android:text="@string/create_folder"
         android:layout_below="@id/SelectFolder" />
 
-    <TextView
-        android:id="@+id/display_text"
+    <ListView
+        android:id="@+id/CurrentList"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/CreateFolder"/>
+        android:layout_height="wrap_content"/>
+
+    <!--<TextView-->
+        <!--android:id="@+id/display_text"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_below="@id/CreateFolder"/>-->
 
 </RelativeLayout>

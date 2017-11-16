@@ -14,4 +14,11 @@
         android:title="@string/add_recording"
         app:showAsAction="ifRoom|withText"/>
 
+    <item
+        android:id="@+id/add_file"
+        android:icon="@drawable/ic_add_file"
+        android:title="@string/add_file"
+        app:showAsAction="ifRoom|withText"
+        />
+
 </menu>

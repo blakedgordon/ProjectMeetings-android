@@ -27,6 +27,8 @@
             android:name=".NewRecordingActivity"
             android:parentActivityName=".FolderViewActivity">
         </activity>
+        <activity android:name=".NewFileActivity"
+                  android:parentActivityName=".FolderViewActivity"/>
     </application>
 
 </manifest>

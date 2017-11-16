@@ -3,8 +3,14 @@
     <string name="sign_out">Sign Out</string>
     <string name="google_oauth_client_id">711742704581-llerd66vh3u40pebn49ak4gggd7hbo05.apps.googleusercontent.com</string>
     <string name="selectFolders">Select Default Folder</string>
+    <string name="create_folder">Create New Folder</string>
     <string name="add_photo">Add Photo</string>
     <string name="add_recording">Add Recording</string>
     <string name="start_recording">Start Recording</string>
     <string name="stop_recording">Stop Recording</string>
+    <string name="current_meetings">Current Meetings</string>
+    <string name="upcoming_meetings">Upcoming Meetings</string>
+    <string name="past_meetings">Past Meetings</string>
+    <string name="add_file">Add File</string>
+    <string name="filename">File Name</string>
 </resources>
