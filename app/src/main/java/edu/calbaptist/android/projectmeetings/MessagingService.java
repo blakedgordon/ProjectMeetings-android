@@ -30,10 +30,27 @@ public class MessagingService extends FirebaseMessagingService {
         // Check if message contains a notification payload.
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
+
+            // Create a notification to display while still in the app (may or may not be useful)
             notifyUser(remoteMessage.getFrom(), remoteMessage.getNotification().getBody());
         }
 
         // TODO: Add response different notifications.
+
+        String type = remoteMessage.getData().get("type");
+
+        switch (type) {
+            case "meeting_invite":
+                // Do something
+                break;
+            case "meeting_warn":
+                // Do something
+                break;
+            case "meeting_start":
+                // Do something
+                break;
+        }
+
     }
 
 

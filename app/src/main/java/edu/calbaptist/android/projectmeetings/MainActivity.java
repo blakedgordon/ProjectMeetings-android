@@ -59,6 +59,7 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.iid.FirebaseInstanceId;
 
@@ -276,7 +277,23 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
-        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId() + " " + acct.getIdToken());
+        Log.d(TAG, "Google Id Token:" + acct.getId() + " " + acct.getIdToken());
+
+        FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+        mUser.getToken(true)
+                .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                    public void onComplete(@NonNull Task<GetTokenResult> task) {
+                        if (task.isSuccessful()) {
+                            String idToken = task.getResult().getToken();
+                            Log.d(TAG, "Firebase Id Token: "  + idToken);
+                            // TODO: Send token to the backend via HTTPS
+                            // ...
+                        } else {
+                            Log.d(TAG, "Firebase Id Token: UNSUCCESSFUL");
+                            // Handle error -> task.getException();
+                        }
+                    }
+                });
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
@@ -286,8 +303,7 @@ public class MainActivity extends AppCompatActivity
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential: success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            statusTextView.setText("Hello, " + user.getDisplayName());
+//                            FirebaseUser user = mAuth.getCurrentUser();
 //                            updateUI(user);
                         } else {
                             // If sign in fails, display a message to the user.
