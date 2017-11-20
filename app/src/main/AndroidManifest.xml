@@ -29,30 +29,6 @@
         </activity>
         <activity android:name=".NewFileActivity"
                   android:parentActivityName=".FolderViewActivity"/>
-
-        <service
-            android:name=".InstanceIdService">
-            <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
-            </intent-filter>
-        </service>
-
-        <service
-            android:name=".MessagingService">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-            </intent-filter>
-        </service>
-
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="@string/notification_channel_id" />
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@drawable/common_google_signin_btn_icon_dark_focused" />
-        <meta-data android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@color/colorPrimary" />
-
     </application>
 
 </manifest>

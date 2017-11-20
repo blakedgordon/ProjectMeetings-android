@@ -2,8 +2,7 @@
   "project_info": {
     "project_number": "711742704581",
     "firebase_url": "https://projectmeeting-183706.firebaseio.com",
-    "project_id": "projectmeeting-183706",
-    "storage_bucket": "projectmeeting-183706.appspot.com"
+    "project_id": "projectmeeting-183706"
   },
   "client": [
     {
@@ -14,22 +13,6 @@
         }
       },
       "oauth_client": [
-        {
-          "client_id": "711742704581-i1fml5c88udime1q6v7hbh9ced9v17i0.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "edu.calbaptist.android.projectmeetings",
-            "certificate_hash": "a7e7f2d7eb4f57dba73f868a7894b118087e59e2"
-          }
-        },
-        {
-          "client_id": "711742704581-56gik8ualtje6gem75go81ie7u93sqi1.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "edu.calbaptist.android.projectmeetings",
-            "certificate_hash": "4161692886f8e3fba770ea699d8b72cc5282ad41"
-          }
-        },
         {
           "client_id": "711742704581-llerd66vh3u40pebn49ak4gggd7hbo05.apps.googleusercontent.com",
           "client_type": 1,

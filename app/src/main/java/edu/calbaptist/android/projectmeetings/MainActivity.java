@@ -14,14 +14,11 @@ import com.google.api.services.drive.model.*;
 import android.Manifest;
 import android.accounts.AccountManager;
 import android.app.Dialog;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
@@ -59,9 +56,7 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.auth.GoogleAuthProvider;
-import com.google.firebase.iid.FirebaseInstanceId;
 
 public class MainActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
@@ -155,20 +150,6 @@ public class MainActivity extends AppCompatActivity
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
-
-        // Get instance id token for FCM.
-        String token = FirebaseInstanceId.getInstance().getToken();
-        Log.d(TAG, "FirebaseInstanceId token: " + token);
-
-        // Configure FCM notification channel
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            String channelId  = getString(R.string.notification_channel_id);
-            String channelName = getString(R.string.notification_channel_name);
-            NotificationManager notificationManager =
-                    getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(new NotificationChannel(channelId,
-                    channelName, NotificationManager.IMPORTANCE_LOW));
-        }
     }
 
     @Override
@@ -277,23 +258,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
-        Log.d(TAG, "Google Id Token:" + acct.getId() + " " + acct.getIdToken());
-
-        FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
-        mUser.getToken(true)
-                .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
-                    public void onComplete(@NonNull Task<GetTokenResult> task) {
-                        if (task.isSuccessful()) {
-                            String idToken = task.getResult().getToken();
-                            Log.d(TAG, "Firebase Id Token: "  + idToken);
-                            // TODO: Send token to the backend via HTTPS
-                            // ...
-                        } else {
-                            Log.d(TAG, "Firebase Id Token: UNSUCCESSFUL");
-                            // Handle error -> task.getException();
-                        }
-                    }
-                });
+        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId() + " " + acct.getIdToken());
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
@@ -303,7 +268,8 @@ public class MainActivity extends AppCompatActivity
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential: success");
-//                            FirebaseUser user = mAuth.getCurrentUser();
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            statusTextView.setText("Hello, " + user.getDisplayName());
 //                            updateUI(user);
                         } else {
                             // If sign in fails, display a message to the user.
