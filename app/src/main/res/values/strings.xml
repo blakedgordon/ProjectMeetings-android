@@ -13,4 +13,7 @@
     <string name="past_meetings">Past Meetings</string>
     <string name="add_file">Add File</string>
     <string name="filename">File Name</string>
+    <string name="notification_channel_id">fcm_channel</string>
+    <string name="notification_channel_name">Project Meetings FCM Channel</string>
+    <string name="notification_channel_description">This channel assists with deploying Firebase Cloud Messaging notifications.</string>
 </resources>
