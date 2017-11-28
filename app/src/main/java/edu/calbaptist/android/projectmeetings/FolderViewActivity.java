@@ -62,6 +62,8 @@ import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_PERMIS
 public class FolderViewActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener{
 
+    private static final int CAMERA_REQUEST = 1888;
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.add_media_menu, menu);
@@ -73,7 +75,8 @@ public class FolderViewActivity extends AppCompatActivity
         switch (item.getItemId()) {
             case R.id.add_photo:
                 // Navigate to the new photo activity
-                Toast.makeText(this, R.string.add_photo, Toast.LENGTH_SHORT).show();
+                Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(cameraIntent, CAMERA_REQUEST);
                 return true;
             case R.id.add_recording:
                 // Navigate to the new recording activity
