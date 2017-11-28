@@ -1,16 +1,5 @@
 package edu.calbaptist.android.projectmeetings;
 
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
-
-import com.google.api.client.util.ExponentialBackOff;
-
-import com.google.api.services.drive.DriveScopes;
-
-import com.google.api.services.drive.model.*;
-
 import android.Manifest;
 import android.accounts.AccountManager;
 import android.app.Dialog;
@@ -23,25 +12,14 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import edu.calbaptist.android.projectmeetings.Exceptions.ChooseAccountException;
-import edu.calbaptist.android.projectmeetings.Exceptions.GooglePlayServicesAvailabilityException;
-import edu.calbaptist.android.projectmeetings.Exceptions.RequestPermissionException;
-import pub.devrel.easypermissions.EasyPermissions;
-
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
@@ -49,18 +27,41 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.iid.FirebaseInstanceId;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import edu.calbaptist.android.projectmeetings.Exceptions.ChooseAccountException;
+import edu.calbaptist.android.projectmeetings.Exceptions.GooglePlayServicesAvailabilityException;
+import edu.calbaptist.android.projectmeetings.Exceptions.RequestPermissionException;
+import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
@@ -168,6 +169,18 @@ public class MainActivity extends AppCompatActivity
             notificationManager.createNotificationChannel(new NotificationChannel(channelId,
                     channelName, NotificationManager.IMPORTANCE_LOW));
         }
+
+    }
+
+    private static List<String> keysFromJsonString(String json) throws JSONException {
+        List<String> keys = new ArrayList<>();
+        Iterator<String> iterator = new JSONObject(json).keys();
+
+        while(iterator.hasNext()) {
+            keys.add(iterator.next());
+        }
+
+        return keys;
     }
 
     @Override
@@ -276,7 +289,23 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
-        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId() + " " + acct.getIdToken());
+        Log.d(TAG, "Google Token:" + acct.getId() + " " + acct.getIdToken());
+
+        FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+        mUser.getToken(true)
+                .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                    public void onComplete(@NonNull Task<GetTokenResult> task) {
+                        if (task.isSuccessful()) {
+                            String idToken = task.getResult().getToken();
+
+                            Log.d(TAG, "Firebase Token: " + idToken);
+                            // Send token to your backend via HTTPS
+                            // ...
+                        } else {
+                            // Handle error -> task.getException();
+                        }
+                    }
+                });
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
