@@ -138,15 +138,15 @@ public class FolderViewActivity extends AppCompatActivity
         Log.d(TAG, "onConnectionFailed: " + connectionResult);
     }
 
-    void showGooglePlayServicesAvailabilityErrorDialog(
-            final int connectionStatusCode) {
-        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-        Dialog dialog = apiAvailability.getErrorDialog(
-                FolderViewActivity.this,
-                connectionStatusCode,
-                REQUEST_GOOGLE_PLAY_SERVICES);
-        dialog.show();
-    }
+//    void showGooglePlayServicesAvailabilityErrorDialog(
+//            final int connectionStatusCode) {
+//        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+//        Dialog dialog = apiAvailability.getErrorDialog(
+//                FolderViewActivity.this,
+//                connectionStatusCode,
+//                REQUEST_GOOGLE_PLAY_SERVICES);
+//        dialog.show();
+//    }
 
 //    private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
 //        private com.google.api.services.drive.Drive mService = null;

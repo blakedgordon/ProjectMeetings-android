@@ -19,10 +19,11 @@
         android:text="@string/create_folder"
         android:layout_below="@id/SelectFolder" />
 
-    <ListView
-        android:id="@+id/CurrentList"
+    <fragment
+        android:id="@+id/fragment1"
+        android:name="edu.calbaptist.android.projectmeetings.FolderListFragment"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="match_parent" />
 
     <!--<TextView-->
         <!--android:id="@+id/display_text"-->
