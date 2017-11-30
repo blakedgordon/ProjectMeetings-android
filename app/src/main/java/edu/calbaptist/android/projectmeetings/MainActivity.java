@@ -104,8 +104,10 @@ public class MainActivity extends AppCompatActivity
             if(prefs.getBoolean("hasSelectedFolder",false)){
                 //TODO: Swttich activity to MeetingList
             }
-            Intent transfer = new Intent(this,FolderViewActivity.class);
-            startActivity(transfer);
+            if (prefs.getString(PREF_ACCOUNT_NAME, null) != null) {
+                Intent transfer = new Intent(this, FolderViewActivity.class);
+                startActivity(transfer);
+            }
         }
 
         setContentView(R.layout.activity_main);
@@ -216,7 +218,13 @@ public class MainActivity extends AppCompatActivity
         SharedPreferences.Editor editor = settings.edit();
         editor.putBoolean("isSignedIn", true);
         editor.apply();
-        startActivityForResult(signInIntent, GOOGLE_SIGN_IN);
+        if (settings.getString(PREF_ACCOUNT_NAME, null) == null) {
+            startActivityForResult(
+                    mCredential.newChooseAccountIntent(),
+                    REQUEST_ACCOUNT_PICKER);
+        } else {
+            startActivityForResult(signInIntent, GOOGLE_SIGN_IN);
+        }
     }
 
     /**
