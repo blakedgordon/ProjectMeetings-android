@@ -23,7 +23,8 @@
         android:id="@+id/fragment1"
         android:name="edu.calbaptist.android.projectmeetings.FolderListFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_below="@id/CreateFolder" />
 
     <!--<TextView-->
         <!--android:id="@+id/display_text"-->

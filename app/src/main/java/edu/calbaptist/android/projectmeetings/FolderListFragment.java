@@ -3,6 +3,8 @@ package edu.calbaptist.android.projectmeetings;
 import android.app.Dialog;
 import android.app.ListFragment;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -28,7 +30,10 @@ import com.google.api.services.drive.model.FileList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.calbaptist.android.projectmeetings.Exceptions.ChooseAccountException;
 import edu.calbaptist.android.projectmeetings.Exceptions.GooglePlayServicesAvailabilityException;
@@ -48,12 +53,13 @@ public class FolderListFragment extends ListFragment
 
     GoogleAccountCredential mCredential;
     private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_FILE };
-    List<String> folders = new ArrayList<>();
+    Map<String,String> folders = new LinkedHashMap<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_folderview, container, false);
+
     }
 
     @Override
@@ -71,8 +77,6 @@ public class FolderListFragment extends ListFragment
 
         new FolderListFragment.MakeRequestTask().execute();
 
-        ArrayAdapter adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, folders.toArray());
-        setListAdapter(adapter);
         getListView().setOnItemClickListener(this);
     }
 
@@ -93,10 +97,18 @@ public class FolderListFragment extends ListFragment
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
+        List<String> folderIDs = new ArrayList(folders.values()); // convert hashmap to array
+        SharedPreferences settings = App.context.getSharedPreferences(
+                "edu.calbaptist.android.projectmeetings.Account_Name",
+                Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putString("DefaultFolder", folderIDs.get(position));
+        editor.apply();
+        Intent transfer = new Intent(getActivity(), MeetingListActivity.class);
+        startActivity(transfer);
     }
 
-    private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
+    private class MakeRequestTask extends AsyncTask<Void, Void, Map<String,String>> {
         private com.google.api.services.drive.Drive mService = null;
         private Exception mLastError = null;
 
@@ -123,7 +135,7 @@ public class FolderListFragment extends ListFragment
          * @param params no parameters needed for this task.
          */
         @Override
-        protected List<String> doInBackground(Void... params) {
+        protected Map<String,String> doInBackground(Void... params) {
             try {
                 return getDataFromApi();
             } catch (Exception e) {
@@ -140,9 +152,9 @@ public class FolderListFragment extends ListFragment
          *         found.
          * @throws IOException
          */
-        private List<String> getDataFromApi() throws IOException {
+        private Map<String,String> getDataFromApi() throws IOException {
             // Get a list of up to 10 files.
-            List<String> fileInfo = new ArrayList<String>();
+            Map<String, String> fileInfo = new LinkedHashMap<>();
             FileList result = mService.files().list()
                     .setPageSize(10)
                     .setFields("nextPageToken, files(id, name)")
@@ -151,16 +163,20 @@ public class FolderListFragment extends ListFragment
             List<File> files = result.getFiles();
             if (files != null) {
                 for (File file : files) {
-                    fileInfo.add(String.format("%s \n",
-                            file.getName()));
+                    fileInfo.put(String.format("%s \n",
+                            file.getName()),file.getId());
                 }
             }
             return fileInfo;
         }
 
         @Override
-        protected void onPostExecute(List<String> output) {
-                folders = output;
+        protected void onPostExecute(Map<String, String> output) {
+            folders = output;
+            ArrayList<String> folderArray = new ArrayList<>();
+            folderArray.addAll(output.keySet());
+            ArrayAdapter adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, folderArray.toArray());
+            setListAdapter(adapter);
         }
 
         @Override

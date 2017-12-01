@@ -122,123 +122,12 @@ public class FolderViewActivity extends AppCompatActivity
                 new requestCreateFolder().execute();
             }
         });
-
-        //Activate AsyncTask located in private class
-//        new FolderViewActivity.MakeRequestTask().execute();
-
-        //Show folders (Hacked solution)
-//        mFolderText = (TextView) findViewById(R.id.display_text);
-//        mFolderText.setVerticalScrollBarEnabled(true);
-//        mFolderText.setMovementMethod(new ScrollingMovementMethod());
-//        mFolderText.setText("");
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.d(TAG, "onConnectionFailed: " + connectionResult);
     }
-
-//    void showGooglePlayServicesAvailabilityErrorDialog(
-//            final int connectionStatusCode) {
-//        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-//        Dialog dialog = apiAvailability.getErrorDialog(
-//                FolderViewActivity.this,
-//                connectionStatusCode,
-//                REQUEST_GOOGLE_PLAY_SERVICES);
-//        dialog.show();
-//    }
-
-//    private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
-//        private com.google.api.services.drive.Drive mService = null;
-//        private Exception mLastError = null;
-//
-//        MakeRequestTask() {
-//            try {
-//                mService = DriveFiles.getInstance().getDriveService();
-//            } catch (GooglePlayServicesAvailabilityException e) {
-//                showGooglePlayServicesAvailabilityErrorDialog(e.connectionStatusCode);
-//            } catch (ChooseAccountException e) {
-//                startActivityForResult(
-//                        mCredential.newChooseAccountIntent(),
-//                        REQUEST_ACCOUNT_PICKER);
-//            } catch (RequestPermissionException e) {
-//                EasyPermissions.requestPermissions(
-//                        FolderViewActivity.this,
-//                        "This app needs to access your Google account (via Contacts).",
-//                        REQUEST_PERMISSION_GET_ACCOUNTS,
-//                        android.Manifest.permission.GET_ACCOUNTS);
-//            }
-//        }
-//
-//        /**
-//         * Background task to call Drive API.
-//         * @param params no parameters needed for this task.
-//         */
-//        @Override
-//        protected List<String> doInBackground(Void... params) {
-//            try {
-//                return getDataFromApi();
-//            } catch (Exception e) {
-//                mLastError = e;
-//                e.printStackTrace();
-//                cancel(true);
-//                return null;
-//            }
-//        }
-//
-//        /**
-//         * Fetch a list of up to 10 file names and IDs.
-//         * @return List of Strings describing files, or an empty list if no files
-//         *         found.
-//         * @throws IOException
-//         */
-//        private List<String> getDataFromApi() throws IOException {
-//            // Get a list of up to 10 files.
-//            List<String> fileInfo = new ArrayList<String>();
-//            FileList result = mService.files().list()
-//                    .setPageSize(10)
-//                    .setFields("nextPageToken, files(id, name)")
-//                    .setQ("mimeType = \"application/vnd.google-apps.folder\"") //only display folders
-//                    .execute();
-//            List<File> files = result.getFiles();
-//            if (files != null) {
-//                for (File file : files) {
-//                    fileInfo.add(String.format("%s \n",
-//                            file.getName()));
-//                }
-//            }
-//            return fileInfo;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(List<String> output) {
-//            if (output == null || output.size() == 0) {
-//                mFolderText.setText("No results returned.");
-//            } else {
-//                mFolderText.setText(TextUtils.join("\n", output));
-//            }
-//        }
-//
-//        @Override
-//        protected void onCancelled() {
-//            if (mLastError != null) {
-//                if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
-//                    showGooglePlayServicesAvailabilityErrorDialog(
-//                            ((GooglePlayServicesAvailabilityIOException) mLastError)
-//                                    .getConnectionStatusCode());
-//                } else if (mLastError instanceof UserRecoverableAuthIOException) {
-//                    startActivityForResult(
-//                            ((UserRecoverableAuthIOException) mLastError).getIntent(),
-//                            MainActivity.REQUEST_AUTHORIZATION);
-//                } else {
-//                    mFolderText.setText("The following error occurred:\n"
-//                            + mLastError.getMessage());
-//                }
-//            } else {
-//                mFolderText.setText("Request cancelled.");
-//            }
-//        }
-//    }
 
     private class requestCreateFolder extends  AsyncTask<Void, Void, Void> {
 

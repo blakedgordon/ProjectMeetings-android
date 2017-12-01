@@ -102,9 +102,10 @@ public class MainActivity extends AppCompatActivity
                 Context.MODE_PRIVATE);
         if(prefs.getBoolean("isSignedIn",false)){
             if(prefs.getBoolean("hasSelectedFolder",false)){
-                //TODO: Swttich activity to MeetingList
+                Intent transfer = new Intent(this, MeetingListActivity.class);
+                startActivity(transfer);
             }
-            if (prefs.getString(PREF_ACCOUNT_NAME, null) != null) {
+            else{
                 Intent transfer = new Intent(this, FolderViewActivity.class);
                 startActivity(transfer);
             }
