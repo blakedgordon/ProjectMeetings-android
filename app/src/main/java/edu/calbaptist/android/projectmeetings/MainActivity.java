@@ -88,6 +88,8 @@ public class MainActivity extends AppCompatActivity
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA_READONLY };
 
+    private Button meetingActivityButton;
+
     /**
      * Create the main activity.
      * @param savedInstanceState previously saved instance data.
@@ -144,6 +146,17 @@ public class MainActivity extends AppCompatActivity
                 mCallApiButton.setEnabled(true);
             }
         });
+
+
+        meetingActivityButton = (Button) findViewById(R.id.meeting_activity_button);
+        meetingActivityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, MeetingActivity.class);
+                startActivity(intent);
+            }
+        });
+
 
         mOutputText = (TextView) findViewById(R.id.output_text);
         mOutputText.setVerticalScrollBarEnabled(true);
