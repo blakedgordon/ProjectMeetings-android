@@ -22,6 +22,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -61,6 +62,7 @@ import java.util.List;
 import edu.calbaptist.android.projectmeetings.Exceptions.ChooseAccountException;
 import edu.calbaptist.android.projectmeetings.Exceptions.GooglePlayServicesAvailabilityException;
 import edu.calbaptist.android.projectmeetings.Exceptions.RequestPermissionException;
+import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity
@@ -88,6 +90,8 @@ public class MainActivity extends AppCompatActivity
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA_READONLY };
 
+    private Button meetingActivityButton;
+
     /**
      * Create the main activity.
      * @param savedInstanceState previously saved instance data.
@@ -101,7 +105,7 @@ public class MainActivity extends AppCompatActivity
                 "edu.calbaptist.android.projectmeetings.Account_Name",
                 Context.MODE_PRIVATE);
         if(prefs.getBoolean("isSignedIn",false)){
-            if(prefs.getBoolean("hasSelectedFolder",false)){
+            if(prefs.getString("DefaultFolder",null) != null){
                 Intent transfer = new Intent(this, MeetingListActivity.class);
                 startActivity(transfer);
             }
@@ -144,6 +148,17 @@ public class MainActivity extends AppCompatActivity
                 mCallApiButton.setEnabled(true);
             }
         });
+
+
+        meetingActivityButton = (Button) findViewById(R.id.meeting_activity_button);
+        meetingActivityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, MeetingActivity.class);
+                startActivity(intent);
+            }
+        });
+
 
         mOutputText = (TextView) findViewById(R.id.output_text);
         mOutputText.setVerticalScrollBarEnabled(true);
@@ -246,10 +261,13 @@ public class MainActivity extends AppCompatActivity
             case GOOGLE_SIGN_IN:
                 // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...)
                 GoogleSignInResult acct = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-                GoogleSignInAccount user = acct.getSignInAccount();
-                Intent transferIntent = new Intent();
-                transferIntent.putExtra("AccountEmail",user.getEmail());
-                handleSignInResult(acct);
+                try {
+                    handleSignInResult(acct);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (GoogleAuthException e) {
+                    e.printStackTrace();
+                }
                 break;
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
@@ -285,12 +303,13 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void handleSignInResult(GoogleSignInResult result) {
+    private void handleSignInResult(GoogleSignInResult result) throws IOException, GoogleAuthException {
         Log.d(TAG, "handleSignInResult: " + result.isSuccess());
         if(result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount user = result.getSignInAccount();
             firebaseAuthWithGoogle(user);
+            createUser(user.getDisplayName(), user.getEmail(), user.getIdToken());
             startActivity(new Intent(this, FolderViewActivity.class));
         } else {
             statusTextView.setText("Sign in w/ Google failed :(");
@@ -299,22 +318,6 @@ public class MainActivity extends AppCompatActivity
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
         Log.d(TAG, "Google Token:" + acct.getId() + " " + acct.getIdToken());
-
-        FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
-        mUser.getToken(true)
-                .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
-                    public void onComplete(@NonNull Task<GetTokenResult> task) {
-                        if (task.isSuccessful()) {
-                            String idToken = task.getResult().getToken();
-
-                            Log.d(TAG, "Firebase Token: " + idToken);
-                            // Send token to your backend via HTTPS
-                            // ...
-                        } else {
-                            // Handle error -> task.getException();
-                        }
-                    }
-                });
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
@@ -326,6 +329,22 @@ public class MainActivity extends AppCompatActivity
                             Log.d(TAG, "signInWithCredential: success");
                             FirebaseUser user = mAuth.getCurrentUser();
                             statusTextView.setText("Hello, " + user.getDisplayName());
+
+                            FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+                            mUser.getToken(true)
+                                    .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                                        public void onComplete(@NonNull Task<GetTokenResult> task) {
+                                            if (task.isSuccessful()) {
+                                                String idToken = task.getResult().getToken();
+
+                                                Log.d(TAG, "Firebase Token: " + idToken);
+                                                // Send token to your backend via HTTPS
+                                                // ...
+                                            } else {
+                                                // Handle error -> task.getException();
+                                            }
+                                        }
+                                    });
 //                            updateUI(user);
                         } else {
                             // If sign in fails, display a message to the user.
@@ -475,5 +494,56 @@ public class MainActivity extends AppCompatActivity
                 mOutputText.setText("Request cancelled.");
             }
         }
+    }
+
+    private void createUser(final String displayName, final String email, final String gToken) throws IOException, GoogleAuthException {
+
+        FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+        mUser.getToken(true)
+                .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                    public void onComplete(@NonNull Task<GetTokenResult> task) {
+                        if (task.isSuccessful()) {
+                            String idToken = task.getResult().getToken();
+
+                            final User user = new User.UserBuilder().setDisplayName(displayName).setEmail(email)
+                                    .setFirebaseToken(idToken)
+                                    .setGoogleToken(gToken)
+                                    .setInstanceId(FirebaseInstanceId.getInstance().getToken())
+                                    .build();
+
+                            AsyncTask.execute(new Runnable() {
+                                @Override
+                                public void run() {
+                                    RestClient.createUser(user, new Callback.RestClientUser() {
+                                        @Override
+                                        void onTaskExecuted(User user) {
+                                            Log.d(TAG, "onTaskExecuted: " + user.getDisplayName());
+                                        }
+
+                                        @Override
+                                        void onTaskFailed(RestClientException e) {
+                                            Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
+                                                    + ": " + e.getJson().toString());
+                                        }
+
+                                        @Override
+                                        void onExceptionRaised(Exception e) {
+                                            Log.d(TAG, "onExceptionRaised: " + e.getMessage());
+                                        }
+                                    });
+                                }
+                            });
+
+                            Log.d(TAG, "Firebase Token: " + idToken);
+                            // Send token to your backend via HTTPS
+                            // ...
+                        } else {
+                            // Handle error -> task.getException();
+                        }
+                    }
+                });
+
+
+
     }
 }

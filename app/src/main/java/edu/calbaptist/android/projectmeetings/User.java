@@ -19,7 +19,6 @@ public class User {
     private String uid;
     private String email;
     private String displayName;
-
     private String firebaseToken;
     private String googleToken;
     private String instanceId;

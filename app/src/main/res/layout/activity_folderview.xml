@@ -26,10 +26,5 @@
         android:layout_height="match_parent"
         android:layout_below="@id/CreateFolder" />
 
-    <!--<TextView-->
-        <!--android:id="@+id/display_text"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_below="@id/CreateFolder"/>-->
 
 </RelativeLayout>
