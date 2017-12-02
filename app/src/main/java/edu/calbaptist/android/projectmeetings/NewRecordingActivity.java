@@ -14,10 +14,22 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.services.drive.DriveScopes;
+
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
+
+import edu.calbaptist.android.projectmeetings.Exceptions.ChooseAccountException;
+import edu.calbaptist.android.projectmeetings.Exceptions.GooglePlayServicesAvailabilityException;
+import edu.calbaptist.android.projectmeetings.Exceptions.RequestPermissionException;
+
+import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_AUTHORIZATION;
 
 public class NewRecordingActivity extends AppCompatActivity {
 
@@ -130,6 +142,14 @@ public class NewRecordingActivity extends AppCompatActivity {
             final int N = recordedFiles.length;
             recordedFiles = Arrays.copyOf(recordedFiles, N + 1);
             recordedFiles[N] = fileName;
+
+            // Upload the file to Drive
+            File uploadFile = new File(mFilePath);
+            try {
+                DriveFiles.getInstance().uploadFileToDrive(uploadFile, fileName, "audio/x-aac");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             mFilePath = null;
         }

@@ -1,59 +1,36 @@
 package edu.calbaptist.android.projectmeetings;
 
-import android.accounts.Account;
-import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.FileList;
-import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Date;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.ChooseAccountException;
-import edu.calbaptist.android.projectmeetings.Exceptions.GooglePlayServicesAvailabilityException;
-import edu.calbaptist.android.projectmeetings.Exceptions.RequestPermissionException;
-import pub.devrel.easypermissions.EasyPermissions;
-
-import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_ACCOUNT_PICKER;
 import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_AUTHORIZATION;
-import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_GOOGLE_PLAY_SERVICES;
-import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_PERMISSION_GET_ACCOUNTS;
 
 /**
  * Created by Austin on 10/31/2017.
@@ -63,6 +40,8 @@ public class FolderViewActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener{
 
     private static final int CAMERA_REQUEST = 1888;
+    private String mCurrentPhotoPath;
+    private String mCurrentPhotoName;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -76,7 +55,23 @@ public class FolderViewActivity extends AppCompatActivity
             case R.id.add_photo:
                 // Navigate to the new photo activity
                 Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(cameraIntent, CAMERA_REQUEST);
+                if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+                    // Create the File where the photo should go
+                    java.io.File photoFile = null;
+                    try {
+                        photoFile = createImageFile();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                    // Continue only if the File was successfully created
+                    if (photoFile != null) {
+                        Uri photoURI = FileProvider.getUriForFile(this,
+                                "edu.calbaptist.android.projectmeetings.fileprovider",
+                                photoFile);
+                        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                        startActivityForResult(cameraIntent, CAMERA_REQUEST);
+                    }
+                }
                 return true;
             case R.id.add_recording:
                 // Navigate to the new recording activity
@@ -92,7 +87,35 @@ public class FolderViewActivity extends AppCompatActivity
         }
     }
 
-    private TextView mFolderText;
+    private java.io.File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        java.io.File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        java.io.File image = java.io.File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = image.getAbsolutePath();
+        mCurrentPhotoName = image.getName();
+        return image;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
+            java.io.File image = new java.io.File(mCurrentPhotoPath);
+            try {
+                DriveFiles.getInstance().uploadFileToDrive(image, mCurrentPhotoName, "image/jpeg");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private static final String TAG = "SignInActivity";
     GoogleAccountCredential mCredential;
     private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_FILE };
@@ -122,6 +145,12 @@ public class FolderViewActivity extends AppCompatActivity
                 new requestCreateFolder().execute();
             }
         });
+
+        try {
+            driveService = DriveFiles.getInstance().getDriveService();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -140,12 +169,6 @@ public class FolderViewActivity extends AppCompatActivity
             File fileMetadata = new File();
             fileMetadata.setName("Meetings Folder");
             fileMetadata.setMimeType("application/vnd.google-apps.folder");
-            HttpTransport transport = AndroidHttp.newCompatibleTransport();
-            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            driveService = new com.google.api.services.drive.Drive.Builder(
-                    transport, jsonFactory, mCredential)
-                    .setApplicationName("Project Meetings")
-                    .build();
             try {
                 File file = driveService.files().create(fileMetadata)
                         .setFields("id")

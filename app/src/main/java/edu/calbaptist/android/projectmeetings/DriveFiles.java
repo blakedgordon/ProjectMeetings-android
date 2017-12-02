@@ -1,6 +1,8 @@
 package edu.calbaptist.android.projectmeetings;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -9,7 +11,9 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.batch.BatchRequest;
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonError;
+import com.google.api.client.http.FileContent;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -17,10 +21,12 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.Permission;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import edu.calbaptist.android.projectmeetings.Exceptions.ChooseAccountException;
@@ -51,6 +57,13 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
         mCredential = GoogleAccountCredential.usingOAuth2(
                 App.context, Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
+
+        String accountName = App.context.getSharedPreferences(
+                "edu.calbaptist.android.projectmeetings.Account_Name", Context.MODE_PRIVATE)
+                .getString(PREF_ACCOUNT_NAME, null);
+        if (accountName != null) {
+            mCredential.setSelectedAccountName(accountName);
+        }
 
         getResultsFromApi();
     }
@@ -90,7 +103,7 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
         Permission userPermission = new Permission()
                 .setType("user")
                 .setRole("writer")
-                .setEmailAddress("user@example.com");
+                .setEmailAddress(email);
         try {
             driveService.permissions().create(fileId, userPermission)
                     .setFields("id")
@@ -99,6 +112,42 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
             batch.execute();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void uploadFileToDrive(java.io.File filePath, String fileName, String fileType) {
+        SharedPreferences prefs = App.context.getSharedPreferences(
+                "edu.calbaptist.android.projectmeetings.Account_Name",
+                Context.MODE_PRIVATE);
+        String defaultFolderID = prefs.getString("DefaultFolder", "");
+        File fileMetadata = new File();
+        fileMetadata.setName(fileName);
+        fileMetadata.setParents(Collections.singletonList(defaultFolderID));
+        FileContent mediaContent = new FileContent(fileType, filePath);
+        new UploadFile(fileMetadata, mediaContent).execute();
+    }
+
+    private class UploadFile extends AsyncTask<Void, Void, Void> {
+        private File fileMetadata;
+        private FileContent mediaContent;
+
+        public UploadFile(File fileMetadata, FileContent mediaContent) {
+            this.fileMetadata = fileMetadata;
+            this.mediaContent = mediaContent;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                File file1 = driveService.files().create(fileMetadata, mediaContent)
+                        .setFields("id, parents")
+                        .execute();
+                System.out.println("File ID: " + file1.getId());
+            } catch (IOException e) {
+                e.printStackTrace();
+
+            }
+            return null;
         }
     }
 
