@@ -16,8 +16,10 @@
     <string name="notification_channel_id">fcm_channel</string>
     <string name="notification_channel_name">Project Meetings FCM Channel</string>
     <string name="notification_channel_description">This channel assists with deploying Firebase Cloud Messaging notifications.</string>
-    <string name="title_activity_meeting">MeetingActivity</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="meetingName">Meeting Name</string>
+    <string name="meetingObjective">Meeting Objective</string>
+    <string name="length">Enter length of meeting in minutes</string>
+    <string name="submit">Submit</string>
+    <string name="createMeeting">Create Meeting</string>
+    <string name="invites">You\'ve been invited to some meetings</string>
 </resources>
