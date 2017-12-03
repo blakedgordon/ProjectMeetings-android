@@ -1,0 +1,7 @@
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+/.idea/encodings.xml
+.DS_Store
+/build

@@ -2,6 +2,7 @@ package edu.calbaptist.android.projectmeetings;
 
 import com.google.firebase.database.DatabaseReference;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -11,7 +12,7 @@ import java.util.ArrayList;
  *  @author Caleb Solorio
  *  @version 0.4.0 11/27/17
  */
-public class Meeting {
+public class Meeting implements Serializable{
     private static final String TAG = "Meeting";
 
     private DatabaseReference db;
@@ -162,7 +163,7 @@ public class Meeting {
          * @param time the time of the user.
          * @return the new MeetingBuilder object.
          */
-        public MeetingBuilder setTime(Long time) {
+        public MeetingBuilder setTime(long time) {
             this.time = time;
             return this;
         }
@@ -172,7 +173,7 @@ public class Meeting {
          * @param timeLimit the time limit of the user.
          * @return the new MeetingBuilder object.
          */
-        public MeetingBuilder setTimeLimit(Long timeLimit) {
+        public MeetingBuilder setTimeLimit(long timeLimit) {
             this.timeLimit = timeLimit;
             return this;
         }

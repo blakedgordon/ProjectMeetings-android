@@ -2,6 +2,7 @@ package edu.calbaptist.android.projectmeetings;
 
 import com.google.firebase.database.DatabaseReference;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -11,7 +12,7 @@ import java.util.ArrayList;
  *  @author Caleb Solorio
  *  @version 0.4.0 11/27/17
  */
-public class User {
+public class User implements Serializable {
     private static final String TAG = "User";
 
     private DatabaseReference db;

@@ -27,6 +27,7 @@
         <!-- Customize your theme here. -->
         <item name="colorPrimaryDark">#210072</item>
         <item name="android:textColor">@color/colorWhite</item>
+        <!--<item name="windowActionBar">false</item>-->
     </style>
 
 </resources>

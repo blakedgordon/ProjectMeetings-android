@@ -36,6 +36,11 @@
         <activity
             android:name=".NewFileActivity"
             android:parentActivityName=".FolderViewActivity"/>
+        <activity
+            android:name=".MeetingActivity"
+            android:label="@string/title_activity_meeting"
+            android:theme="@style/ActivityMeetingTheme"
+            android:windowSoftInputMode="adjustPan"></activity>
 
         <service android:name=".InstanceIdService">
             <intent-filter>
