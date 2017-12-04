@@ -138,6 +138,16 @@
                 android:layout_height="wrap_content"
                 android:minHeight="30dp" />
 
+            <Button
+                android:id="@+id/recording_button"
+                android:textColor="@color/colorGrayDark"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_alignParentStart="true"
+                android:visibility="invisible"
+                android:text="@string/start_recording"/>
+
             <RelativeLayout
                 android:layout_width="50dp"
                 android:layout_height="match_parent"

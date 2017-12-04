@@ -2,10 +2,19 @@ package edu.calbaptist.android.projectmeetings;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -19,6 +28,7 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.ScaleAnimation;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -29,7 +39,11 @@ import android.widget.TextView;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -85,6 +99,29 @@ public class MeetingActivity extends AppCompatActivity {
     private ImageButton buttonSendMessage;
     private int animIndex = 0;
 
+    private Button mRecordButton;
+    private MediaRecorder mMediaRecorder;
+    private boolean mStartRecording = false;
+    private static String mFilePath;
+
+    // Requesting permission to RECORD_AUDIO
+    private boolean permissionToRecordAccepted = false;
+    private String [] permissions = {android.Manifest.permission.RECORD_AUDIO};
+    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
+    private static final String LOG_TAG = "AudioRecord";
+
+    private static final int CAMERA_REQUEST = 1888;
+    private String mCurrentPhotoPath;
+    private String mCurrentPhotoName;
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mStartRecording) {
+            recordPressed(mStartRecording);
+        }
+    }
+
     /**
      * Creates the view and assigns all initial properties.
      * @param savedInstanceState
@@ -130,7 +167,7 @@ public class MeetingActivity extends AppCompatActivity {
                 if(!started && user.getUid().equals(meeting.getUid())) {
                     try {
                         channel.push("start_meeting", null);
-//                        TODO: Start recording audio.
+                        mRecordButton.setVisibility(View.VISIBLE);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -145,6 +182,16 @@ public class MeetingActivity extends AppCompatActivity {
         mPagerAdapter = new MeetingMessagesPagerAdapter(getSupportFragmentManager());
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mPagerAdapter);
+
+        ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
+
+        mRecordButton = findViewById(R.id.recording_button);
+        mRecordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                recordPressed(mStartRecording);
+            }
+        });
 
         buttonApplause = (ImageButton) findViewById(R.id.button_applause);
         applauseIcons[0] = R.id.applause_icon_1;
@@ -224,6 +271,19 @@ public class MeetingActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode){
+            case REQUEST_RECORD_AUDIO_PERMISSION:
+                permissionToRecordAccepted  = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                break;
+        }
+        if (!permissionToRecordAccepted ) finish();
     }
 
     /**
@@ -506,6 +566,9 @@ public class MeetingActivity extends AppCompatActivity {
                                             initialTimePassed = envelope.getPayload()
                                                     .get("response").get("time_passed").asLong();
                                             startTimer(meeting.getTimeLimit());
+                                            if(user.getUid().equals(meeting.getUid())) {
+                                                mRecordButton.setVisibility(View.VISIBLE);
+                                            }
                                         } else {
                                             long minutes = timeLimit / 60000;
                                             long seconds = (timeLimit % 60000) / 1000;
@@ -720,9 +783,111 @@ public class MeetingActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_meeting, menu);
 
-//        TODO: Navigate into photo menu on menu button select
-
         return true;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.add_photo:
+                // Navigate to the new photo activity
+                Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+                    // Create the File where the photo should go
+                    java.io.File photoFile = null;
+                    try {
+                        photoFile = createImageFile();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                    // Continue only if the File was successfully created
+                    if (photoFile != null) {
+                        Uri photoURI = FileProvider.getUriForFile(this,
+                                "edu.calbaptist.android.projectmeetings.fileprovider",
+                                photoFile);
+                        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                        startActivityForResult(cameraIntent, CAMERA_REQUEST);
+                    }
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private java.io.File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        java.io.File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        java.io.File image = java.io.File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = image.getAbsolutePath();
+        mCurrentPhotoName = image.getName();
+        return image;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
+            java.io.File image = new java.io.File(mCurrentPhotoPath);
+            try {
+                DriveFiles.getInstance().uploadFileToDrive(image, mCurrentPhotoName, "image/jpeg");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void recordPressed(boolean recording) {
+        if (!recording) {
+            mRecordButton.setText(R.string.stop_recording);
+
+            Calendar c = Calendar.getInstance();
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+            String formattedDate = df.format(c.getTime());
+            mFilePath = getDir("recordings", MODE_PRIVATE).getAbsolutePath();
+            mFilePath += "/" + formattedDate + ".aac";
+
+            mMediaRecorder = new MediaRecorder();
+            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.AAC_ADTS);
+            mMediaRecorder.setOutputFile(mFilePath);
+            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+
+            try {
+                mMediaRecorder.prepare();
+            } catch (IOException e) {
+                Log.e(LOG_TAG, "prepare() failed");
+            }
+
+            mMediaRecorder.start();
+
+            mStartRecording = true;
+        } else {
+            mRecordButton.setText(R.string.start_recording);
+            mMediaRecorder.stop();
+            mMediaRecorder.release();
+            mMediaRecorder = null;
+            mStartRecording = false;
+
+            String[] directories = mFilePath.split("/");
+            String fileName = directories[directories.length - 1];
+
+            // Upload the file to Drive
+            File uploadFile = new File(mFilePath);
+            try {
+                DriveFiles.getInstance().uploadFileToDrive(uploadFile, fileName, "audio/x-aac");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            mFilePath = null;
+        }
+    }
 }
