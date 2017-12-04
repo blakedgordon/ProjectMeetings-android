@@ -90,6 +90,10 @@ public class MainActivity extends AppCompatActivity
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA_READONLY };
 
+    final static SharedPreferences prefs = App.context.getSharedPreferences(
+            "edu.calbaptist.android.projectmeetings.Account_Name",
+            Context.MODE_PRIVATE);
+
     private Button meetingActivityButton;
 
     /**
@@ -289,6 +293,7 @@ public class MainActivity extends AppCompatActivity
                                 Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = settings.edit();
                         editor.putString(PREF_ACCOUNT_NAME, accountName);
+                        editor.putBoolean("isSignedIn", true);
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
                         new MakeRequestTask().execute();
@@ -310,6 +315,9 @@ public class MainActivity extends AppCompatActivity
             GoogleSignInAccount user = result.getSignInAccount();
             firebaseAuthWithGoogle(user);
             createUser(user.getDisplayName(), user.getEmail(), user.getIdToken());
+
+            prefs.edit().putString("gToken", user.getIdToken()).apply();
+
             startActivity(new Intent(this, FolderViewActivity.class));
         } else {
             statusTextView.setText("Sign in w/ Google failed :(");
@@ -518,6 +526,12 @@ public class MainActivity extends AppCompatActivity
                                         @Override
                                         void onTaskExecuted(User user) {
                                             Log.d(TAG, "onTaskExecuted: " + user.getDisplayName());
+                                            SharedPreferences settings = App.context.getSharedPreferences(
+                                                    "edu.calbaptist.android.projectmeetings.Account_Name",
+                                                    Context.MODE_PRIVATE);
+                                            SharedPreferences.Editor editor = settings.edit();
+                                            editor.putString("uID",user.getUid());
+                                            editor.apply();
                                         }
 
                                         @Override

@@ -80,6 +80,7 @@ public class MeetingCreationActivity extends AppCompatActivity{
                                     "edu.calbaptist.android.projectmeetings.Account_Name",
                                     Context.MODE_PRIVATE);
 
+                            //TODO: Add actual invitation functionality
                             ArrayList<String> invites = new ArrayList<String>(Arrays.asList(new String[]{"austin@gmail.com", "blake@gmail.com"}));
 
                             final Meeting meeting = new Meeting.MeetingBuilder()
