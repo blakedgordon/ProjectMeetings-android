@@ -8,9 +8,12 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import java.util.ArrayList;
 
 /**
- * Created by csolo on 11/30/2017.
+ *  Meeting Messages Pager Adapter
+ *  Functions as a standard PagerAdapter for MeetingMessageObjectFragment.
+ *
+ *  @author Caleb Solorio
+ *  @version 0.7.0 12/3/17
  */
-
 public class MeetingMessagesPagerAdapter extends FragmentStatePagerAdapter {
     private int currentPos;
     ArrayList<MeetingMessage> messages;
