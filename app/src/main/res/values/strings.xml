@@ -8,7 +8,7 @@
     <string name="add_recording">Add Recording</string>
     <string name="start_recording">Start Recording</string>
     <string name="stop_recording">Stop Recording</string>
-    <string name="current_meetings">Current Meetings</string>
+    <string name="current_meetings">Meetings</string>
     <string name="upcoming_meetings">Upcoming Meetings</string>
     <string name="past_meetings">Past Meetings</string>
     <string name="add_file">Add File</string>

@@ -160,6 +160,10 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, MeetingActivity.class);
 
+                SharedPreferences prefs = App.context.getSharedPreferences(
+                        "edu.calbaptist.android.projectmeetings.Account_Name",
+                        Context.MODE_PRIVATE);
+
                 Meeting meeting = new Meeting.MeetingBuilder()
                         .setMid("748da02f-7004-4a8c-aca5-af8b571f2b55")
                         .setName("My First Meeting")
@@ -174,7 +178,7 @@ public class MainActivity extends AppCompatActivity
                         .setUid("dXwfd6uiyZR5xiiBo1xfPWYAF1C2")
                         .setEmail("jerryvonjingles@gmail.com")
                         .setDisplayName("Jerry Jingles")
-                        .setFirebaseToken("eyJhbGciOiJSUzI1NiIsImtpZCI6ImUxNjNjMTUyOWYyZDVlZTQ0ZGE2YzZiNzI1M2RjYmVkMzlmMzRhNzUifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vcHJvamVjdG1lZXRpbmctMTgzNzA2IiwibmFtZSI6IkplcnJ5IEppbmdsZXMiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tLy1GNFZiUW5YYURuYy9BQUFBQUFBQUFBSS9BQUFBQUFBQUFGOC9rRFVoVmotNkFWZy9zOTYtYy9waG90by5qcGciLCJhdWQiOiJwcm9qZWN0bWVldGluZy0xODM3MDYiLCJhdXRoX3RpbWUiOjE1MTIxNjg4NDYsInVzZXJfaWQiOiJkWHdmZDZ1aXlaUjV4aWlCbzF4ZlBXWUFGMUMyIiwic3ViIjoiZFh3ZmQ2dWl5WlI1eGlpQm8xeGZQV1lBRjFDMiIsImlhdCI6MTUxMjE3MjIxNiwiZXhwIjoxNTEyMTc1ODE2LCJlbWFpbCI6ImplcnJ5dm9uamluZ2xlc0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJnb29nbGUuY29tIjpbIjExNDEwMTI5ODE2MDU2MDIzNTgzMSJdLCJlbWFpbCI6WyJqZXJyeXZvbmppbmdsZXNAZ21haWwuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoiZ29vZ2xlLmNvbSJ9fQ.RMAzrCJB-ADEfgHnLtZtuBmDQ9rdCNMbg0btJ881lePXLSZgeq0oN52NjlSX_cfig85jm5HdO8Tu-Ws5E_q2Gavf-ypT7UwIiAjWAQp-G4xc-tCtS-AD2-fS2rD8Inh9mjzKt-tPQOrDojlPW-vvNYKbkLjnqGgsooBggSB7lfx1cv5t5FPIQr4EHfsoyuRqma7MhI4-cqkQ2BDlMiRF7DqIY90oY2ERFT-uHga3pIhvGvCDJD11spkKmR67XqwzrHthZOr4IDqKe-x2eDQrH_Jzio7CRMYzJHK62MIrYrfitB3xEbgHqWyNwG0_hEqZoaogTAUbwOl_IZpB_kuIEg")
+                        .setFirebaseToken(prefs.getString("FirebaseToken",null))
                         .build();
 
                 intent.putExtra("meeting", meeting);
@@ -552,6 +556,7 @@ public class MainActivity extends AppCompatActivity
                                                     Context.MODE_PRIVATE);
                                             SharedPreferences.Editor editor = settings.edit();
                                             editor.putString("uID",user.getUid());
+                                            editor.putString("DisplayName",user.getDisplayName());
                                             editor.apply();
                                         }
 

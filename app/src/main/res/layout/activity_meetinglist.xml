@@ -31,17 +31,6 @@
         android:text="@string/current_meetings"
         android:layout_below="@id/Invites"/>
 
-    <!--<fragment-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"/>-->
-
-    <TextView
-        android:id="@+id/upcomingMeetings"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/upcoming_meetings"
-        android:layout_below="@id/currentMeetings"/>
-
     <fragment
         android:id="@+id/fragment1"
         android:name="edu.calbaptist.android.projectmeetings.CurrentMeetingsFragment"
@@ -49,16 +38,7 @@
         android:layout_height="match_parent"
         android:layout_below="@id/currentMeetings" />
 
-    <TextView
-        android:id="@+id/PastMeetings"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/past_meetings"
-        android:layout_below="@id/upcomingMeetings"/>
 
-    <!--<fragment-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"/>-->
 
 
 </RelativeLayout>
