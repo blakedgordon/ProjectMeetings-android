@@ -1,5 +1,6 @@
 package edu.calbaptist.android.projectmeetings;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.content.Intent;
@@ -104,10 +105,12 @@ public class MeetingActivity extends AppCompatActivity {
     private boolean mStartRecording = false;
     private static String mFilePath;
 
-    // Requesting permission to RECORD_AUDIO
+    // Requesting permission to RECORD_AUDIO and CAMERA
     private boolean permissionToRecordAccepted = false;
-    private String [] permissions = {android.Manifest.permission.RECORD_AUDIO};
-    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
+    private boolean permissionToTakePhotos = false;
+    private String [] permissions = {android.Manifest.permission.RECORD_AUDIO,
+                                        Manifest.permission.CAMERA};
+    private static final int REQUEST_MULTIPLE_PERMISSION = 200;
     private static final String LOG_TAG = "AudioRecord";
 
     private static final int CAMERA_REQUEST = 1888;
@@ -183,7 +186,7 @@ public class MeetingActivity extends AppCompatActivity {
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mPagerAdapter);
 
-        ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
+        ActivityCompat.requestPermissions(this, permissions, REQUEST_MULTIPLE_PERMISSION);
 
         mRecordButton = findViewById(R.id.recording_button);
         mRecordButton.setOnClickListener(new View.OnClickListener() {
@@ -279,11 +282,12 @@ public class MeetingActivity extends AppCompatActivity {
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode){
-            case REQUEST_RECORD_AUDIO_PERMISSION:
+            case REQUEST_MULTIPLE_PERMISSION:
                 permissionToRecordAccepted  = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                permissionToTakePhotos = grantResults[1] == PackageManager.PERMISSION_GRANTED;
                 break;
         }
-        if (!permissionToRecordAccepted ) finish();
+        if (!permissionToRecordAccepted && !permissionToTakePhotos ) finish();
     }
 
     /**
