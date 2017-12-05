@@ -100,7 +100,7 @@ public class MeetingActivity extends AppCompatActivity {
     private ImageButton buttonSendMessage;
     private int animIndex = 0;
 
-    private Button mRecordButton;
+    private MenuItem mRecordButton;
     private MediaRecorder mMediaRecorder;
     private boolean mStartRecording = false;
     private static String mFilePath;
@@ -170,7 +170,6 @@ public class MeetingActivity extends AppCompatActivity {
                 if(!started && user.getUid().equals(meeting.getUid())) {
                     try {
                         channel.push("start_meeting", null);
-                        mRecordButton.setVisibility(View.VISIBLE);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -187,14 +186,6 @@ public class MeetingActivity extends AppCompatActivity {
         mViewPager.setAdapter(mPagerAdapter);
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_MULTIPLE_PERMISSION);
-
-        mRecordButton = findViewById(R.id.recording_button);
-        mRecordButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                recordPressed(mStartRecording);
-            }
-        });
 
         buttonApplause = (ImageButton) findViewById(R.id.button_applause);
         applauseIcons[0] = R.id.applause_icon_1;
@@ -570,9 +561,6 @@ public class MeetingActivity extends AppCompatActivity {
                                             initialTimePassed = envelope.getPayload()
                                                     .get("response").get("time_passed").asLong();
                                             startTimer(meeting.getTimeLimit());
-                                            if(user.getUid().equals(meeting.getUid())) {
-                                                mRecordButton.setVisibility(View.VISIBLE);
-                                            }
                                         } else {
                                             long minutes = timeLimit / 60000;
                                             long seconds = (timeLimit % 60000) / 1000;
@@ -787,6 +775,9 @@ public class MeetingActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_meeting, menu);
 
+        mRecordButton = menu.findItem(R.id.record);
+        mRecordButton.setVisible(user.getUid().equals(meeting.getUid()));
+
         return true;
     }
 
@@ -813,6 +804,9 @@ public class MeetingActivity extends AppCompatActivity {
                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
                     }
                 }
+                return true;
+            case R.id.record:
+                recordPressed(mStartRecording);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -842,6 +836,11 @@ public class MeetingActivity extends AppCompatActivity {
             java.io.File image = new java.io.File(mCurrentPhotoPath);
             try {
                 DriveFiles.getInstance().uploadFileToDrive(image, mCurrentPhotoName, "image/jpeg");
+
+                ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
+                        .put("msg", user.getDisplayName() + " uploaded a photo to Google Drive!");
+
+                channel.push("msg", node);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -850,8 +849,6 @@ public class MeetingActivity extends AppCompatActivity {
 
     private void recordPressed(boolean recording) {
         if (!recording) {
-            mRecordButton.setText(R.string.stop_recording);
-
             Calendar c = Calendar.getInstance();
             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
             String formattedDate = df.format(c.getTime());
@@ -864,6 +861,8 @@ public class MeetingActivity extends AppCompatActivity {
             mMediaRecorder.setOutputFile(mFilePath);
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
 
+            mRecordButton.setIcon(R.drawable.ic_stop_recording);
+
             try {
                 mMediaRecorder.prepare();
             } catch (IOException e) {
@@ -874,7 +873,7 @@ public class MeetingActivity extends AppCompatActivity {
 
             mStartRecording = true;
         } else {
-            mRecordButton.setText(R.string.start_recording);
+            mRecordButton.setIcon(R.drawable.ic_start_recording);
             mMediaRecorder.stop();
             mMediaRecorder.release();
             mMediaRecorder = null;
@@ -887,6 +886,12 @@ public class MeetingActivity extends AppCompatActivity {
             File uploadFile = new File(mFilePath);
             try {
                 DriveFiles.getInstance().uploadFileToDrive(uploadFile, fileName, "audio/x-aac");
+
+                ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
+                        .put("msg", user.getDisplayName()
+                                + " uploaded an audio recording to Google Drive!");
+
+                channel.push("msg", node);
             } catch (Exception e) {
                 e.printStackTrace();
             }
