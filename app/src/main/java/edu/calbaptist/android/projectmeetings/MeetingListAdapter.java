@@ -97,12 +97,12 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
 
             int hours = totalMinutes/60;
             if(hours > 0) {
-                builder.append(hours + "h ");
+                builder.append(hours).append("h ");
             }
 
             int minutes = totalMinutes % 60;
             if(minutes > 0) {
-                builder.append(minutes + "m");
+                builder.append(minutes).append("m");
             }
 
             textTime.setText(builder.toString());
@@ -112,7 +112,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
     }
 
     public static class ViewHolder {
-        public static ImageView mDriveButton;
-        public static ImageView mEditButton;
+        public ImageView mDriveButton;
+        public ImageView mEditButton;
     }
 }

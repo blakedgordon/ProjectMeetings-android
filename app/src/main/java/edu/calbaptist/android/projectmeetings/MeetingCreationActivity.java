@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -74,7 +75,9 @@ public class MeetingCreationActivity extends AppCompatActivity{
             @Override
             public void onClick(View v){
                 Calendar calendar = Calendar.getInstance();
-                calendar.set(date.getYear(), date.getMonth(), date.getDayOfMonth(), time.getHour(), time.getMinute());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    calendar.set(date.getYear(), date.getMonth(), date.getDayOfMonth(), time.getHour(), time.getMinute());
+                }
                 final long millis = calendar.getTimeInMillis();
                 final long mLength = Long.parseLong(length.getText().toString())*60*1000;
                 createMeeting(millis, mLength);

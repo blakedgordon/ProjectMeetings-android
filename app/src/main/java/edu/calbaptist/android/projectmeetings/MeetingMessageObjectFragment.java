@@ -25,6 +25,7 @@ public class MeetingMessageObjectFragment extends Fragment {
                 R.layout.fragment_meeting_message_object, container, false);
         Bundle args = getArguments();
         MeetingMessage message = (MeetingMessage) args.getSerializable(MEETING_OBJECT);
+        assert message != null;
         ((TextView) rootView.findViewById(R.id.message_item_text)).setText(message.getMsg());
         return rootView;
     }
