@@ -48,9 +48,7 @@ public class CurrentMeetingsFragment extends ListFragment {
         buildMeetings();
     }
 
-
-
-    private ArrayList<Meeting> buildMeetings(){
+    private void buildMeetings(){
         String uId = prefs.getString("uID",null);
         final ArrayList<Meeting> meetings = new ArrayList<>();
 
@@ -94,13 +92,11 @@ public class CurrentMeetingsFragment extends ListFragment {
                 }
             }
 
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
             }
         });
-        return meetings;
     }
 
     private String unixToDateTime(Long unix){

@@ -27,11 +27,11 @@ import java.util.Date;
 public class MeetingListAdapter extends ArrayAdapter<Meeting> {
     final static String TAG = "MeetingLstAdapter";
 
-    final static SharedPreferences prefs = App.context.getSharedPreferences(
+    private final static SharedPreferences prefs = App.context.getSharedPreferences(
             "edu.calbaptist.android.projectmeetings.Account_Name",
             Context.MODE_PRIVATE);
 
-    ArrayList<Meeting> meetings;
+    private ArrayList<Meeting> meetings;
 
     public MeetingListAdapter(@NonNull Context context, ArrayList<Meeting> meetings) {
         super(context, 0, meetings);
@@ -129,8 +129,8 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
     }
 
     public static class ViewHolder {
-        public static RelativeLayout mItemMeeting;
-        public static ImageView mDriveButton;
-        public static ImageView mEditButton;
+        public RelativeLayout mItemMeeting;
+        public ImageView mDriveButton;
+        public ImageView mEditButton;
     }
 }
