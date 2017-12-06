@@ -1,9 +1,11 @@
 package edu.calbaptist.android.projectmeetings;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -15,6 +17,8 @@ import android.widget.TimePicker;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
+
 import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
 
 /**
@@ -22,6 +26,7 @@ import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
  */
 
 public class EditMeetingActivity extends AppCompatActivity {
+    Meeting meeting;
 
     EditText MeetingName, MeetingObjective, length;
     DatePicker date;
@@ -32,23 +37,43 @@ public class EditMeetingActivity extends AppCompatActivity {
             "edu.calbaptist.android.projectmeetings.Account_Name",
             Context.MODE_PRIVATE);
 
+    @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_meeting_creation);
 
-        MeetingName = findViewById(R.id.MeetingName);
-        MeetingObjective = findViewById(R.id.MeetingObjective);
-        date = findViewById(R.id.Date);
-        time = findViewById(R.id.Time);
-        submit = findViewById(R.id.Submit);
-        length = findViewById(R.id.Length);
+        meeting = (Meeting) getIntent().getExtras().getSerializable("meeting");
 
+        MeetingName = findViewById(R.id.MeetingName);
+        MeetingName.setText(meeting.getName());
+
+        MeetingObjective = findViewById(R.id.MeetingObjective);
+        MeetingObjective.setText(meeting.getObjective());
+
+        date = findViewById(R.id.Date);
+
+        Date mDate = new Date(meeting.getTime());
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(mDate);
+        date.updateDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+
+        time = findViewById(R.id.Time);
+        time.setHour(mDate.getHours());
+        time.setMinute(mDate.getMinutes());
+
+        length = findViewById(R.id.Length);
+        length.setText(String.valueOf(meeting.getTimeLimit()/60000));
+
+        submit = findViewById(R.id.Submit);
         submit.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
                 Calendar calendar = Calendar.getInstance();
-                calendar.set(date.getYear(), date.getMonth(), date.getDayOfMonth(), time.getHour(), time.getMinute());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    calendar.set(date.getYear(), date.getMonth(), date.getDayOfMonth(), time.getHour(), time.getMinute());
+                }
                 final long millis = calendar.getTimeInMillis();
                 final long mLength = Long.parseLong(length.getText().toString())*60*1000;
                 editMeeting(millis, mLength);

@@ -1,27 +1,14 @@
 package edu.calbaptist.android.projectmeetings;
 
-import android.app.Fragment;
 import android.app.ListFragment;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -32,20 +19,14 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
 
 /**
  * Created by Austin on 12/1/2017.
  */
 
-public class CurrentMeetingsFragment extends ListFragment
-        implements AdapterView.OnItemClickListener{
+public class CurrentMeetingsFragment extends ListFragment {
 
     private static final String TAG = "CurrentMeetingsFragment";
     final static SharedPreferences prefs = App.context.getSharedPreferences(
@@ -62,34 +43,7 @@ public class CurrentMeetingsFragment extends ListFragment
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
         buildMeetings();
-        getListView().setOnItemClickListener(this);
-        getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            public boolean onItemLongClick(AdapterView<?> av, View v, int position, long id) {
-                List<Meeting> MeetingList = new ArrayList(meetingHashMap.values()); // convert hashmap to array
-                Meeting m = MeetingList.get(position);
-                Intent intent = new Intent(getActivity(), EditMeetingActivity.class);
-                intent.putExtra("meetingID", m.getMid());
-                startActivity(intent);
-                return true;
-            }
-        });
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        List<Meeting> MeetingList = new ArrayList(meetingHashMap.values()); // convert hashmap to array
-        Meeting m = MeetingList.get(position);
-        Intent intent = new Intent(getActivity(), MeetingActivity.class);
-        intent.putExtra("meeting", m);
-        User user = new User.UserBuilder()
-                .setUid(prefs.getString("uID",null))
-                .setDisplayName(prefs.getString("DisplayName",null))
-                .setFirebaseToken(prefs.getString("FirebaseToken",null))
-                .build();
-        intent.putExtra("user",user);
-        startActivity(intent);
     }
 
 
@@ -126,7 +80,7 @@ public class CurrentMeetingsFragment extends ListFragment
                             unixToDateTime(m.getTime());
                     meetingHashMap.put(name, m);
                 }
-                ArrayAdapter adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, meetingHashMap.keySet().toArray());
+                ArrayAdapter adapter = new MeetingListAdapter(getActivity(), meetings);
                 setListAdapter(adapter);
             }
 
