@@ -289,8 +289,6 @@ public class MainActivity extends AppCompatActivity
 
             assert user != null;
             prefs.edit().putString("gToken", user.getIdToken()).apply();
-
-            startActivity(new Intent(this, FolderViewActivity.class));
         } else {
             statusTextView.setText("Sign in w/ Google failed :(");
         }
@@ -398,6 +396,13 @@ public class MainActivity extends AppCompatActivity
                                             editor.putString("DisplayName",user.getDisplayName());
                                             editor.putString("email",user.getEmail());
                                             editor.apply();
+
+                                            final SharedPreferences prefs = App.context.getSharedPreferences(
+                                                    "edu.calbaptist.android.projectmeetings.Account_Name",
+                                                    Context.MODE_PRIVATE);
+                                            Log.d(TAG, "onTaskExecuted: " + prefs.getString("uID", null));
+
+                                            startActivity(new Intent(getApplicationContext(), FolderViewActivity.class));
                                         }
 
                                         @Override

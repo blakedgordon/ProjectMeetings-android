@@ -10,7 +10,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -18,7 +17,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.FirebaseInstanceIdInternalReceiver;
 
 import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
 
@@ -53,7 +51,7 @@ public class MeetingListActivity extends AppCompatActivity{
     }
 
     private void stashToken(){
-        FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+        final FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
         mUser.getToken(true)
                 .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
                     public void onComplete(@NonNull Task<GetTokenResult> task) {
@@ -69,6 +67,7 @@ public class MeetingListActivity extends AppCompatActivity{
                                 @Override
                                 public void run() {
                                     String uID = prefs.getString("uID",null);
+                                    Log.d(TAG, "run: " + uID);
                                     final String firebaseToken = prefs.getString("FirebaseToken",null);
                                     RestClient.getUserByUid(uID, firebaseToken, new Callback.RestClientUser() {
                                         @Override
