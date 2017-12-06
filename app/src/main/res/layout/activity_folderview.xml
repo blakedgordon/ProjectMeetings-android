@@ -6,18 +6,11 @@
     android:layout_height="match_parent"
     tools:context="edu.calbaptist.android.projectmeetings.FolderViewActivity">
 
-    <TextView
-        android:id="@+id/SelectFolder"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/selectFolders" />
-
     <Button
         android:id="@+id/CreateFolder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/create_folder"
-        android:layout_below="@id/SelectFolder" />
+        android:text="@string/create_folder"/>
 
     <fragment
         android:id="@+id/fragment1"
@@ -25,6 +18,5 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/CreateFolder" />
-
 
 </RelativeLayout>

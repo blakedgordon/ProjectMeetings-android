@@ -23,6 +23,8 @@
     <string name="length">Enter length of meeting in minutes</string>
     <string name="submit">Submit</string>
     <string name="createMeeting">Create Meeting</string>
+    <string name="noMeetingsFound">No meetings found!</string>
+    <string name="tableFlip">(ノ°Д°）ノ︵ ┻━┻</string>
     <string name="invites">You\'ve been invited to some meetings</string>
     <string name="http_endpoint">http://ec2-34-226-155-228.compute-1.amazonaws.com:8080</string>
     <string name="ws_endpoint">ws://ec2-34-226-155-228.compute-1.amazonaws.com:8080/socket/websocket</string>

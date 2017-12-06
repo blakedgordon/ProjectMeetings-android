@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -28,7 +29,7 @@ import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
 public class MeetingListActivity extends AppCompatActivity{
 
     private static final String TAG = "MeetingListActivity";
-    private Button newMeeting;
+    private FloatingActionButton newMeeting;
     final static SharedPreferences prefs = App.context.getSharedPreferences(
             "edu.calbaptist.android.projectmeetings.Account_Name",
             Context.MODE_PRIVATE);
@@ -45,7 +46,6 @@ public class MeetingListActivity extends AppCompatActivity{
                 switchActivity(MeetingCreationActivity.class);
             }
         });
-
     }
 
     private void switchActivity(Class activity){

@@ -8,6 +8,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -75,13 +77,21 @@ public class CurrentMeetingsFragment extends ListFragment {
                     }
                 }
 
-                for(Meeting m : meetings){
-                    String name = m.getName() + "\n" + m.getObjective() +  "\n" +
-                            unixToDateTime(m.getTime());
-                    meetingHashMap.put(name, m);
+                ProgressBar spinner = (ProgressBar) getActivity().findViewById(R.id.loadingMeetingsSpinner);
+                spinner.setVisibility(View.GONE);
+
+                if(meetings.size() > 0) {
+                    for(Meeting m : meetings){
+                        String name = m.getName() + "\n" + m.getObjective() +  "\n" +
+                                unixToDateTime(m.getTime());
+                        meetingHashMap.put(name, m);
+                    }
+                    ArrayAdapter adapter = new MeetingListAdapter(getActivity(), meetings);
+                    setListAdapter(adapter);
+                } else {
+                    RelativeLayout rel = getActivity().findViewById(R.id.no_meetings);
+                    rel.setVisibility(View.VISIBLE);
                 }
-                ArrayAdapter adapter = new MeetingListAdapter(getActivity(), meetings);
-                setListAdapter(adapter);
             }
 
 
