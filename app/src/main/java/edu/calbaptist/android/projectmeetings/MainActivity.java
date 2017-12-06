@@ -339,7 +339,6 @@ public class MainActivity extends AppCompatActivity
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount user = result.getSignInAccount();
             firebaseAuthWithGoogle(user);
-            createUser(user.getDisplayName(), user.getEmail(), user.getIdToken());
 
             prefs.edit().putString("gToken", user.getIdToken()).apply();
 
@@ -349,7 +348,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+    private void firebaseAuthWithGoogle(final GoogleSignInAccount acct) {
         Log.d(TAG, "Google Token:" + acct.getId() + " " + acct.getIdToken());
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
@@ -360,7 +359,7 @@ public class MainActivity extends AppCompatActivity
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential: success");
-                            FirebaseUser user = mAuth.getCurrentUser();
+                            final FirebaseUser user = mAuth.getCurrentUser();
                             statusTextView.setText("Hello, " + user.getDisplayName());
 
                             FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -371,6 +370,14 @@ public class MainActivity extends AppCompatActivity
                                                 String idToken = task.getResult().getToken();
 
                                                 Log.d(TAG, "Firebase Token: " + idToken);
+
+                                                try {
+                                                    createUser(acct.getDisplayName(), acct.getEmail(), acct.getIdToken());
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
+                                                } catch (GoogleAuthException e) {
+                                                    e.printStackTrace();
+                                                }
                                                 // Send token to your backend via HTTPS
                                                 // ...
                                             } else {
