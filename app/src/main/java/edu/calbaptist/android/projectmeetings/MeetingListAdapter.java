@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
@@ -47,6 +48,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
             rowView = LayoutInflater.from(getContext())
                     .inflate(R.layout.item_meeting, parent, false);
             ViewHolder h = new ViewHolder();
+            h.mItemMeeting = (RelativeLayout) rowView.findViewById(R.id.item_meeting);
             h.mDriveButton = (ImageView) rowView.findViewById(R.id.drive_button);
             h.mEditButton = (ImageView) rowView.findViewById(R.id.edit_button);
             rowView.setTag(h);
@@ -55,6 +57,21 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
         ViewHolder h = (ViewHolder) rowView.getTag();
 
         final Meeting meeting = meetings.get(position);
+
+        h.mItemMeeting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getContext(), MeetingActivity.class);
+                intent.putExtra("meeting", meeting);
+                User user = new User.UserBuilder()
+                        .setUid(prefs.getString("uID",null))
+                        .setDisplayName(prefs.getString("DisplayName",null))
+                        .setFirebaseToken(prefs.getString("FirebaseToken",null))
+                        .build();
+                intent.putExtra("user",user);
+                getContext().startActivity(intent);
+            }
+        });
 
         h.mDriveButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -112,6 +129,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
     }
 
     public static class ViewHolder {
+        public static RelativeLayout mItemMeeting;
         public static ImageView mDriveButton;
         public static ImageView mEditButton;
     }
