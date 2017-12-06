@@ -1,11 +1,9 @@
 package edu.calbaptist.android.projectmeetings;
 
-import android.Manifest;
 import android.accounts.AccountManager;
 import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,7 +12,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -36,12 +33,8 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.FileList;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -59,18 +52,12 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.ChooseAccountException;
-import edu.calbaptist.android.projectmeetings.Exceptions.GooglePlayServicesAvailabilityException;
-import edu.calbaptist.android.projectmeetings.Exceptions.RequestPermissionException;
 import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
-import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
     GoogleAccountCredential mCredential;
     private TextView mOutputText;
-    private Button mCallApiButton;
-    ProgressDialog mProgress;
 
     private SignInButton signInButton;
     private Button signOutButton;
@@ -86,7 +73,6 @@ public class MainActivity extends AppCompatActivity
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
-    private static final String BUTTON_TEXT = "Call Drive API";
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA_READONLY };
 
@@ -105,9 +91,6 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         //auto sign in
-        SharedPreferences prefs = App.context.getSharedPreferences(
-                "edu.calbaptist.android.projectmeetings.Account_Name",
-                Context.MODE_PRIVATE);
         if(prefs.getBoolean("isSignedIn",false)){
             if(prefs.getString("DefaultFolder",null) != null){
                 Intent transfer = new Intent(this, MeetingListActivity.class);
@@ -141,28 +124,12 @@ public class MainActivity extends AppCompatActivity
         signOutButton = (Button) findViewById(R.id.sign_out_button);
         signOutButton.setOnClickListener(this);
 
-        mCallApiButton = (Button) findViewById(R.id.call_api_button);
-        mCallApiButton.setText(BUTTON_TEXT);
-        mCallApiButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCallApiButton.setEnabled(false);
-                mOutputText.setText("");
-                new MakeRequestTask().execute();
-                mCallApiButton.setEnabled(true);
-            }
-        });
-
 
         meetingActivityButton = (Button) findViewById(R.id.meeting_activity_button);
         meetingActivityButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, MeetingActivity.class);
-
-                SharedPreferences prefs = App.context.getSharedPreferences(
-                        "edu.calbaptist.android.projectmeetings.Account_Name",
-                        Context.MODE_PRIVATE);
 
                 Meeting meeting = new Meeting.MeetingBuilder()
                         .setMid("357f2278-6aa3-48a0-b870-8cb938d51194")
@@ -192,11 +159,6 @@ public class MainActivity extends AppCompatActivity
         mOutputText = (TextView) findViewById(R.id.output_text);
         mOutputText.setVerticalScrollBarEnabled(true);
         mOutputText.setMovementMethod(new ScrollingMovementMethod());
-        mOutputText.setText(
-                "Click the \'" + BUTTON_TEXT +"\' button to test the API.");
-
-        mProgress = new ProgressDialog(this);
-        mProgress.setMessage("Calling Drive API ...");
 
         // Initialize credentials and service object.
         mCredential = GoogleAccountCredential.usingOAuth2(
@@ -213,6 +175,7 @@ public class MainActivity extends AppCompatActivity
             String channelName = getString(R.string.notification_channel_name);
             NotificationManager notificationManager =
                     getSystemService(NotificationManager.class);
+            assert notificationManager != null;
             notificationManager.createNotificationChannel(new NotificationChannel(channelId,
                     channelName, NotificationManager.IMPORTANCE_LOW));
         }
@@ -257,13 +220,10 @@ public class MainActivity extends AppCompatActivity
 
     private void signIn() {
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        SharedPreferences settings = App.context.getSharedPreferences(
-                "edu.calbaptist.android.projectmeetings.Account_Name",
-                Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = settings.edit();
+        SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean("isSignedIn", true);
         editor.apply();
-        if (settings.getString(PREF_ACCOUNT_NAME, null) == null) {
+        if (prefs.getString(PREF_ACCOUNT_NAME, null) == null) {
             startActivityForResult(
                     mCredential.newChooseAccountIntent(),
                     REQUEST_ACCOUNT_PICKER);
@@ -292,9 +252,7 @@ public class MainActivity extends AppCompatActivity
                 GoogleSignInResult acct = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
                 try {
                     handleSignInResult(acct);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (GoogleAuthException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 break;
@@ -303,8 +261,6 @@ public class MainActivity extends AppCompatActivity
                     mOutputText.setText(
                             "This app requires Google Play Services. Please install " +
                                     "Google Play Services on your device and relaunch this app.");
-                } else {
-                    new MakeRequestTask().execute();
                 }
                 break;
             case REQUEST_ACCOUNT_PICKER:
@@ -313,21 +269,12 @@ public class MainActivity extends AppCompatActivity
                     String accountName =
                             data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
                     if (accountName != null) {
-                        SharedPreferences settings = App.context.getSharedPreferences(
-                                "edu.calbaptist.android.projectmeetings.Account_Name",
-                                Context.MODE_PRIVATE);
-                        SharedPreferences.Editor editor = settings.edit();
+                        SharedPreferences.Editor editor = prefs.edit();
                         editor.putString(PREF_ACCOUNT_NAME, accountName);
                         editor.putBoolean("isSignedIn", true);
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
-                        new MakeRequestTask().execute();
                     }
-                }
-                break;
-            case REQUEST_AUTHORIZATION:
-                if (resultCode == RESULT_OK) {
-                    new MakeRequestTask().execute();
                 }
                 break;
         }
@@ -340,6 +287,7 @@ public class MainActivity extends AppCompatActivity
             GoogleSignInAccount user = result.getSignInAccount();
             firebaseAuthWithGoogle(user);
 
+            assert user != null;
             prefs.edit().putString("gToken", user.getIdToken()).apply();
 
             startActivity(new Intent(this, FolderViewActivity.class));
@@ -363,6 +311,7 @@ public class MainActivity extends AppCompatActivity
                             statusTextView.setText("Hello, " + user.getDisplayName());
 
                             FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+                            assert mUser != null;
                             mUser.getToken(true)
                                     .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
                                         public void onComplete(@NonNull Task<GetTokenResult> task) {
@@ -373,19 +322,12 @@ public class MainActivity extends AppCompatActivity
 
                                                 try {
                                                     createUser(acct.getDisplayName(), acct.getEmail(), acct.getIdToken());
-                                                } catch (IOException e) {
-                                                    e.printStackTrace();
-                                                } catch (GoogleAuthException e) {
+                                                } catch (Exception e) {
                                                     e.printStackTrace();
                                                 }
-                                                // Send token to your backend via HTTPS
-                                                // ...
-                                            } else {
-                                                // Handle error -> task.getException();
                                             }
                                         }
                                     });
-//                            updateUI(user);
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
@@ -393,10 +335,7 @@ public class MainActivity extends AppCompatActivity
                                     Toast.LENGTH_SHORT).show();
 
                             statusTextView.setText("Authentication with Firebase failed :(");
-//                            updateUI(null);
                         }
-
-                        // ...
                     }
                 });
     }
@@ -431,114 +370,10 @@ public class MainActivity extends AppCompatActivity
         dialog.show();
     }
 
-    /**
-     * An asynchronous task that handles the Drive API call.
-     * Placing the API calls in their own task ensures the UI stays responsive.
-     */
-    private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
-        private com.google.api.services.drive.Drive mService = null;
-        private Exception mLastError = null;
-
-        MakeRequestTask() {
-            try {
-                mService = DriveFiles.getInstance().getDriveService();
-            } catch (GooglePlayServicesAvailabilityException e) {
-                showGooglePlayServicesAvailabilityErrorDialog(e.connectionStatusCode);
-            } catch (ChooseAccountException e) {
-                startActivityForResult(
-                        mCredential.newChooseAccountIntent(),
-                        REQUEST_ACCOUNT_PICKER);
-            } catch (RequestPermissionException e) {
-                EasyPermissions.requestPermissions(
-                        MainActivity.this,
-                        "This app needs to access your Google account (via Contacts).",
-                        REQUEST_PERMISSION_GET_ACCOUNTS,
-                        Manifest.permission.GET_ACCOUNTS);
-            }
-        }
-
-        /**
-         * Background task to call Drive API.
-         * @param params no parameters needed for this task.
-         */
-        @Override
-        protected List<String> doInBackground(Void... params) {
-            try {
-                return getDataFromApi();
-            } catch (Exception e) {
-                mLastError = e;
-                e.printStackTrace();
-                cancel(true);
-                return null;
-            }
-        }
-
-        /**
-         * Fetch a list of up to 10 file names and IDs.
-         * @return List of Strings describing files, or an empty list if no files
-         *         found.
-         * @throws IOException
-         */
-        private List<String> getDataFromApi() throws IOException {
-            // Get a list of up to 10 files.
-            List<String> fileInfo = new ArrayList<String>();
-            FileList result = mService.files().list()
-                    .setPageSize(10)
-                    .setFields("nextPageToken, files(id, name)")
-                    .execute();
-            List<File> files = result.getFiles();
-            if (files != null) {
-                for (File file : files) {
-                    fileInfo.add(String.format("%s (%s)\n",
-                            file.getName(), file.getId()));
-                }
-            }
-            return fileInfo;
-        }
-
-
-        @Override
-        protected void onPreExecute() {
-            mOutputText.setText("");
-            mProgress.show();
-        }
-
-        @Override
-        protected void onPostExecute(List<String> output) {
-            mProgress.hide();
-            if (output == null || output.size() == 0) {
-                mOutputText.setText("No results returned.");
-            } else {
-                output.add(0, "Data retrieved using the Drive API:");
-                mOutputText.setText(TextUtils.join("\n", output));
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            mProgress.hide();
-            if (mLastError != null) {
-                if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
-                    showGooglePlayServicesAvailabilityErrorDialog(
-                            ((GooglePlayServicesAvailabilityIOException) mLastError)
-                                    .getConnectionStatusCode());
-                } else if (mLastError instanceof UserRecoverableAuthIOException) {
-                    startActivityForResult(
-                            ((UserRecoverableAuthIOException) mLastError).getIntent(),
-                            MainActivity.REQUEST_AUTHORIZATION);
-                } else {
-                    mOutputText.setText("The following error occurred:\n"
-                            + mLastError.getMessage());
-                }
-            } else {
-                mOutputText.setText("Request cancelled.");
-            }
-        }
-    }
-
     private void createUser(final String displayName, final String email, final String gToken) throws IOException, GoogleAuthException {
 
         FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+        assert mUser != null;
         mUser.getToken(true)
                 .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
                     public void onComplete(@NonNull Task<GetTokenResult> task) {
@@ -558,10 +393,7 @@ public class MainActivity extends AppCompatActivity
                                         @Override
                                         void onTaskExecuted(User user) {
                                             Log.d(TAG, "onTaskExecuted: " + user.getDisplayName());
-                                            SharedPreferences settings = App.context.getSharedPreferences(
-                                                    "edu.calbaptist.android.projectmeetings.Account_Name",
-                                                    Context.MODE_PRIVATE);
-                                            SharedPreferences.Editor editor = settings.edit();
+                                            SharedPreferences.Editor editor = prefs.edit();
                                             editor.putString("uID",user.getUid());
                                             editor.putString("DisplayName",user.getDisplayName());
                                             editor.putString("email",user.getEmail());
@@ -583,10 +415,6 @@ public class MainActivity extends AppCompatActivity
                             });
 
                             Log.d(TAG, "Firebase Token: " + idToken);
-                            // Send token to your backend via HTTPS
-                            // ...
-                        } else {
-                            // Handle error -> task.getException();
                         }
                     }
                 });
