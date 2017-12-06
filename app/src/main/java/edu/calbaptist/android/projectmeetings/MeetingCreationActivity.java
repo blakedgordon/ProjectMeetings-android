@@ -38,6 +38,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
 
@@ -50,7 +51,7 @@ import static edu.calbaptist.android.projectmeetings.MainActivity.prefs;
 
 public class MeetingCreationActivity extends AppCompatActivity{
 
-    EditText MeetingName, MeetingObjective, length;
+    EditText MeetingName, MeetingObjective, length, invites;
     DatePicker date;
     TimePicker time;
     Button submit;
@@ -69,6 +70,7 @@ public class MeetingCreationActivity extends AppCompatActivity{
         time = findViewById(R.id.Time);
         submit = findViewById(R.id.Submit);
         length = findViewById(R.id.Length);
+        invites = findViewById(R.id.Invites);
 
         submit.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -94,8 +96,7 @@ public class MeetingCreationActivity extends AppCompatActivity{
                                     "edu.calbaptist.android.projectmeetings.Account_Name",
                                     Context.MODE_PRIVATE);
 
-                            //TODO: Add actual invitation functionality
-                            ArrayList<String> invites = new ArrayList<String>(Arrays.asList(new String[]{"austin@gmail.com", "blake@gmail.com"}));
+                            ArrayList items = new ArrayList<String>(Arrays.asList(invites.getText().toString().split("\\s*,\\s*")));
 
                             final Meeting meeting = new Meeting.MeetingBuilder()
                                     .setName(MeetingName.getText().toString())
@@ -103,7 +104,7 @@ public class MeetingCreationActivity extends AppCompatActivity{
                                     .setTime(millis)
                                     .setTimeLimit(mLength)
                                     .setDriveFolderId(prefs.getString("DefaultFolder", ""))
-                                    .setInvites(invites)
+                                    .setInvites(items)
                                     .build();
 
                             AsyncTask.execute(new Runnable() {

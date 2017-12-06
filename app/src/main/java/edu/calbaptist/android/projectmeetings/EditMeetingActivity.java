@@ -28,7 +28,7 @@ import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
 public class EditMeetingActivity extends AppCompatActivity {
     Meeting meeting;
 
-    EditText MeetingName, MeetingObjective, length;
+    EditText MeetingName, MeetingObjective, length, invites;
     DatePicker date;
     TimePicker time;
     Button submit;
@@ -47,6 +47,8 @@ public class EditMeetingActivity extends AppCompatActivity {
 
         MeetingName = findViewById(R.id.MeetingName);
         MeetingName.setText(meeting.getName());
+
+        invites = findViewById(R.id.Invites);
 
         MeetingObjective = findViewById(R.id.MeetingObjective);
         MeetingObjective.setText(meeting.getObjective());
@@ -82,8 +84,7 @@ public class EditMeetingActivity extends AppCompatActivity {
     }
 
     private void editMeeting(long millis, long mLength){
-        //TODO: Add actual invitation functionality
-        ArrayList<String> invites = new ArrayList<String>(Arrays.asList(new String[]{"austin@gmail.com", "blake@gmail.com"}));
+        ArrayList items = new ArrayList<String>(Arrays.asList(invites.getText().toString().split("\\s*,\\s*")));
         final String firebaseToken = prefs.getString("FirebaseToken",null);
         Intent intent = getIntent();
 
@@ -94,7 +95,7 @@ public class EditMeetingActivity extends AppCompatActivity {
                 .setTime(millis)
                 .setTimeLimit(mLength)
                 .setDriveFolderId(prefs.getString("DefaultFolder", ""))
-                .setInvites(invites)
+                .setInvites(items)
                 .build();
         AsyncTask.execute(new Runnable() {
             @Override

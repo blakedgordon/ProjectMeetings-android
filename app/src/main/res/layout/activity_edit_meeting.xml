@@ -51,7 +51,6 @@
             android:layout_below="@id/Date"
             android:layout_centerHorizontal="true"/>
 
-
         <EditText
             android:id="@+id/Length"
             android:layout_width="match_parent"
@@ -62,13 +61,22 @@
             android:layout_marginEnd="10dp"
             android:layout_marginStart="10dp"/>
 
+        <EditText
+            android:id="@+id/Invites"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter in emails seperated by commas"
+            android:inputType="text"
+            android:layout_below="@id/Length"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"/>
 
         <Button
             android:id="@+id/Submit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/submit"
-            android:layout_below="@id/Length"/>
+            android:layout_below="@id/Invites"/>
 
 
     </RelativeLayout>
