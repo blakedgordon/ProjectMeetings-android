@@ -114,6 +114,7 @@ public class CurrentMeetingsFragment extends ListFragment
                                 .setTimeLimit(Long.parseLong((issue.child("time_limit").getValue().toString())))
                                 .setDriveFolderId(issue.child("drive_folder_id").getValue().toString())
                                 .setMid(issue.getKey())
+                                .setUid(issue.child("u_id").getValue().toString())
                                 .setInvites(invites)
                                 .build();
                         meetings.add(m);

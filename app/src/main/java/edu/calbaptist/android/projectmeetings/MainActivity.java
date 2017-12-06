@@ -557,6 +557,7 @@ public class MainActivity extends AppCompatActivity
                                             SharedPreferences.Editor editor = settings.edit();
                                             editor.putString("uID",user.getUid());
                                             editor.putString("DisplayName",user.getDisplayName());
+                                            editor.putString("email",user.getEmail());
                                             editor.apply();
                                         }
 

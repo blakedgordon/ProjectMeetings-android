@@ -12,47 +12,56 @@
         android:layout_height="match_parent"
         tools:context="edu.calbaptist.android.projectmeetings.EditMeetingActivity">
 
-        <TextView
-            android:id="@+id/EditMeeting"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
         <EditText
             android:id="@+id/MeetingName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/meetingName"
-            android:layout_below="@id/EditMeeting"
+            android:hint="@string/meetingName"
+            android:paddingBottom="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"
             android:maxLines="1"/>
 
         <EditText
             android:id="@+id/MeetingObjective"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/meetingObjective"
+            android:hint="@string/meetingObjective"
             android:layout_below="@id/MeetingName"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"
             android:maxLines="1"/>
 
         <DatePicker
             android:id="@+id/Date"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:calendarViewShown="false"
+            android:datePickerMode="spinner"
+            android:headerBackground="@color/colorPrimaryDark"
             android:layout_below="@id/MeetingObjective"
-            android:headerBackground="@color/colorPrimaryDark" />
+            android:layout_centerHorizontal="true"/>
 
         <TimePicker
             android:id="@+id/Time"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:headerBackground="@color/colorPrimaryDark"
+            android:timePickerMode="spinner"
             android:layout_below="@id/Date"
-            android:headerBackground="@color/colorPrimaryDark"/>
+            android:layout_centerHorizontal="true"/>
+
 
         <EditText
             android:id="@+id/Length"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/length"
-            android:layout_below="@id/Time"/>
+            android:hint="@string/length"
+            android:inputType="number"
+            android:layout_below="@id/Time"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"/>
+
 
         <Button
             android:id="@+id/Submit"

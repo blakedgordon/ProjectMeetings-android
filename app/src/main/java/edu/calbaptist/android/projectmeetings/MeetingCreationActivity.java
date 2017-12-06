@@ -12,25 +12,37 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.NumberPicker;
 import android.widget.TimePicker;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.drive.model.File;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import java.io.IOException;
 import java.sql.Time;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
+
+import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_AUTHORIZATION;
+import static edu.calbaptist.android.projectmeetings.MainActivity.prefs;
 
 /**
  * Created by Austin on 12/1/2017.
@@ -43,6 +55,8 @@ public class MeetingCreationActivity extends AppCompatActivity{
     TimePicker time;
     Button submit;
     private static final String TAG = "MeetingCreationActivity";
+
+    private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_FILE };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +113,7 @@ public class MeetingCreationActivity extends AppCompatActivity{
                                         @Override
                                         void onTaskExecuted(Meeting m) {
                                             Log.d(TAG, "onTaskExecuted: " + m.getName());
-                                            switchActivity(MeetingListActivity.class);
+                                            new MeetingCreationActivity.requestCreateFolder(m.getName()).execute();
                                         }
 
                                         @Override
@@ -127,6 +141,46 @@ public class MeetingCreationActivity extends AppCompatActivity{
     }
     private void switchActivity(Class activity){
         startActivity(new Intent(this, activity));
+    }
+
+    private class requestCreateFolder extends  AsyncTask<Void, Void, Void> {
+
+        String meetingName;
+        Drive driveService;
+
+        requestCreateFolder(String meetingName){
+            this.meetingName = meetingName;
+
+            try {
+                driveService = DriveFiles.getInstance().getDriveService();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            String folderId = prefs.getString("DefaultFolder",null);
+            System.out.println(folderId + "-------------------------------------------------------------");
+            File fileMetadata = new File();
+            fileMetadata.setName(meetingName);
+            fileMetadata.setPermissionIds(Collections.singletonList(prefs.getString("email",null)));
+            fileMetadata.setMimeType("application/vnd.google-apps.folder");
+            fileMetadata.setParents(Collections.singletonList(folderId));
+            try {
+                File file = driveService.files().create(fileMetadata)
+                        .setFields("id")
+                        .execute();
+                System.out.println("Folder ID: " + file.getId());
+                finish();
+                switchActivity(MeetingListActivity.class);
+            } catch (UserRecoverableAuthIOException e){
+                startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+            return null;
+        }
     }
 }
 

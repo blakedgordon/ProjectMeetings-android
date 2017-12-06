@@ -20,8 +20,10 @@ import com.google.api.services.drive.model.File;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_AUTHORIZATION;
+import static edu.calbaptist.android.projectmeetings.MainActivity.prefs;
 
 /**
  * Created by Austin on 10/31/2017.
@@ -31,24 +33,14 @@ public class FolderViewActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener{
 
     private static final String TAG = "SignInActivity";
-    GoogleAccountCredential mCredential;
-    private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_FILE };
+
+
     private Button createFolder;
     public Drive driveService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        String accountName = App.context.getSharedPreferences(
-                "edu.calbaptist.android.projectmeetings.Account_Name", Context.MODE_PRIVATE)
-                .getString("accountName", null);
-
-        mCredential = GoogleAccountCredential.usingOAuth2(
-                getApplicationContext(), Arrays.asList(SCOPES))
-                .setBackOff(new ExponentialBackOff());
-        mCredential.setSelectedAccountName(accountName);
-
         setContentView(R.layout.activity_folderview);
 
         // Create New Folder
@@ -82,6 +74,7 @@ public class FolderViewActivity extends AppCompatActivity
         protected Void doInBackground(Void... params) {
             File fileMetadata = new File();
             fileMetadata.setName("Meetings Folder");
+            fileMetadata.setPermissionIds(Collections.singletonList(prefs.getString("email",null)));
             fileMetadata.setMimeType("application/vnd.google-apps.folder");
             try {
                 File file = driveService.files().create(fileMetadata)
