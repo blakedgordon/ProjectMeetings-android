@@ -1,5 +1,6 @@
 package edu.calbaptist.android.projectmeetings;
 
+import android.app.Fragment;
 import android.app.ListFragment;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -62,16 +65,22 @@ public class CurrentMeetingsFragment extends ListFragment
 
         buildMeetings();
         getListView().setOnItemClickListener(this);
+        getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            public boolean onItemLongClick(AdapterView<?> av, View v, int position, long id) {
+                List<Meeting> MeetingList = new ArrayList(meetingHashMap.values()); // convert hashmap to array
+                Meeting m = MeetingList.get(position);
+                Intent intent = new Intent(getActivity(), EditMeetingActivity.class);
+                intent.putExtra("meetingID", m.getMid());
+                startActivity(intent);
+                return true;
+            }
+        });
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         List<Meeting> MeetingList = new ArrayList(meetingHashMap.values()); // convert hashmap to array
         Meeting m = MeetingList.get(position);
-        System.out.println(m.getName() + "--------------------------------------------------------------");
-        System.out.println(m.getDriveFolderId() + " drive folder id");
-        System.out.println(m.getTime() + " time");
-        System.out.println(m.getMid() + "mId");
         Intent intent = new Intent(getActivity(), MeetingActivity.class);
         intent.putExtra("meeting", m);
         User user = new User.UserBuilder()
@@ -79,12 +88,11 @@ public class CurrentMeetingsFragment extends ListFragment
                 .setDisplayName(prefs.getString("DisplayName",null))
                 .setFirebaseToken(prefs.getString("FirebaseToken",null))
                 .build();
-        System.out.println(user.getDisplayName() + " user display name");
-        System.out.println(user.getUid() + " uid");
-        System.out.println("firebase token " + user.getFirebaseToken());
         intent.putExtra("user",user);
         startActivity(intent);
     }
+
+
 
     private ArrayList<Meeting> buildMeetings(){
         String uId = prefs.getString("uID",null);
@@ -134,4 +142,5 @@ public class CurrentMeetingsFragment extends ListFragment
         Date date = new java.util.Date(unix);
         return date.toString();
     }
+
 }

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="edu.calbaptist.android.projectmeetings.EditMeetingActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="edu.calbaptist.android.projectmeetings.EditMeetingActivity">
+
+        <TextView
+            android:id="@+id/EditMeeting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <EditText
+            android:id="@+id/MeetingName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/meetingName"
+            android:layout_below="@id/EditMeeting"
+            android:maxLines="1"/>
+
+        <EditText
+            android:id="@+id/MeetingObjective"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/meetingObjective"
+            android:layout_below="@id/MeetingName"
+            android:maxLines="1"/>
+
+        <DatePicker
+            android:id="@+id/Date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/MeetingObjective"
+            android:headerBackground="@color/colorPrimaryDark" />
+
+        <TimePicker
+            android:id="@+id/Time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/Date"
+            android:headerBackground="@color/colorPrimaryDark"/>
+
+        <EditText
+            android:id="@+id/Length"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/length"
+            android:layout_below="@id/Time"/>
+
+        <Button
+            android:id="@+id/Submit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/submit"
+            android:layout_below="@id/Length"/>
+
+
+    </RelativeLayout>
+
+</ScrollView>

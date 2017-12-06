@@ -17,7 +17,6 @@
     <string name="notification_channel_name">Project Meetings FCM Channel</string>
     <string name="notification_channel_description">This channel assists with deploying Firebase Cloud Messaging notifications.</string>
     <string name="title_activity_meeting">MeetingActivity</string>
-
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="meetingName">Meeting Name</string>
     <string name="meetingObjective">Meeting Objective</string>
@@ -25,8 +24,8 @@
     <string name="submit">Submit</string>
     <string name="createMeeting">Create Meeting</string>
     <string name="invites">You\'ve been invited to some meetings</string>
-
     <string name="http_endpoint">http://ec2-34-226-155-228.compute-1.amazonaws.com:8080</string>
     <string name="ws_endpoint">ws://ec2-34-226-155-228.compute-1.amazonaws.com:8080/socket/websocket</string>
     <string name="firebase_endpoint">https://projectmeeting-183706.firebaseio.com</string>
+    <string name="EditMeeting">Edit Meeting</string>
 </resources>
