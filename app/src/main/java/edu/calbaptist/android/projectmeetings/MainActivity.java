@@ -165,19 +165,19 @@ public class MainActivity extends AppCompatActivity
                         Context.MODE_PRIVATE);
 
                 Meeting meeting = new Meeting.MeetingBuilder()
-                        .setMid("748da02f-7004-4a8c-aca5-af8b571f2b55")
+                        .setMid("357f2278-6aa3-48a0-b870-8cb938d51194")
                         .setName("My First Meeting")
                         .setObjective("Let's figure this app out!")
                         .setTime(1512187834821L)
                         .setTimeLimit(60000L)
                         .setUid("dXwfd6uiyZR5xiiBo1xfPWYAF1C2")
-                        .setDriveFolderId("1UMXxvLoB6QATQvg-OYz764Oyz-Go5l-K")
+                        .setDriveFolderId("0B0SCJBL1Pu8eaWwxU1hnMFZrTVU")
                         .build();
 
                 User user = new User.UserBuilder()
                         .setUid("dXwfd6uiyZR5xiiBo1xfPWYAF1C2")
                         .setEmail("jerryvonjingles@gmail.com")
-                        .setDisplayName("Jerry Jingles")
+                        .setDisplayName("Caleb")
                         .setFirebaseToken(prefs.getString("FirebaseToken",null))
                         .build();
 
