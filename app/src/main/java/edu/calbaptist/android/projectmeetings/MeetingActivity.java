@@ -623,6 +623,9 @@ public class MeetingActivity extends AppCompatActivity {
                                 Log.d(TAG, "presence_state: " + envelope.toString());
                                 connecting = false;
 
+                                final StringBuilder stringBuilder = new StringBuilder("Welcome, " +
+                                        user.getDisplayName().split(" ")[0] + "!");
+
                                 final Iterator iterator = envelope.getPayload().fieldNames();
 
                                 while(iterator.hasNext()) {
@@ -635,20 +638,18 @@ public class MeetingActivity extends AppCompatActivity {
                                             public void run() {
                                                 RestClient.getUserByUid(uid, user.getFirebaseToken(), new Callback.RestClientUser() {
                                                     @Override
-                                                    void onTaskExecuted(User user) {
-                                                        users.put(uid, user);
-
-                                                        StringBuilder stringBuilder = new StringBuilder("Welcome, " +
-                                                                user.getDisplayName().split(" ")[0] + "!");
+                                                    void onTaskExecuted(User u) {
+                                                        users.put(uid, u);
 
                                                         if(!iterator.hasNext() && users.size() > 1) {
                                                             stringBuilder.append(" Here's who else is here:\n");
 
-                                                            for(Object obj: users.entrySet().toArray()) {
-                                                                User u = (User) obj;
+                                                            Iterator userIterator = users.values().iterator();
 
-                                                                if(u.getUid() != user.getUid()) {
-                                                                    stringBuilder.append(u.getDisplayName() + "\"");
+                                                            while (userIterator.hasNext()) {
+                                                                User iteratorUser = (User) userIterator.next();
+                                                                if(!iteratorUser.getUid().equals(user.getUid())) {
+                                                                    stringBuilder.append(iteratorUser.getDisplayName() + "\n");
                                                                 }
                                                             }
                                                         }

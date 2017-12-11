@@ -258,8 +258,8 @@ public class RestClient {
                     .setInstanceId(json.getString("instance_id"));
         }
 
-        if(json.has("add_invites")) {
-            Iterator inviteIterator = json.getJSONObject("add_invites").keys();
+        if(json.has("invites")) {
+            Iterator inviteIterator = json.getJSONObject("invites").keys();
             ArrayList<String> inviteList = new ArrayList<>();
 
             while(inviteIterator.hasNext()) {
