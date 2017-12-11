@@ -39,11 +39,15 @@ import android.widget.TextView;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.api.client.http.FileContent;
+import com.google.api.services.drive.Drive;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -833,17 +837,7 @@ public class MeetingActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
-            java.io.File image = new java.io.File(mCurrentPhotoPath);
-            try {
-                DriveFiles.getInstance().uploadFileToDrive(image, mCurrentPhotoName, "image/jpeg");
-
-                ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
-                        .put("msg", user.getDisplayName() + " uploaded a photo to Google Drive!");
-
-                channel.push("msg", node);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            uploadToDrive(new java.io.File(mCurrentPhotoPath), "image/jpeg");
         }
     }
 
@@ -883,20 +877,44 @@ public class MeetingActivity extends AppCompatActivity {
             String fileName = directories[directories.length - 1];
 
             // Upload the file to Drive
-            File uploadFile = new File(mFilePath);
-            try {
-                DriveFiles.getInstance().uploadFileToDrive(uploadFile, fileName, "audio/x-aac");
-
-                ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
-                        .put("msg", user.getDisplayName()
-                                + " uploaded an audio recording to Google Drive!");
-
-                channel.push("msg", node);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            uploadToDrive(new File(mFilePath), "audio/*");
 
             mFilePath = null;
         }
+    }
+
+    private void uploadToDrive(final java.io.File uploadFile, final String mimeType) {
+        final com.google.api.services.drive.model.File driveFile = new com.google.api.services.drive.model.File();
+        driveFile.setName(user.getDisplayName()
+                .replace(" ", "_").concat(new Date().toString()));
+        driveFile.setParents(Collections.singletonList(meeting.getDriveFolderId()));
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    com.google.api.services.drive.model.File file =
+                            DriveFiles.getInstance().getDriveService().files()
+                                    .create(driveFile, new FileContent(mimeType, uploadFile))
+                                    .setFields("id, parents").execute();
+
+                    String text = user.getDisplayName();
+
+                    switch (mimeType) {
+                        case "audio/*":
+                            text += " uploaded an audio recording to Google Drive!";
+                            break;
+                        case "image/jpeg":
+                            text += " uploaded an image to Google Drive!";
+                    }
+
+                    ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
+                            .put("msg", text);
+
+                    channel.push("msg", node);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }
