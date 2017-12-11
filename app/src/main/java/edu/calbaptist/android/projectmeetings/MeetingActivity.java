@@ -658,7 +658,18 @@ public class MeetingActivity extends AppCompatActivity {
                                                         runOnUiThread(new Runnable() {
                                                             @Override
                                                             public void run() {
-                                                                newMessage(new MeetingMessage(message.toString(), false));
+                                                                if(users.size() > 1) {
+                                                                    newMessage(new MeetingMessage(message.toString(), false));
+                                                                } else {
+                                                                    ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
+                                                                            .put("msg", user.getDisplayName() + " joined the meeting!");
+
+                                                                    try {
+                                                                        channel.push("msg", node);
+                                                                    } catch (IOException e) {
+                                                                        e.printStackTrace();
+                                                                    }
+                                                                }
                                                             }
                                                         });
                                                     }
