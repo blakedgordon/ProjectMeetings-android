@@ -1,5 +1,6 @@
 package edu.calbaptist.android.projectmeetings;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.ListFragment;
 import android.content.Context;
@@ -9,6 +10,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,6 +52,11 @@ import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_PERMIS
 
 public class FolderListFragment extends ListFragment
         implements GoogleApiClient.OnConnectionFailedListener, AdapterView.OnItemClickListener{
+    private final String TAG = "FolderListFragment";
+
+    SharedPreferences prefs = App.context.getSharedPreferences(
+            "edu.calbaptist.android.projectmeetings.Account_Name",
+            Context.MODE_PRIVATE);
 
     GoogleAccountCredential mCredential;
     private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_FILE };
@@ -97,15 +104,24 @@ public class FolderListFragment extends ListFragment
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        List<String> folderIDs = new ArrayList(folders.values()); // convert hashmap to array
-        SharedPreferences settings = App.context.getSharedPreferences(
-                "edu.calbaptist.android.projectmeetings.Account_Name",
-                Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putString("DefaultFolder", folderIDs.get(position));
-        editor.apply();
-        Intent transfer = new Intent(getActivity(), MeetingListActivity.class);
-        startActivity(transfer);
+        String folderName =  ((String) new ArrayList(folders.keySet()).get(position));
+        String folderId = folders.get(folderName);
+
+        Log.d(TAG, "onItemClick: FOLDERID" + folderId);
+
+//        SharedPreferences.Editor editor = prefs.edit();
+//        editor.putString("DefaultFolder", folderId);
+//        editor.apply();
+
+        Intent returnIntent = new Intent();
+        returnIntent.putExtra("folder_name",
+                folderName.replace("\n", "").replace("\r", ""));
+        returnIntent.putExtra("folder_id", folderId);
+        getActivity().setResult(Activity.RESULT_OK, returnIntent);
+        getActivity().finish();
+
+//        Intent transfer = new Intent(getActivity(), MeetingListActivity.class);
+//        startActivity(transfer);
     }
 
     private class MakeRequestTask extends AsyncTask<Void, Void, Map<String,String>> {

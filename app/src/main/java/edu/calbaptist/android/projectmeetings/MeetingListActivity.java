@@ -35,7 +35,7 @@ public class MeetingListActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        stashToken();
+//        stashToken();
         setContentView(R.layout.activity_meetinglist);
         newMeeting = findViewById(R.id.CreateMeeting);
         newMeeting.setOnClickListener(new View.OnClickListener(){
@@ -122,6 +122,14 @@ public class MeetingListActivity extends AppCompatActivity{
                     }
                 });
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        Log.d(TAG, "onBackPressed: ");
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        intent.putExtra("type", "SignInActivity");
+        startActivity(intent);
     }
 }
 

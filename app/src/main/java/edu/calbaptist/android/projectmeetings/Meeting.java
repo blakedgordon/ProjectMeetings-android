@@ -94,8 +94,8 @@ public class Meeting implements Serializable{
     }
 
     /**
-     * Gets the meetings's invites.
-     * @return the invites list
+     * Gets the meetings's add_invites.
+     * @return the add_invites list
      */
     public ArrayList getInvites() {
         return invites;
@@ -189,8 +189,8 @@ public class Meeting implements Serializable{
         }
 
         /**
-         * Sets the builder's invites.
-         * @param invites the invites of the user.
+         * Sets the builder's add_invites.
+         * @param invites the add_invites of the user.
          * @return the new MeetingBuilder object.
          */
         public MeetingBuilder setInvites(ArrayList invites) {

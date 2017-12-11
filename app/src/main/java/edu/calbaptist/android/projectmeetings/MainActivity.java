@@ -12,10 +12,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,8 +59,11 @@ public class MainActivity extends AppCompatActivity
     GoogleAccountCredential mCredential;
     private TextView mOutputText;
 
+    private LinearLayout buttonContainer;
     private SignInButton signInButton;
     private Button signOutButton;
+    private LinearLayout connectingContainer;
+    private TextView welcomeText;
     private TextView statusTextView;
     private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth mAuth;
@@ -80,7 +83,7 @@ public class MainActivity extends AppCompatActivity
             "edu.calbaptist.android.projectmeetings.Account_Name",
             Context.MODE_PRIVATE);
 
-    private Button meetingActivityButton;
+//    private Button meetingActivityButton;
 
     /**
      * Create the main activity.
@@ -91,16 +94,37 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         //auto sign in
-        if(prefs.getBoolean("isSignedIn",false)){
-            if(prefs.getString("DefaultFolder",null) != null){
+        if(prefs.getBoolean("isSignedIn",false)) {
+            Log.d(TAG, "onCreate: cHEcKING");
+            Intent intent = getIntent();
+
+            if (intent != null && intent.getExtras() != null) {
+                Bundle extras = intent.getExtras();
+                Log.d(TAG, "onCreate: " + extras.toString());
+
+                String type = extras.getString("type");
+
+                switch (type) {
+                    case "meeting_invite":
+                        Intent transfer = new Intent(this, MeetingListActivity.class);
+                        startActivity(transfer);
+                        break;
+                    case "meeting_warn":
+                        toMeetingActivity(extras.getString("m_id"));
+                        break;
+                    case "meeting_start":
+                        toMeetingActivity(extras.getString("m_id"));
+                        break;
+                }
+//                String someData= extras.getString("someData");
+//                String someData2 = extras.getString("someData2");
+            } else if(intent.getExtras() == null){
                 Intent transfer = new Intent(this, MeetingListActivity.class);
                 startActivity(transfer);
             }
-            else{
-                Intent transfer = new Intent(this, FolderViewActivity.class);
-                startActivity(transfer);
-            }
         }
+
+        Log.d(TAG, "onCreate: DONE CHECKING");
 
         setContentView(R.layout.activity_main);
 
@@ -116,7 +140,8 @@ public class MainActivity extends AppCompatActivity
 
         mAuth = FirebaseAuth.getInstance();
 
-        statusTextView = (TextView) findViewById(R.id.status_text_view);
+//        statusTextView = (TextView) findViewById(R.id.status_text_view);
+        buttonContainer = (LinearLayout) findViewById(R.id.layout_main_button_container);
 
         signInButton = (SignInButton) findViewById(R.id.sign_in_button);
         signInButton.setOnClickListener(this);
@@ -124,41 +149,48 @@ public class MainActivity extends AppCompatActivity
         signOutButton = (Button) findViewById(R.id.sign_out_button);
         signOutButton.setOnClickListener(this);
 
+        if(prefs.getString("FirebaseToken", null) == null) {
+            signOutButton.setEnabled(false);
+        }
 
-        meetingActivityButton = (Button) findViewById(R.id.meeting_activity_button);
-        meetingActivityButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, MeetingActivity.class);
-
-                Meeting meeting = new Meeting.MeetingBuilder()
-                        .setMid("357f2278-6aa3-48a0-b870-8cb938d51194")
-                        .setName("My First Meeting")
-                        .setObjective("Let's figure this app out!")
-                        .setTime(1512187834821L)
-                        .setTimeLimit(60000L)
-                        .setUid("dXwfd6uiyZR5xiiBo1xfPWYAF1C2")
-                        .setDriveFolderId("0B0SCJBL1Pu8eaWwxU1hnMFZrTVU")
-                        .build();
-
-                User user = new User.UserBuilder()
-                        .setUid("dXwfd6uiyZR5xiiBo1xfPWYAF1C2")
-                        .setEmail("jerryvonjingles@gmail.com")
-                        .setDisplayName("Caleb")
-                        .setFirebaseToken(prefs.getString("FirebaseToken",null))
-                        .build();
-
-                intent.putExtra("meeting", meeting);
-                intent.putExtra("user", user);
-
-                startActivity(intent);
-            }
-        });
+        connectingContainer = (LinearLayout) findViewById(R.id.layout_main_connecting_container);
+        welcomeText = (TextView) findViewById(R.id.text_main_welcome);
 
 
-        mOutputText = (TextView) findViewById(R.id.output_text);
-        mOutputText.setVerticalScrollBarEnabled(true);
-        mOutputText.setMovementMethod(new ScrollingMovementMethod());
+//        meetingActivityButton = (Button) findViewById(R.id.meeting_activity_button);
+//        meetingActivityButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Intent intent = new Intent(MainActivity.this, MeetingActivity.class);
+//
+//                Meeting meeting = new Meeting.MeetingBuilder()
+//                        .setMid("357f2278-6aa3-48a0-b870-8cb938d51194")
+//                        .setName("My First Meeting")
+//                        .setObjective("Let's figure this app out!")
+//                        .setTime(1512187834821L)
+//                        .setTimeLimit(60000L)
+//                        .setUid("dXwfd6uiyZR5xiiBo1xfPWYAF1C2")
+//                        .setDriveFolderId("0B0SCJBL1Pu8eaWwxU1hnMFZrTVU")
+//                        .build();
+//
+//                User user = new User.UserBuilder()
+//                        .setUid("dXwfd6uiyZR5xiiBo1xfPWYAF1C2")
+//                        .setEmail("jerryvonjingles@gmail.com")
+//                        .setDisplayName("Caleb")
+//                        .setFirebaseToken(prefs.getString("FirebaseToken",null))
+//                        .build();
+//
+//                intent.putExtra("meeting", meeting);
+//                intent.putExtra("user", user);
+//
+//                startActivity(intent);
+//            }
+//        });
+
+
+//        mOutputText = (TextView) findViewById(R.id.output_text);
+//        mOutputText.setVerticalScrollBarEnabled(true);
+//        mOutputText.setMovementMethod(new ScrollingMovementMethod());
 
         // Initialize credentials and service object.
         mCredential = GoogleAccountCredential.usingOAuth2(
@@ -201,7 +233,7 @@ public class MainActivity extends AppCompatActivity
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
         if(currentUser != null) {
-            statusTextView.setText(currentUser.getDisplayName());
+//            statusTextView.setText(currentUser.getDisplayName());
         }
     }
 
@@ -220,16 +252,16 @@ public class MainActivity extends AppCompatActivity
 
     private void signIn() {
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean("isSignedIn", true);
-        editor.apply();
-        if (prefs.getString(PREF_ACCOUNT_NAME, null) == null) {
-            startActivityForResult(
-                    mCredential.newChooseAccountIntent(),
-                    REQUEST_ACCOUNT_PICKER);
-        } else {
+//        SharedPreferences.Editor editor = prefs.edit();
+//        editor.putBoolean("isSignedIn", true);
+//        editor.apply();
+//        if (prefs.getString(PREF_ACCOUNT_NAME, null) == null) {
+//            startActivityForResult(
+//                    mCredential.newChooseAccountIntent(),
+//                    REQUEST_ACCOUNT_PICKER);
+//        } else {
             startActivityForResult(signInIntent, GOOGLE_SIGN_IN);
-        }
+//        }
     }
 
     /**
@@ -258,24 +290,30 @@ public class MainActivity extends AppCompatActivity
                 break;
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
-                    mOutputText.setText(
-                            "This app requires Google Play Services. Please install " +
+                    showToast("This app requires Google Play Services. Please install " +
                                     "Google Play Services on your device and relaunch this app.");
+
+//                    mOutputText.setText(
+//                            "This app requires Google Play Services. Please install " +
+//                                    "Google Play Services on your device and relaunch this app.");
                 }
                 break;
             case REQUEST_ACCOUNT_PICKER:
                 if (resultCode == RESULT_OK && data != null &&
-                        data.getExtras() != null) {
-                    String accountName =
-                            data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-                    if (accountName != null) {
-                        SharedPreferences.Editor editor = prefs.edit();
-                        editor.putString(PREF_ACCOUNT_NAME, accountName);
-                        editor.putBoolean("isSignedIn", true);
-                        editor.apply();
-                        mCredential.setSelectedAccountName(accountName);
-                    }
+                    data.getExtras() != null) {
+                String accountName =
+                        data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+
+                    Log.d(TAG, "onActivityResult: ACCOUNT " + accountName);
+
+                if (accountName != null) {
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString(PREF_ACCOUNT_NAME, accountName);
+                    editor.putBoolean("isSignedIn", true);
+                    editor.apply();
+                    mCredential.setSelectedAccountName(accountName);
                 }
+            }
                 break;
         }
     }
@@ -290,7 +328,8 @@ public class MainActivity extends AppCompatActivity
             assert user != null;
             prefs.edit().putString("gToken", user.getIdToken()).apply();
         } else {
-            statusTextView.setText("Sign in w/ Google failed :(");
+//            statusTextView.setText("Sign in w/ Google failed :(");
+            showToast("Sign in with Google failed :(");
         }
     }
 
@@ -306,7 +345,7 @@ public class MainActivity extends AppCompatActivity
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential: success");
                             final FirebaseUser user = mAuth.getCurrentUser();
-                            statusTextView.setText("Hello, " + user.getDisplayName());
+//                            statusTextView.setText("Hello, " + user.getDisplayName());
 
                             FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
                             assert mUser != null;
@@ -314,10 +353,6 @@ public class MainActivity extends AppCompatActivity
                                     .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
                                         public void onComplete(@NonNull Task<GetTokenResult> task) {
                                             if (task.isSuccessful()) {
-                                                String idToken = task.getResult().getToken();
-
-                                                Log.d(TAG, "Firebase Token: " + idToken);
-
                                                 try {
                                                     createUser(acct.getDisplayName(), acct.getEmail(), acct.getIdToken());
                                                 } catch (Exception e) {
@@ -332,7 +367,8 @@ public class MainActivity extends AppCompatActivity
                             Toast.makeText(MainActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
 
-                            statusTextView.setText("Authentication with Firebase failed :(");
+//                            statusTextView.setText("Authentication with Firebase failed :(");
+                            showToast("Authentication with Firebase failed :(");
                         }
                     }
                 });
@@ -347,7 +383,9 @@ public class MainActivity extends AppCompatActivity
         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
             @Override
             public void onResult(@NonNull Status status) {
-                statusTextView.setText("Signed out");
+//                statusTextView.setText("Signed out");
+                prefs.edit().clear().commit();
+                signOutButton.setEnabled(false);
             }
         });
     }
@@ -369,6 +407,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void createUser(final String displayName, final String email, final String gToken) throws IOException, GoogleAuthException {
+        buttonContainer.setVisibility(View.GONE);
+        connectingContainer.setVisibility(View.VISIBLE);
+        welcomeText.setText("Welcome, " + displayName + "!");
+
 
         FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
         assert mUser != null;
@@ -376,55 +418,156 @@ public class MainActivity extends AppCompatActivity
                 .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
                     public void onComplete(@NonNull Task<GetTokenResult> task) {
                         if (task.isSuccessful()) {
-                            String idToken = task.getResult().getToken();
+                            final String idToken = task.getResult().getToken();
+                            Log.d(TAG, "Firebase Token 427: " + idToken);
 
-                            final User user = new User.UserBuilder().setDisplayName(displayName).setEmail(email)
+                            final User user = new User.UserBuilder()
+                                    .setDisplayName(displayName)
+                                    .setEmail(email)
                                     .setFirebaseToken(idToken)
                                     .setGoogleToken(gToken)
                                     .setInstanceId(FirebaseInstanceId.getInstance().getToken())
                                     .build();
 
+                            Log.d(TAG, "get TOken: " + user.getFirebaseToken());
+
                             AsyncTask.execute(new Runnable() {
                                 @Override
                                 public void run() {
+                                    try {
+                                        Thread.sleep(500);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+
                                     RestClient.createUser(user, new Callback.RestClientUser() {
                                         @Override
                                         void onTaskExecuted(User user) {
                                             Log.d(TAG, "onTaskExecuted: " + user.getDisplayName());
                                             SharedPreferences.Editor editor = prefs.edit();
+                                            editor.putString(PREF_ACCOUNT_NAME, user.getEmail());
+                                            editor.putBoolean("isSignedIn", true);
                                             editor.putString("uID",user.getUid());
                                             editor.putString("DisplayName",user.getDisplayName());
                                             editor.putString("email",user.getEmail());
+                                            editor.putString("FirebaseToken", user.getFirebaseToken());
+                                            editor.putString("GoogleToken", user.getGoogleToken());
+                                            editor.putString("InstanceId", user.getInstanceId());
                                             editor.apply();
 
-                                            final SharedPreferences prefs = App.context.getSharedPreferences(
-                                                    "edu.calbaptist.android.projectmeetings.Account_Name",
-                                                    Context.MODE_PRIVATE);
-                                            Log.d(TAG, "onTaskExecuted: " + prefs.getString("uID", null));
+//                                            final SharedPreferences prefs = App.context.getSharedPreferences(
+//                                                    "edu.calbaptist.android.projectmeetings.Account_Name",
+//                                                    Context.MODE_PRIVATE);
+//                                            Log.d(TAG, "onTaskExecuted: " + prefs.getString("uID", null));
 
-                                            startActivity(new Intent(getApplicationContext(), FolderViewActivity.class));
+                                            showSignInButtons();
+
+                                            startActivity(new Intent(getApplicationContext(), MeetingListActivity.class));
                                         }
 
                                         @Override
                                         void onTaskFailed(RestClientException e) {
                                             Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
                                                     + ": " + e.getJson().toString());
+
+                                            showToast("Uh oh, an unknown error occured :(");
+                                            showSignInButtons();
                                         }
 
                                         @Override
                                         void onExceptionRaised(Exception e) {
                                             Log.d(TAG, "onExceptionRaised: " + e.getMessage());
+
+                                            showToast("An unknown error occured :(");
+                                            showSignInButtons();
                                         }
                                     });
                                 }
                             });
-
-                            Log.d(TAG, "Firebase Token: " + idToken);
                         }
                     }
                 });
+    }
 
+    private void toMeetingActivity(final String mId) {
+        final String token = prefs.getString("FirebaseToken", null);
 
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                RestClient.getMeeting(mId, token, new Callback.RestClientMeeting() {
+                    @Override
+                    void onTaskExecuted(final Meeting meeting) {
+                        AsyncTask.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                RestClient.updateUser(new User.UserBuilder().build(),
+                                        token, new Callback.RestClientUser() {
+                                            @Override
+                                            void onTaskExecuted(User user) {
+                                                FcmNotificationManager mNotificationManager =
+                                                        new FcmNotificationManager(getApplicationContext());
 
+                                                Intent transfer = new Intent(getApplicationContext(),
+                                                        MeetingActivity.class);
+                                                transfer.putExtra("meeting", meeting);
+                                                transfer.putExtra("user", user);
+
+                                                startActivity(transfer);
+                                            }
+
+                                            @Override
+                                            void onTaskFailed(RestClientException e) {
+                                                Log.d(TAG, "onTaskFailed: " + e.getMessage());
+                                                e.printStackTrace();
+                                            }
+
+                                            @Override
+                                            void onExceptionRaised(Exception e) {
+                                                Log.d(TAG, "onExceptionRaise: " + e.getMessage());
+                                                e.printStackTrace();
+                                            }
+                                        });
+                            }
+                        });
+                    }
+
+                    @Override
+                    void onTaskFailed(RestClientException e) {
+                        Log.d(TAG, "onTaskFailed: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    void onExceptionRaised(Exception e) {
+                        Log.d(TAG, "onExceptionRaise: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                });
+            }
+        });
+    }
+
+    private void showToast(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showSignInButtons() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                buttonContainer.setVisibility(View.VISIBLE);
+                connectingContainer.setVisibility(View.GONE);
+
+                if(prefs.getString("FirebaseToken", null) != null) {
+                    signOutButton.setEnabled(true);
+                }
+            }
+        });
     }
 }

@@ -7,12 +7,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
@@ -33,7 +31,9 @@ public class RestClient {
     public static final String TAG = "RestClient";
 
     private static final String PROTOCOL = "http";
+//    private static final String HOST = "10.0.2.2";
     private static final String HOST = "ec2-34-226-155-228.compute-1.amazonaws.com";
+//    private static final int PORT = 4000;
     private static final int PORT = 8080;
 
     /**
@@ -41,7 +41,7 @@ public class RestClient {
      * @param user The user to create.
      * @param callback Executes after task is finished, ideally returns a User object.
      */
-    public static void createUser(User user, Callback.RestClientUser callback) {
+    public static void createUser(final User user, Callback.RestClientUser callback) {
         String displayName = user.getDisplayName();
         String email = user.getEmail();
         String firebaseToken = user.getFirebaseToken();
@@ -128,7 +128,8 @@ public class RestClient {
 
     private static User putUser(JSONObject json)
             throws IOException, JSONException, RestClientException {
-        URL url = new URL(PROTOCOL, HOST, PORT,  "/api/user");
+        URL url = new URL(PROTOCOL, HOST, PORT,  "/api/user/");
+        Log.d(TAG, "putUser: " + url.toString());
         HttpURLConnection conn = getBasicHttpURLConnection(url);
 
         return putUser(json, conn);
@@ -145,11 +146,11 @@ public class RestClient {
 
     private static User putUser(JSONObject json, HttpURLConnection conn)
             throws IOException, JSONException, RestClientException {
+
         conn.setRequestMethod("PUT");
+//        conn.setDoOutput(true);
 
         JSONObject data = jsonFromRequest(json, conn);
-
-        Log.d(TAG, "jsonFromRequest: " + data.toString());
 
         return jsonToUser(data);
     }
@@ -257,12 +258,26 @@ public class RestClient {
                     .setInstanceId(json.getString("instance_id"));
         }
 
-        if(json.has("invites")) {
-            builder = builder.setInvites((ArrayList) keysFromJsonString(json.getString("invites")));
+        if(json.has("add_invites")) {
+            Iterator inviteIterator = json.getJSONObject("add_invites").keys();
+            ArrayList<String> inviteList = new ArrayList<>();
+
+            while(inviteIterator.hasNext()) {
+                inviteList.add((String) inviteIterator.next());
+            }
+
+            builder = builder.setInvites(inviteList);
         }
 
         if(json.has("meetings")) {
-            builder = builder.setMeetings((ArrayList) keysFromJsonString(json.getString("meetings")));
+            Iterator meetingIterator = json.getJSONObject("meetings").keys();
+            ArrayList<String> meetingList = new ArrayList<>();
+
+            while(meetingIterator.hasNext()) {
+                meetingList.add((String) meetingIterator.next());
+            }
+
+            builder = builder.setMeetings(meetingList);
         }
 
         return builder.build();
@@ -283,8 +298,8 @@ public class RestClient {
 
         if(isEmpty(name) || isEmpty(objective) ||
                 isEmpty(driveFolderId) || time <= 0 || timeLimit <= 0) {
-            throw new IllegalArgumentException("Must provide mid, uid, name, objective, " +
-                    "time, timeLimit, driveFolderId, and invites.");
+            callback.onExceptionRaised(new IllegalArgumentException("Must provide mid, uid, name, "
+                    + "objective, time, timeLimit, driveFolderId, and add_invites."));
         }
 
         try {
@@ -360,6 +375,8 @@ public class RestClient {
             HttpURLConnection conn = getBasicHttpURLConnection(url);
             conn.setRequestMethod("PUT");
             conn.setRequestProperty("token", token);
+
+            Log.d(TAG, "updateMeeting: AYYY " + json.toString());
 
             JSONObject data = jsonFromRequest(json, conn);
             Meeting m = jsonToMeeting(data);
@@ -480,6 +497,8 @@ public class RestClient {
             JSONObject json = new JSONObject();
             json.put("emails", new JSONArray(emails));
 
+            Log.d(TAG, "uninviteFromMeeting: JSON " + json.toString());
+
             URL url = new URL(PROTOCOL, HOST, PORT,  "/api/meeting/" + mid + "/invites");
 
             HttpURLConnection conn = getBasicHttpURLConnection(url);
@@ -502,21 +521,30 @@ public class RestClient {
 
     private static HttpURLConnection getBasicHttpURLConnection(URL url) throws IOException {
         HttpURLConnection conn = ((HttpURLConnection) url.openConnection());
-        conn.setDoInput(true);
         conn.setRequestProperty("Accept", "application/json");
         conn.setRequestProperty("Content-Type", "application/json");
+        conn.setDoInput(true);
 
         return conn;
     }
 
     private static JSONObject jsonFromRequest(JSONObject json, HttpURLConnection conn)
             throws IOException, JSONException, RestClientException {
-        OutputStream outputStream = conn.getOutputStream();
-        BufferedWriter writer =
-                new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-        writer.write(json.toString());
-        writer.close();
-        outputStream.close();
+//        OutputStream outputStream = conn.getOutputStream();
+//        BufferedWriter writer =
+//                new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+//        writer.write(json.toString());
+//        writer.close();
+//        outputStream.flush();
+//        outputStream.close();
+
+        OutputStream os = conn.getOutputStream();
+        os.write(json.toString().getBytes("UTF-8"));
+        os.flush();
+        os.close();
+
+        Log.d(TAG, "jsonFromRequest putUser: " + json.toString());
+
 
         return jsonFromRequest(conn);
     }
@@ -551,7 +579,14 @@ public class RestClient {
             returnJson.append(tmp).append("\n");
         bufferedReader.close();
 
-        return new JSONObject(returnJson.toString());
+        Log.d(TAG, "jsonFromRequest: " + returnJson.toString());
+
+        try {
+            return new JSONObject(returnJson.toString());
+        } catch (JSONException e) {
+            return new JSONObject("{ \"message\": \""
+                    + returnJson.toString() + "\" }");
+        }
     }
 
     private static Meeting jsonToMeeting(JSONObject json) throws JSONException{
@@ -564,8 +599,8 @@ public class RestClient {
                 .setTimeLimit(json.getLong("time_limit"))
                 .setDriveFolderId(json.getString("drive_folder_id"));
 
-        if(json.has("invites")) {
-            builder = builder.setInvites((ArrayList) keysFromJsonString(json.getString("invites")));
+        if(json.has("add_invites")) {
+            builder = builder.setInvites((ArrayList) keysFromJsonString(json.getString("add_invites")));
         }
 
         return builder.build();

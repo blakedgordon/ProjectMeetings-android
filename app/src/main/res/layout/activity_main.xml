@@ -2,10 +2,12 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:theme="@style/AppTheme.NoActionBar"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="edu.calbaptist.android.projectmeetings.MainActivity">
+    tools:context="edu.calbaptist.android.projectmeetings.MainActivity"
+    android:background="@drawable/meeting_activity_root_gradient">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -14,31 +16,72 @@
         android:orientation="vertical" >
 
         <TextView
-            android:id="@+id/status_text_view"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"/>
-
-        <com.google.android.gms.common.SignInButton
-            android:id="@+id/sign_in_button"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:layout_width="150dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/sign_out"
-            android:id="@+id/sign_out_button" />
+            android:textAlignment="center"
+            android:text="@string/app_slogan"
+            android:textSize="30dp"/>
 
-        <TextView
-            android:id="@+id/output_text"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"/>
+        <ImageView
+            android:layout_width="350dp"
+            android:layout_height="350dp"
+            android:layout_marginVertical="15dp"
+            android:src="@drawable/roundtable"/>
 
-        <Button
-            android:layout_width="150dp"
+        <!--<TextView-->
+            <!--android:id="@+id/status_text_view"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"/>-->
+
+        <LinearLayout
+            android:id="@+id/layout_main_button_container"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Meeting Activity"
-            android:id="@+id/meeting_activity_button" />
+            android:gravity="center_horizontal">
+
+            <com.google.android.gms.common.SignInButton
+                android:id="@+id/sign_in_button"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"/>
+
+            <Button
+                android:id="@+id/sign_out_button"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:text="@string/sign_out"
+                style="@style/Widget.AppCompat.Button.Colored" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_main_connecting_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/text_main_welcome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Connecting"
+                android:textAlignment="center"
+                android:textSize="30dp"/>
+
+            <ProgressBar
+                android:id="@+id/loadingMeetingsSpinner"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/no_meetings"
+                android:layout_centerInParent="true"
+                android:indeterminate="true"
+                android:layout_margin="10dp"/>
+
+
+        </LinearLayout>
 
     </LinearLayout>
 

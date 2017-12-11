@@ -34,6 +34,7 @@ public class User implements Serializable {
         this.googleToken = builder.googleToken;
         this.instanceId = builder.instanceId;
         this.invites = builder.invites;
+        this.meetings = builder.meetings;
     }
 
     /**
@@ -85,8 +86,8 @@ public class User implements Serializable {
     }
 
     /**
-     * Gets the user's invites.
-     * @return the invites list.
+     * Gets the user's add_invites.
+     * @return the add_invites list.
      */
     public ArrayList getInvites() {
         return invites;
@@ -179,8 +180,8 @@ public class User implements Serializable {
         }
 
         /**
-         * Sets the builder's invites.
-         * @param invites the invites of the user.
+         * Sets the builder's add_invites.
+         * @param invites the add_invites of the user.
          * @return the new UserBuilder object.
          */
         public UserBuilder setInvites(ArrayList invites) {

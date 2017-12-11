@@ -75,6 +75,14 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             tools:targetApi="lollipop" />
 
+        <ImageView
+            android:id="@+id/remove_button"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_remove_dark"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            tools:targetApi="lollipop" />
+
     </LinearLayout>
 
 </RelativeLayout>

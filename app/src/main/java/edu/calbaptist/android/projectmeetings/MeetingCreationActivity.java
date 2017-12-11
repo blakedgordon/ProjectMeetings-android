@@ -1,10 +1,12 @@
 package edu.calbaptist.android.projectmeetings;
 
+import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -14,32 +16,26 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.NumberPicker;
+import android.widget.ProgressBar;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
-import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
-import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.io.IOException;
-import java.sql.Time;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
 
 import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
 
@@ -52,10 +48,19 @@ import static edu.calbaptist.android.projectmeetings.MainActivity.prefs;
 
 public class MeetingCreationActivity extends AppCompatActivity{
 
-    EditText MeetingName, MeetingObjective, length, invites;
-    DatePicker date;
-    TimePicker time;
+    Calendar c;
+
+    EditText meetingName, meetingObjective, add_invites;
     Button submit;
+
+    Button dateButton;
+    Button timeButton;
+    Button driveButton;
+
+    String mDriveFolderId;
+
+    private int mLengthMinutes;
+
     private static final String TAG = "MeetingCreationActivity";
 
     private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_FILE };
@@ -65,29 +70,121 @@ public class MeetingCreationActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_meeting_creation);
 
-        MeetingName = findViewById(R.id.MeetingName);
-        MeetingObjective = findViewById(R.id.MeetingObjective);
-        date = findViewById(R.id.Date);
-        time = findViewById(R.id.Time);
-        submit = findViewById(R.id.Submit);
-        length = findViewById(R.id.Length);
-        invites = findViewById(R.id.Invites);
+        getSupportActionBar().setTitle("Create Meeting");
 
+        meetingName = findViewById(R.id.MeetingName);
+        meetingObjective = findViewById(R.id.MeetingObjective);
+
+        c = Calendar.getInstance();
+        final int mYear = c.get(Calendar.YEAR);
+        final int mMonth = c.get(Calendar.MONTH);
+        final int mDay = c.get(Calendar.DAY_OF_MONTH);
+        final int mHour = c.get(Calendar.HOUR_OF_DAY);
+        final int mMinute = c.get(Calendar.MINUTE);
+
+        final SimpleDateFormat dateFormatter = new SimpleDateFormat("MMM dd, YYYY");
+        final SimpleDateFormat timeFormatter = new SimpleDateFormat("h:mm a");
+
+        dateButton = findViewById(R.id.button_date_picker);
+        dateButton.setText(dateFormatter.format(c.getTime()));
+        dateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DatePickerDialog datePickerDialog = new DatePickerDialog(MeetingCreationActivity.this,
+                        new DatePickerDialog.OnDateSetListener() {
+
+                            @Override
+                            public void onDateSet(DatePicker view, int year,
+                                                  int monthOfYear, int dayOfMonth) {
+                                c.set(year, monthOfYear, dayOfMonth);
+
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        dateButton.setText(dateFormatter.format(c.getTime()));
+                                    }
+                                });
+
+                            }
+                        }, mYear, mMonth, mDay);
+                datePickerDialog.show();
+            }
+        });
+
+        timeButton = findViewById(R.id.button_time_picker);
+        timeButton.setText(timeFormatter.format(c.getTime()));
+        timeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TimePickerDialog timePickerDialog = new TimePickerDialog(MeetingCreationActivity.this,
+                        new TimePickerDialog.OnTimeSetListener() {
+
+                            @Override
+                            public void onTimeSet(TimePicker view, int hour,
+                                                  int minute) {
+                                c.set(Calendar.HOUR_OF_DAY, hour);
+                                c.set(Calendar.MINUTE, minute);
+
+                                timeButton.setText(timeFormatter.format(c.getTime()));
+                            }
+                        }, mHour, mMinute, false);
+                timePickerDialog.show();
+            }
+        });
+
+        driveButton = findViewById(R.id.button_drive_folder);
+        driveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), FolderViewActivity.class);
+                startActivityForResult(intent, 1);
+            }
+        });
+
+        mLengthMinutes = 1;
+
+        NumberPicker np = (NumberPicker) findViewById(R.id.np);
+        np.setMinValue(1);
+        np.setMaxValue(60);
+
+        np.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+            @Override
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal){
+                //Display the newly selected number from picker
+                mLengthMinutes = newVal;
+            }
+        });
+
+        add_invites = findViewById(R.id.add_invites);
+
+        submit = findViewById(R.id.Submit);
         submit.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                Calendar calendar = Calendar.getInstance();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    calendar.set(date.getYear(), date.getMonth(), date.getDayOfMonth(), time.getHour(), time.getMinute());
-                }
-                final long millis = calendar.getTimeInMillis();
-                final long mLength = Long.parseLong(length.getText().toString())*60*1000;
-                createMeeting(millis, mLength);
+                createMeeting();
             }
         });
     }
 
-    private void createMeeting(final long millis, final long mLength){
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == 1) {
+            if(resultCode == Activity.RESULT_OK){
+                Log.d(TAG, "onActivityResult: " + data.getStringExtra("folder_name"));
+                driveButton.setText(data.getStringExtra("folder_name"));
+                mDriveFolderId = data.getStringExtra("folder_id");
+            }
+            if (resultCode == Activity.RESULT_CANCELED) {
+                //Write your code if there's no result
+            }
+        }
+    }
+
+    private void createMeeting(){
+        final long millis = c.getTimeInMillis();
+        final long length = (long) mLengthMinutes * 60 * 1000;
+
         FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
         mUser.getToken(true)
                 .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
@@ -99,15 +196,19 @@ public class MeetingCreationActivity extends AppCompatActivity{
                                     "edu.calbaptist.android.projectmeetings.Account_Name",
                                     Context.MODE_PRIVATE);
 
-                            ArrayList items = new ArrayList<String>(Arrays.asList(invites.getText().toString().split("\\s*,\\s*")));
+                            final ProgressBar progressBar = (ProgressBar) findViewById(R.id.edit_meeting_spinner);
+                            progressBar.setVisibility(View.VISIBLE);
+
+                            final ArrayList invitationsToAdd =
+                                    new ArrayList<String>(Arrays.asList(add_invites.getText().toString().split("\\s*,\\s*")));
 
                             final Meeting meeting = new Meeting.MeetingBuilder()
-                                    .setName(MeetingName.getText().toString())
-                                    .setObjective(MeetingObjective.getText().toString())
+                                    .setName(meetingName.getText().toString())
+                                    .setObjective(meetingObjective.getText().toString())
                                     .setTime(millis)
-                                    .setTimeLimit(mLength)
-                                    .setDriveFolderId(prefs.getString("DefaultFolder", ""))
-                                    .setInvites(items)
+                                    .setTimeLimit(length)
+                                    .setDriveFolderId(mDriveFolderId)
+                                    .setInvites(invitationsToAdd)
                                     .build();
 
                             AsyncTask.execute(new Runnable() {
@@ -124,27 +225,28 @@ public class MeetingCreationActivity extends AppCompatActivity{
                                         void onTaskFailed(RestClientException e) {
                                             Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
                                                     + ": " + e.getJson().toString());
+                                            progressBar.setVisibility(View.GONE);
+                                            showToast("Oh no, an unknown error occured :(");
                                         }
 
                                         @Override
                                         void onExceptionRaised(Exception e) {
                                             Log.d(TAG, "onExceptionRaised: " + e.getMessage());
+                                            progressBar.setVisibility(View.GONE);
+                                            showToast("Whoops, make sure all the fields are filled out. "
+                                                    + "You must invite at least one user to the meeting.");
                                         }
                                     });
                                 }
                             });
 
                             Log.d(TAG, "Firebase Token: " + idToken);
-                            // Send token to your backend via HTTPS
-                            // ...
                         } else {
-                            // Handle error -> task.getException();
+                            Log.d(TAG, "Couldn't connect to Firebase :(");
+                            showToast("Error getting user credentials :(");
                         }
                     }
                 });
-    }
-    private void switchActivity(Class activity){
-        startActivity(new Intent(this, activity));
     }
 
     private class requestCreateFolder extends  AsyncTask<Void, Void, Void> {
@@ -177,7 +279,13 @@ public class MeetingCreationActivity extends AppCompatActivity{
                         .execute();
                 System.out.println("Folder ID: " + file.getId());
                 finish();
-                switchActivity(MeetingListActivity.class);
+
+                Intent intent = new Intent(getApplicationContext(), MeetingListActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+
+//                startActivity(new Intent(this, activity));
+//                switchActivity(MeetingListActivity.class);
             } catch (UserRecoverableAuthIOException e){
                 startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
             } catch (IOException e){
@@ -185,6 +293,15 @@ public class MeetingCreationActivity extends AppCompatActivity{
             }
             return null;
         }
+    }
+
+    private void showToast(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
 

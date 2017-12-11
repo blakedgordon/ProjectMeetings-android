@@ -10,5 +10,11 @@
     <color name="colorGrayDarkTransparent20">#20000000</color>
     <color name="colorGrayDarkTransparent60">#60000000</color>
 
+    <color name="colorBlackLight">#262626</color>
+
+    <color name="colorPurpleLight">#7931c6</color>
     <color name="colorPurpleDark">#320059</color>
+
+    <color name="colorPrimaryAccentMix">#4f09e8</color>
+
 </resources>

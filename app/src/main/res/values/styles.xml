@@ -23,11 +23,14 @@
         <item name="android:width">40dp</item>
     </style>
 
-    <style name="ActivityMeetingTheme" parent="AppTheme.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimaryDark">#210072</item>
+    <style name="ActivityMainTheme" parent="AppTheme.NoActionBar">
+        <item name="colorPrimaryDark">@color/colorPrimaryAccentMix</item>
         <item name="android:textColor">@color/colorWhite</item>
-        <!--<item name="windowActionBar">false</item>-->
+    </style>
+
+    <style name="ActivityMeetingTheme" parent="AppTheme.NoActionBar">
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="android:textColor">@color/colorWhite</item>
     </style>
 
     <style name="ActionButton" parent="@android:style/Widget.ActionButton">

@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 /**
@@ -31,11 +32,11 @@ public class FcmNotificationManager {
 
     /**
      * Builds and issues a notification.
-     * @param from The FCM sender id
-     * @param notification The notification text
+     * @param title The FCM sender id
+     * @param body The notification text
      * @param intent The intent which the user will be directed to upon tapping the notification.
      */
-    public void showNotification(String from, String notification, Intent intent) {
+    public void showNotification(String title, String body, Intent intent) {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
@@ -48,9 +49,10 @@ public class FcmNotificationManager {
         // Configure the notification builder
         String channelId = context.getString(R.string.notification_channel_id);
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(context.getString(R.string.app_name))
-                .setContentText(notification)
+                .setSmallIcon(R.drawable.clapping_hands)
+                .setColor(ContextCompat.getColor(context, R.color.colorAccent))
+                .setContentTitle(title)
+                .setContentText(body)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent);
 
