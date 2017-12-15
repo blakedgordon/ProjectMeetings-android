@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +23,6 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
@@ -32,14 +30,13 @@ import com.google.api.services.drive.model.FileList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.ChooseAccountException;
-import edu.calbaptist.android.projectmeetings.Exceptions.GooglePlayServicesAvailabilityException;
-import edu.calbaptist.android.projectmeetings.Exceptions.RequestPermissionException;
+import edu.calbaptist.android.projectmeetings.exceptions.ChooseAccountException;
+import edu.calbaptist.android.projectmeetings.exceptions.GooglePlayServicesAvailabilityException;
+import edu.calbaptist.android.projectmeetings.exceptions.RequestPermissionException;
 import pub.devrel.easypermissions.EasyPermissions;
 
 import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_ACCOUNT_PICKER;

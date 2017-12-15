@@ -1,4 +1,4 @@
-package edu.calbaptist.android.projectmeetings.Exceptions;
+package edu.calbaptist.android.projectmeetings.exceptions;
 
 import org.json.JSONObject;
 

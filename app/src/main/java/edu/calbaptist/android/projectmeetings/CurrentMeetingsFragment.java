@@ -2,7 +2,6 @@ package edu.calbaptist.android.projectmeetings;
 
 import android.app.ListFragment;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -26,18 +25,15 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Stream;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
+import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
 
 /**
  * Created by Austin on 12/1/2017.
@@ -82,21 +78,21 @@ public class CurrentMeetingsFragment extends ListFragment {
                             AsyncTask.execute(new Runnable() {
                                 @Override
                                 public void run() {
-                                    String uID = prefs.getString("uID",null);
+                                    String uID = prefs.getString("u_id",null);
                                     Log.d(TAG, "run: " + uID);
-                                    final String firebaseToken = prefs.getString("FirebaseToken",null);
+                                    final String firebaseToken = prefs.getString("firebase_token",null);
                                     RestClient.getUserByUid(uID, firebaseToken, new Callback.RestClientUser() {
                                         @Override
                                         void onTaskExecuted(final User user) {
                                             Log.d(TAG, "onTaskExecuted: " + user.getFirebaseToken());
 
                                             SharedPreferences.Editor editor = prefs.edit();
-                                            editor.putString("uID",user.getUid());
-                                            editor.putString("DisplayName",user.getDisplayName());
+                                            editor.putString("u_id",user.getUid());
+                                            editor.putString("display_name",user.getDisplayName());
                                             editor.putString("email",user.getEmail());
-                                            editor.putString("FirebaseToken", task.getResult().getToken());
-                                            editor.putString("GoogleToken", user.getGoogleToken());
-                                            editor.putString("InstanceId", user.getInstanceId());
+                                            editor.putString("firebase_token", task.getResult().getToken());
+                                            editor.putString("google_token", user.getGoogleToken());
+                                            editor.putString("instance_id", user.getInstanceId());
                                             editor.apply();
 
                                             ArrayList<String> mids = new ArrayList<>();
@@ -190,7 +186,7 @@ public class CurrentMeetingsFragment extends ListFragment {
     private ArrayList<Meeting> buildMeetings(){
 
 
-        String uId = prefs.getString("uID",null);
+        String uId = prefs.getString("u_id",null);
         final ArrayList<Meeting> meetings = new ArrayList<>();
 
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference();

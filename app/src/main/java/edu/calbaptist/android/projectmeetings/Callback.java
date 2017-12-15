@@ -2,7 +2,7 @@ package edu.calbaptist.android.projectmeetings;
 
 import org.json.JSONObject;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
+import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
 
 /**
  *  Callback

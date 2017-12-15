@@ -1,16 +1,10 @@
 package edu.calbaptist.android.projectmeetings;
 
-import android.os.AsyncTask;
-import android.util.Log;
-
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
 import edu.calbaptist.android.projectmeetings.javaphoenixchannels.Channel;
 import edu.calbaptist.android.projectmeetings.javaphoenixchannels.Envelope;
 import edu.calbaptist.android.projectmeetings.javaphoenixchannels.IErrorCallback;

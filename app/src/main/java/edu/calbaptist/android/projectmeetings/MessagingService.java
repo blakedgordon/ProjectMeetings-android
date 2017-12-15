@@ -10,7 +10,7 @@ import android.util.Log;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
+import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
 
 /**
  *  Messeging Service
@@ -108,7 +108,7 @@ public class MessagingService extends FirebaseMessagingService {
      * @param mId The id of the meeting
      */
     private void notifyUserToMeetingActivity(final String title, final String body, final String mId) {
-        final String token = prefs.getString("FirebaseToken", null);
+        final String token = prefs.getString("firebase_token", null);
 
         AsyncTask.execute(new Runnable() {
             @Override

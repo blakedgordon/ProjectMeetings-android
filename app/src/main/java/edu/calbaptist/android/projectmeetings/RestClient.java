@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
+import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
 
 /**
  *  Rest Client

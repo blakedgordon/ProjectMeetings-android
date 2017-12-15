@@ -1,4 +1,4 @@
-package edu.calbaptist.android.projectmeetings.Exceptions;
+package edu.calbaptist.android.projectmeetings.exceptions;
 
 /**
  * Created by blakegordon on 10/31/17.

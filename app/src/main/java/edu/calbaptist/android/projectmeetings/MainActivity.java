@@ -52,7 +52,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
+import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
 
 public class MainActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         //auto sign in
-        if(prefs.getBoolean("isSignedIn",false)) {
+        if(prefs.getBoolean("signed_in",false)) {
             Log.d(TAG, "onCreate: cHEcKING");
             Intent intent = getIntent();
 
@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity
         signOutButton = (Button) findViewById(R.id.sign_out_button);
         signOutButton.setOnClickListener(this);
 
-        if(prefs.getString("FirebaseToken", null) == null) {
+        if(prefs.getString("firebase_token", null) == null) {
             signOutButton.setEnabled(false);
         }
 
@@ -309,7 +309,7 @@ public class MainActivity extends AppCompatActivity
                 if (accountName != null) {
                     SharedPreferences.Editor editor = prefs.edit();
                     editor.putString(PREF_ACCOUNT_NAME, accountName);
-                    editor.putBoolean("isSignedIn", true);
+                    editor.putBoolean("signed_in", true);
                     editor.apply();
                     mCredential.setSelectedAccountName(accountName);
                 }
@@ -326,7 +326,7 @@ public class MainActivity extends AppCompatActivity
             firebaseAuthWithGoogle(user);
 
             assert user != null;
-            prefs.edit().putString("gToken", user.getIdToken()).apply();
+            prefs.edit().putString("google_token", user.getIdToken()).apply();
         } else {
 //            statusTextView.setText("Sign in w/ Google failed :(");
             showToast("Sign in with Google failed :(");
@@ -429,7 +429,27 @@ public class MainActivity extends AppCompatActivity
                                     .setInstanceId(FirebaseInstanceId.getInstance().getToken())
                                     .build();
 
-                            Log.d(TAG, "get TOken: " + user.getFirebaseToken());
+                            AsyncTask.execute(new Runnable() {
+                                @Override
+                                public void run() {
+                                    RestClient.createUser(user, new Callback.RestClientUser() {
+                                        @Override
+                                        void onTaskExecuted(User user) {
+                                            Log.d(TAG, "User Created!");
+                                        }
+
+                                        @Override
+                                        void onTaskFailed(RestClientException e) {
+                                            Log.d(TAG, "Hmmm, looks like the user wasn't valid");
+                                        }
+
+                                        @Override
+                                        void onExceptionRaised(Exception e) {
+                                            Log.d(TAG, "An unexpected error occured :(");
+                                        }
+                                    });
+                                }
+                            });
 
                             AsyncTask.execute(new Runnable() {
                                 @Override
@@ -446,19 +466,14 @@ public class MainActivity extends AppCompatActivity
                                             Log.d(TAG, "onTaskExecuted: " + user.getDisplayName());
                                             SharedPreferences.Editor editor = prefs.edit();
                                             editor.putString(PREF_ACCOUNT_NAME, user.getEmail());
-                                            editor.putBoolean("isSignedIn", true);
-                                            editor.putString("uID",user.getUid());
-                                            editor.putString("DisplayName",user.getDisplayName());
+                                            editor.putBoolean("signed_in", true);
+                                            editor.putString("u_id",user.getUid());
+                                            editor.putString("display_name",user.getDisplayName());
                                             editor.putString("email",user.getEmail());
-                                            editor.putString("FirebaseToken", user.getFirebaseToken());
-                                            editor.putString("GoogleToken", user.getGoogleToken());
-                                            editor.putString("InstanceId", user.getInstanceId());
+                                            editor.putString("firebase_token", user.getFirebaseToken());
+                                            editor.putString("google_token", user.getGoogleToken());
+                                            editor.putString("instance_id", user.getInstanceId());
                                             editor.apply();
-
-//                                            final SharedPreferences prefs = App.context.getSharedPreferences(
-//                                                    "edu.calbaptist.android.projectmeetings.Account_Name",
-//                                                    Context.MODE_PRIVATE);
-//                                            Log.d(TAG, "onTaskExecuted: " + prefs.getString("uID", null));
 
                                             showSignInButtons();
 
@@ -490,7 +505,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void toMeetingActivity(final String mId) {
-        final String token = prefs.getString("FirebaseToken", null);
+        final String token = prefs.getString("firebase_token", null);
 
         AsyncTask.execute(new Runnable() {
             @Override
@@ -564,7 +579,7 @@ public class MainActivity extends AppCompatActivity
                 buttonContainer.setVisibility(View.VISIBLE);
                 connectingContainer.setVisibility(View.GONE);
 
-                if(prefs.getString("FirebaseToken", null) != null) {
+                if(prefs.getString("firebase_token", null) != null) {
                     signOutButton.setEnabled(true);
                 }
             }

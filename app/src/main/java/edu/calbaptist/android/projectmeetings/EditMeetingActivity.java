@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -20,10 +19,6 @@ import android.widget.NumberPicker;
 import android.widget.ProgressBar;
 import android.widget.TimePicker;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.api.services.drive.Drive;
-import com.google.api.services.drive.model.File;
-
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -32,10 +27,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.ChooseAccountException;
-import edu.calbaptist.android.projectmeetings.Exceptions.GooglePlayServicesAvailabilityException;
-import edu.calbaptist.android.projectmeetings.Exceptions.RequestPermissionException;
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
+import edu.calbaptist.android.projectmeetings.exceptions.ChooseAccountException;
+import edu.calbaptist.android.projectmeetings.exceptions.GooglePlayServicesAvailabilityException;
+import edu.calbaptist.android.projectmeetings.exceptions.RequestPermissionException;
+import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
 
 /**
  * Created by Austin on 12/5/2017.
@@ -48,7 +43,6 @@ public class EditMeetingActivity extends AppCompatActivity {
     Button submit;
 
     Button dateButton;
-    Button timeButton;
     Button driveButton;
 
     private String mDriveFolderId;
@@ -56,10 +50,6 @@ public class EditMeetingActivity extends AppCompatActivity {
 
     Meeting meeting;
 
-//    EditText MeetingName, MeetingObjective, length, add_invites;
-//    DatePicker date;
-//    TimePicker time;
-//    Button submit;
     private static final String TAG = "EditMeetingActivity";
     SharedPreferences prefs = App.context.getSharedPreferences(
             "edu.calbaptist.android.projectmeetings.Account_Name",
@@ -90,53 +80,45 @@ public class EditMeetingActivity extends AppCompatActivity {
         final int mHour = c.get(Calendar.HOUR_OF_DAY);
         final int mMinute = c.get(Calendar.MINUTE);
 
-        final SimpleDateFormat dateFormatter = new SimpleDateFormat("MMM dd, YYYY");
-        final SimpleDateFormat timeFormatter = new SimpleDateFormat("h:mm a");
+        final SimpleDateFormat dateFormatter = new SimpleDateFormat("h:mm a, MMM dd, YYYY");
+
+        final TimePickerDialog timePickerDialog = new TimePickerDialog(EditMeetingActivity.this,
+                new TimePickerDialog.OnTimeSetListener() {
+
+                    @Override
+                    public void onTimeSet(TimePicker view, int hour,
+                                          int minute) {
+                        c.set(Calendar.HOUR_OF_DAY, hour);
+                        c.set(Calendar.MINUTE, minute);
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                dateButton.setText(dateFormatter.format(c.getTime()));
+                            }
+                        });
+                    }
+                }, mHour, mMinute, false);
+
+        final DatePickerDialog datePickerDialog = new DatePickerDialog(EditMeetingActivity.this,
+                new DatePickerDialog.OnDateSetListener() {
+
+                    @Override
+                    public void onDateSet(DatePicker view, int year,
+                                          int monthOfYear, int dayOfMonth) {
+                        c.set(year, monthOfYear, dayOfMonth);
+
+                        timePickerDialog.show();
+
+                    }
+                }, mYear, mMonth, mDay);
 
         dateButton = findViewById(R.id.button_date_picker);
         dateButton.setText(dateFormatter.format(c.getTime()));
         dateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                DatePickerDialog datePickerDialog = new DatePickerDialog(EditMeetingActivity.this,
-                        new DatePickerDialog.OnDateSetListener() {
-
-                            @Override
-                            public void onDateSet(DatePicker view, int year,
-                                                  int monthOfYear, int dayOfMonth) {
-                                c.set(year, monthOfYear, dayOfMonth);
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        dateButton.setText(dateFormatter.format(c.getTime()));
-                                    }
-                                });
-
-                            }
-                        }, mYear, mMonth, mDay);
                 datePickerDialog.show();
-            }
-        });
-
-        timeButton = findViewById(R.id.button_time_picker);
-        timeButton.setText(timeFormatter.format(c.getTime()));
-        timeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                TimePickerDialog timePickerDialog = new TimePickerDialog(EditMeetingActivity.this,
-                        new TimePickerDialog.OnTimeSetListener() {
-
-                            @Override
-                            public void onTimeSet(TimePicker view, int hour,
-                                                  int minute) {
-                                c.set(Calendar.HOUR_OF_DAY, hour);
-                                c.set(Calendar.MINUTE, minute);
-
-                                timeButton.setText(timeFormatter.format(c.getTime()));
-                            }
-                        }, mHour, mMinute, false);
-                timePickerDialog.show();
             }
         });
 
@@ -216,7 +198,7 @@ public class EditMeetingActivity extends AppCompatActivity {
         final long millis = c.getTimeInMillis();
         final long length = (long) mLengthMinutes * 60 * 1000;
 
-        final String firebaseToken = prefs.getString("FirebaseToken",null);
+        final String firebaseToken = prefs.getString("firebase_token",null);
         Log.d(TAG, "editMeeting: TOKEN " +firebaseToken);
 
         ProgressBar progressBar = (ProgressBar) findViewById(R.id.edit_meeting_spinner);

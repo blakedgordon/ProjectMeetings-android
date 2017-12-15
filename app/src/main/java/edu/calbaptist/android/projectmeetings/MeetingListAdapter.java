@@ -25,7 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
+import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
 
 /**
  * Created by csolo on 12/5/2017.
@@ -72,9 +72,9 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
                 Intent intent = new Intent(getContext(), MeetingActivity.class);
                 intent.putExtra("meeting", meeting);
                 User user = new User.UserBuilder()
-                        .setUid(prefs.getString("uID",null))
-                        .setDisplayName(prefs.getString("DisplayName",null))
-                        .setFirebaseToken(prefs.getString("FirebaseToken",null))
+                        .setUid(prefs.getString("u_id",null))
+                        .setDisplayName(prefs.getString("display_name",null))
+                        .setFirebaseToken(prefs.getString("firebase_token",null))
                         .build();
 
                 Log.d(TAG, "onClick: UID " + user.getUid());
@@ -94,7 +94,8 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
             }
         });
 
-        if(meeting.getUid().equals(prefs.getString("uID", null))) {
+        if(meeting.getUid().equals(prefs.getString("u_id", null))) {
+            h.mEditButton.setVisibility(View.VISIBLE);
             h.mEditButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -111,7 +112,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
                         @Override
                         public void run() {
                             RestClient.deleteMeeting(meeting.getMid(),
-                                    prefs.getString("FirebaseToken", null),
+                                    prefs.getString("firebase_token", null),
                                     new Callback.RestClientJson() {
                                 @Override
                                 void onTaskExecuted(JSONObject json) {
@@ -137,6 +138,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
                 }
             });
         } else {
+            Log.d(TAG, "getView: AYYYYY");
             h.mEditButton.setVisibility(View.GONE);
 
             h.mRemoveButton.setOnClickListener(new View.OnClickListener() {
@@ -146,7 +148,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
                         @Override
                         public void run() {
                             RestClient.deleteUserInvite(meeting.getMid(),
-                                    prefs.getString("FirebaseToken", null),
+                                    prefs.getString("firebase_token", null),
                                     new Callback.RestClientJson() {
                                         @Override
                                         void onTaskExecuted(JSONObject json) {

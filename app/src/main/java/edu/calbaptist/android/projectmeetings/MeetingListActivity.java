@@ -18,7 +18,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.iid.FirebaseInstanceId;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
+import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
 
 /**
  * Created by Austin on 11/30/2017.
@@ -35,7 +35,7 @@ public class MeetingListActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-//        stashToken();
+        stashToken();
         setContentView(R.layout.activity_meetinglist);
         newMeeting = findViewById(R.id.CreateMeeting);
         newMeeting.setOnClickListener(new View.OnClickListener(){
@@ -61,14 +61,14 @@ public class MeetingListActivity extends AppCompatActivity{
                                     "edu.calbaptist.android.projectmeetings.Account_Name",
                                     Context.MODE_PRIVATE);
                             SharedPreferences.Editor editor = settings.edit();
-                            editor.putString("FirebaseToken", idToken);
+                            editor.putString("firebase_token", idToken);
                             editor.apply();
                             AsyncTask.execute(new Runnable() {
                                 @Override
                                 public void run() {
-                                    String uID = prefs.getString("uID",null);
+                                    String uID = prefs.getString("u_id",null);
                                     Log.d(TAG, "run: " + uID);
-                                    final String firebaseToken = prefs.getString("FirebaseToken",null);
+                                    final String firebaseToken = prefs.getString("firebase_token",null);
                                     RestClient.getUserByUid(uID, firebaseToken, new Callback.RestClientUser() {
                                         @Override
                                         void onTaskExecuted(final User user) {
@@ -76,14 +76,14 @@ public class MeetingListActivity extends AppCompatActivity{
 
                                             final User updatedUser = new User.UserBuilder()
                                                     .setFirebaseToken(firebaseToken)
-                                                    .setGoogleToken(prefs.getString("gToken",null))
+                                                    .setGoogleToken(prefs.getString("google_token",null))
                                                     .setInstanceId(FirebaseInstanceId.getInstance().getToken())
                                                     .build();
 
                                             AsyncTask.execute(new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    String firebaseToken = prefs.getString("FirebaseToken",null);
+                                                    String firebaseToken = prefs.getString("firebase_token",null);
                                                     RestClient.updateUser(updatedUser, firebaseToken, new Callback.RestClientUser() {
                                                         @Override
                                                         void onTaskExecuted(User user) {

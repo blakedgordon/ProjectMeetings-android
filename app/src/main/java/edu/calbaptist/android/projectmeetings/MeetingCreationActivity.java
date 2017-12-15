@@ -22,10 +22,15 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.api.client.googleapis.batch.BatchRequest;
+import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.googleapis.json.GoogleJsonError;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.Permission;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
@@ -37,7 +42,10 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
+import edu.calbaptist.android.projectmeetings.exceptions.ChooseAccountException;
+import edu.calbaptist.android.projectmeetings.exceptions.GooglePlayServicesAvailabilityException;
+import edu.calbaptist.android.projectmeetings.exceptions.RequestPermissionException;
+import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
 
 import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_AUTHORIZATION;
 import static edu.calbaptist.android.projectmeetings.MainActivity.prefs;
@@ -82,53 +90,45 @@ public class MeetingCreationActivity extends AppCompatActivity{
         final int mHour = c.get(Calendar.HOUR_OF_DAY);
         final int mMinute = c.get(Calendar.MINUTE);
 
-        final SimpleDateFormat dateFormatter = new SimpleDateFormat("MMM dd, YYYY");
-        final SimpleDateFormat timeFormatter = new SimpleDateFormat("h:mm a");
+        final SimpleDateFormat dateFormatter = new SimpleDateFormat("h:mm a, MMM dd, YYYY");
+
+        final TimePickerDialog timePickerDialog = new TimePickerDialog(MeetingCreationActivity.this,
+                new TimePickerDialog.OnTimeSetListener() {
+
+                    @Override
+                    public void onTimeSet(TimePicker view, int hour,
+                                          int minute) {
+                        c.set(Calendar.HOUR_OF_DAY, hour);
+                        c.set(Calendar.MINUTE, minute);
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                dateButton.setText(dateFormatter.format(c.getTime()));
+                            }
+                        });
+                    }
+                }, mHour, mMinute, false);
+
+        final DatePickerDialog datePickerDialog = new DatePickerDialog(MeetingCreationActivity.this,
+                new DatePickerDialog.OnDateSetListener() {
+
+                    @Override
+                    public void onDateSet(DatePicker view, int year,
+                                          int monthOfYear, int dayOfMonth) {
+                        c.set(year, monthOfYear, dayOfMonth);
+
+                        timePickerDialog.show();
+
+                    }
+                }, mYear, mMonth, mDay);
 
         dateButton = findViewById(R.id.button_date_picker);
         dateButton.setText(dateFormatter.format(c.getTime()));
         dateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                DatePickerDialog datePickerDialog = new DatePickerDialog(MeetingCreationActivity.this,
-                        new DatePickerDialog.OnDateSetListener() {
-
-                            @Override
-                            public void onDateSet(DatePicker view, int year,
-                                                  int monthOfYear, int dayOfMonth) {
-                                c.set(year, monthOfYear, dayOfMonth);
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        dateButton.setText(dateFormatter.format(c.getTime()));
-                                    }
-                                });
-
-                            }
-                        }, mYear, mMonth, mDay);
                 datePickerDialog.show();
-            }
-        });
-
-        timeButton = findViewById(R.id.button_time_picker);
-        timeButton.setText(timeFormatter.format(c.getTime()));
-        timeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                TimePickerDialog timePickerDialog = new TimePickerDialog(MeetingCreationActivity.this,
-                        new TimePickerDialog.OnTimeSetListener() {
-
-                            @Override
-                            public void onTimeSet(TimePicker view, int hour,
-                                                  int minute) {
-                                c.set(Calendar.HOUR_OF_DAY, hour);
-                                c.set(Calendar.MINUTE, minute);
-
-                                timeButton.setText(timeFormatter.format(c.getTime()));
-                            }
-                        }, mHour, mMinute, false);
-                timePickerDialog.show();
             }
         });
 
@@ -225,7 +225,12 @@ public class MeetingCreationActivity extends AppCompatActivity{
                                         void onTaskFailed(RestClientException e) {
                                             Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
                                                     + ": " + e.getJson().toString());
-                                            progressBar.setVisibility(View.GONE);
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    progressBar.setVisibility(View.GONE);
+                                                }
+                                            });
                                             showToast("Oh no, an unknown error occured :(");
                                         }
 
@@ -239,6 +244,49 @@ public class MeetingCreationActivity extends AppCompatActivity{
                                     });
                                 }
                             });
+
+                            JsonBatchCallback<Permission> callback = new JsonBatchCallback<Permission>() {
+                                @Override
+                                public void onFailure(GoogleJsonError e,
+                                                      HttpHeaders responseHeaders)
+                                        throws IOException {
+                                    // Handle error
+                                    Log.d(TAG, "onFailure: " + e.getMessage());
+                                }
+
+                                @Override
+                                public void onSuccess(Permission permission,
+                                                      HttpHeaders responseHeaders)
+                                        throws IOException {
+                                    System.out.println("Permission ID: " + permission.getId());
+                                }
+                            };
+
+                            try {
+                                Drive driveService = DriveFiles.getInstance().getDriveService();
+                                BatchRequest batch = driveService.batch();
+
+                                for(Object object : invitationsToAdd) {
+                                    String email = (String) object;
+
+                                    Permission userPermission = new Permission()
+                                            .setType("user")
+                                            .setRole("writer")
+                                            .setEmailAddress(email);
+                                    driveService.permissions().create(meeting.getDriveFolderId(), userPermission)
+                                            .setFields("id")
+                                            .queue(batch, callback);
+                                }
+
+                            } catch (GooglePlayServicesAvailabilityException e) {
+                                e.printStackTrace();
+                            } catch (ChooseAccountException e) {
+                                e.printStackTrace();
+                            } catch (RequestPermissionException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
 
                             Log.d(TAG, "Firebase Token: " + idToken);
                         } else {
@@ -266,7 +314,7 @@ public class MeetingCreationActivity extends AppCompatActivity{
 
         @Override
         protected Void doInBackground(Void... params) {
-            String folderId = prefs.getString("DefaultFolder",null);
+            String folderId = prefs.getString("default_folder",null);
             System.out.println(folderId + "-------------------------------------------------------------");
             File fileMetadata = new File();
             fileMetadata.setName(meetingName);

@@ -11,7 +11,6 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.batch.BatchRequest;
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.http.FileContent;
 import com.google.api.client.http.HttpHeaders;
@@ -29,9 +28,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.ChooseAccountException;
-import edu.calbaptist.android.projectmeetings.Exceptions.GooglePlayServicesAvailabilityException;
-import edu.calbaptist.android.projectmeetings.Exceptions.RequestPermissionException;
+import edu.calbaptist.android.projectmeetings.exceptions.ChooseAccountException;
+import edu.calbaptist.android.projectmeetings.exceptions.GooglePlayServicesAvailabilityException;
+import edu.calbaptist.android.projectmeetings.exceptions.RequestPermissionException;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
@@ -119,7 +118,7 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
         SharedPreferences prefs = App.context.getSharedPreferences(
                 "edu.calbaptist.android.projectmeetings.Account_Name",
                 Context.MODE_PRIVATE);
-        String defaultFolderID = prefs.getString("DefaultFolder", "");
+        String defaultFolderID = prefs.getString("default_folder", "");
         File fileMetadata = new File();
         fileMetadata.setName(fileName);
         fileMetadata.setParents(Collections.singletonList(defaultFolderID));
