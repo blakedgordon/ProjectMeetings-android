@@ -62,7 +62,6 @@ public class MeetingCreationActivity extends AppCompatActivity{
     Button submit;
 
     Button dateButton;
-    Button timeButton;
     Button driveButton;
 
     String mDriveFolderId;
@@ -192,15 +191,23 @@ public class MeetingCreationActivity extends AppCompatActivity{
                         if (task.isSuccessful()) {
                             final String idToken = task.getResult().getToken();
 
-                            SharedPreferences prefs = App.context.getSharedPreferences(
-                                    "edu.calbaptist.android.projectmeetings.Account_Name",
-                                    Context.MODE_PRIVATE);
-
                             final ProgressBar progressBar = (ProgressBar) findViewById(R.id.edit_meeting_spinner);
                             progressBar.setVisibility(View.VISIBLE);
 
                             final ArrayList invitationsToAdd =
                                     new ArrayList<String>(Arrays.asList(add_invites.getText().toString().split("\\s*,\\s*")));
+
+                            try {
+                                DriveFiles.getInstance().shareFolder(mDriveFolderId, invitationsToAdd);
+                            } catch (GooglePlayServicesAvailabilityException e) {
+                                e.printStackTrace();
+                            } catch (ChooseAccountException e) {
+                                e.printStackTrace();
+                            } catch (RequestPermissionException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
 
                             final Meeting meeting = new Meeting.MeetingBuilder()
                                     .setName(meetingName.getText().toString())
@@ -218,7 +225,10 @@ public class MeetingCreationActivity extends AppCompatActivity{
                                         @Override
                                         void onTaskExecuted(Meeting m) {
                                             Log.d(TAG, "onTaskExecuted: " + m.getName());
-                                            new MeetingCreationActivity.requestCreateFolder(m.getName()).execute();
+//                                            new MeetingCreationActivity.requestCreateFolder(m.getName()).execute();
+                                            Intent intent = new Intent(getApplicationContext(), MeetingListActivity.class);
+                                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                            startActivity(intent);
                                         }
 
                                         @Override
@@ -245,49 +255,6 @@ public class MeetingCreationActivity extends AppCompatActivity{
                                 }
                             });
 
-                            JsonBatchCallback<Permission> callback = new JsonBatchCallback<Permission>() {
-                                @Override
-                                public void onFailure(GoogleJsonError e,
-                                                      HttpHeaders responseHeaders)
-                                        throws IOException {
-                                    // Handle error
-                                    Log.d(TAG, "onFailure: " + e.getMessage());
-                                }
-
-                                @Override
-                                public void onSuccess(Permission permission,
-                                                      HttpHeaders responseHeaders)
-                                        throws IOException {
-                                    System.out.println("Permission ID: " + permission.getId());
-                                }
-                            };
-
-                            try {
-                                Drive driveService = DriveFiles.getInstance().getDriveService();
-                                BatchRequest batch = driveService.batch();
-
-                                for(Object object : invitationsToAdd) {
-                                    String email = (String) object;
-
-                                    Permission userPermission = new Permission()
-                                            .setType("user")
-                                            .setRole("writer")
-                                            .setEmailAddress(email);
-                                    driveService.permissions().create(meeting.getDriveFolderId(), userPermission)
-                                            .setFields("id")
-                                            .queue(batch, callback);
-                                }
-
-                            } catch (GooglePlayServicesAvailabilityException e) {
-                                e.printStackTrace();
-                            } catch (ChooseAccountException e) {
-                                e.printStackTrace();
-                            } catch (RequestPermissionException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-
                             Log.d(TAG, "Firebase Token: " + idToken);
                         } else {
                             Log.d(TAG, "Couldn't connect to Firebase :(");
@@ -297,51 +264,48 @@ public class MeetingCreationActivity extends AppCompatActivity{
                 });
     }
 
-    private class requestCreateFolder extends  AsyncTask<Void, Void, Void> {
-
-        String meetingName;
-        Drive driveService;
-
-        requestCreateFolder(String meetingName){
-            this.meetingName = meetingName;
-
-            try {
-                driveService = DriveFiles.getInstance().getDriveService();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            String folderId = prefs.getString("default_folder",null);
-            System.out.println(folderId + "-------------------------------------------------------------");
-            File fileMetadata = new File();
-            fileMetadata.setName(meetingName);
-            fileMetadata.setPermissionIds(Collections.singletonList(prefs.getString("email",null)));
-            fileMetadata.setMimeType("application/vnd.google-apps.folder");
-            fileMetadata.setParents(Collections.singletonList(folderId));
-            try {
-                File file = driveService.files().create(fileMetadata)
-                        .setFields("id")
-                        .execute();
-                System.out.println("Folder ID: " + file.getId());
-                finish();
-
-                Intent intent = new Intent(getApplicationContext(), MeetingListActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-
-//                startActivity(new Intent(this, activity));
-//                switchActivity(MeetingListActivity.class);
-            } catch (UserRecoverableAuthIOException e){
-                startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
-            } catch (IOException e){
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
+//    private class requestCreateFolder extends  AsyncTask<Void, Void, Void> {
+//
+//        String meetingName;
+//        Drive driveService;
+//
+//        requestCreateFolder(String meetingName){
+//            this.meetingName = meetingName;
+//
+//            try {
+//                driveService = DriveFiles.getInstance().getDriveService();
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        @Override
+//        protected Void doInBackground(Void... params) {
+//            String folderId = prefs.getString("default_folder",null);
+//            System.out.println(folderId + "-------------------------------------------------------------");
+//            File fileMetadata = new File();
+//            fileMetadata.setName(meetingName);
+//            fileMetadata.setPermissionIds(Collections.singletonList(prefs.getString("email",null)));
+//            fileMetadata.setMimeType("application/vnd.google-apps.folder");
+//            fileMetadata.setParents(Collections.singletonList(folderId));
+//            try {
+//                File file = driveService.files().create(fileMetadata)
+//                        .setFields("id")
+//                        .execute();
+//                System.out.println("Folder ID: " + file.getId());
+//                finish();
+//
+//                Intent intent = new Intent(getApplicationContext(), MeetingListActivity.class);
+//                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+//                startActivity(intent);
+//            } catch (UserRecoverableAuthIOException e){
+//                startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
+//            } catch (IOException e){
+//                e.printStackTrace();
+//            }
+//            return null;
+//        }
+//    }
 
     private void showToast(final String message) {
         runOnUiThread(new Runnable() {

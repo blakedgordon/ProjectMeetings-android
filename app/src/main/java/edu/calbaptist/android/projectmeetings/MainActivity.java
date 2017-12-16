@@ -432,28 +432,6 @@ public class MainActivity extends AppCompatActivity
                             AsyncTask.execute(new Runnable() {
                                 @Override
                                 public void run() {
-                                    RestClient.createUser(user, new Callback.RestClientUser() {
-                                        @Override
-                                        void onTaskExecuted(User user) {
-                                            Log.d(TAG, "User Created!");
-                                        }
-
-                                        @Override
-                                        void onTaskFailed(RestClientException e) {
-                                            Log.d(TAG, "Hmmm, looks like the user wasn't valid");
-                                        }
-
-                                        @Override
-                                        void onExceptionRaised(Exception e) {
-                                            Log.d(TAG, "An unexpected error occured :(");
-                                        }
-                                    });
-                                }
-                            });
-
-                            AsyncTask.execute(new Runnable() {
-                                @Override
-                                public void run() {
                                     try {
                                         Thread.sleep(500);
                                     } catch (InterruptedException e) {

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -24,6 +25,7 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.Permission;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +41,8 @@ import pub.devrel.easypermissions.EasyPermissions;
  */
 
 public class DriveFiles implements EasyPermissions.PermissionCallbacks {
+    private static final String TAG = "DriveFiles";
+
     private static DriveFiles instance = null;
     private Drive driveService;
     private GoogleAccountCredential mCredential;
@@ -114,6 +118,50 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
         }
     }
 
+    public void shareFolder(String driveFolderId, ArrayList<String> invitationsToAdd) throws IOException {
+        JsonBatchCallback<Permission> callback = new JsonBatchCallback<Permission>() {
+            @Override
+            public void onFailure(GoogleJsonError e,
+                                  HttpHeaders responseHeaders)
+                    throws IOException {
+                // Handle error
+                Log.d(TAG, "onFailure: " + e.getMessage());
+            }
+
+            @Override
+            public void onSuccess(Permission permission,
+                                  HttpHeaders responseHeaders)
+                    throws IOException {
+                Log.d(TAG, "onSuccess: Permission ID: " + permission.getId());
+            }
+        };
+
+        final BatchRequest batch = driveService.batch();
+
+        for(String email : invitationsToAdd.toArray(new String[0])) {
+            Log.d(TAG, "run email: " + email);
+
+            Permission userPermission = new Permission()
+                    .setType("user")
+                    .setRole("writer")
+                    .setEmailAddress(email);
+            driveService.permissions().create(driveFolderId, userPermission)
+                    .setFields("id")
+                    .queue(batch, callback);
+        }
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    batch.execute();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
     public void uploadFileToDrive(java.io.File filePath, String fileName, String fileType) {
         SharedPreferences prefs = App.context.getSharedPreferences(
                 "edu.calbaptist.android.projectmeetings.Account_Name",
@@ -123,32 +171,32 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
         fileMetadata.setName(fileName);
         fileMetadata.setParents(Collections.singletonList(defaultFolderID));
         FileContent mediaContent = new FileContent(fileType, filePath);
-        new UploadFile(fileMetadata, mediaContent).execute();
+//        new UploadFile(fileMetadata, mediaContent).execute();
     }
 
-    private class UploadFile extends AsyncTask<Void, Void, Void> {
-        private File fileMetadata;
-        private FileContent mediaContent;
-
-        public UploadFile(File fileMetadata, FileContent mediaContent) {
-            this.fileMetadata = fileMetadata;
-            this.mediaContent = mediaContent;
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            try {
-                File file1 = driveService.files().create(fileMetadata, mediaContent)
-                        .setFields("id, parents")
-                        .execute();
-                System.out.println("File ID: " + file1.getId());
-            } catch (IOException e) {
-                e.printStackTrace();
-
-            }
-            return null;
-        }
-    }
+//    private class UploadFile extends AsyncTask<Void, Void, Void> {
+//        private File fileMetadata;
+//        private FileContent mediaContent;
+//
+//        public UploadFile(File fileMetadata, FileContent mediaContent) {
+//            this.fileMetadata = fileMetadata;
+//            this.mediaContent = mediaContent;
+//        }
+//
+//        @Override
+//        protected Void doInBackground(Void... voids) {
+//            try {
+//                File file1 = driveService.files().create(fileMetadata, mediaContent)
+//                        .setFields("id, parents")
+//                        .execute();
+//                System.out.println("File ID: " + file1.getId());
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//
+//            }
+//            return null;
+//        }
+//    }
 
     /**
      * Attempt to call the API, after verifying that all the preconditions are
