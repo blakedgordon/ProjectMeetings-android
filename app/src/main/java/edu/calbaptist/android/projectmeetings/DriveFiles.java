@@ -144,8 +144,48 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
             Permission userPermission = new Permission()
                     .setType("user")
                     .setRole("writer")
+                    .setId(email)
                     .setEmailAddress(email);
+
             driveService.permissions().create(driveFolderId, userPermission)
+                    .setFields("id")
+                    .queue(batch, callback);
+        }
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    batch.execute();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public void unshareFolder(String driveFolderId, ArrayList<String> invitationsToRemove) throws IOException {
+        JsonBatchCallback<Void> callback = new JsonBatchCallback<Void>() {
+            @Override
+            public void onSuccess(Void aVoid, HttpHeaders responseHeaders) throws IOException {
+                Log.d(TAG, "onSuccess: Permission ID");
+            }
+
+            @Override
+            public void onFailure(GoogleJsonError e,
+                                  HttpHeaders responseHeaders)
+                    throws IOException {
+                // Handle error
+                Log.d(TAG, "onFailure: " + e.getMessage());
+            }
+        };
+
+        final BatchRequest batch = driveService.batch();
+
+        for(String email : invitationsToRemove.toArray(new String[0])) {
+            Log.d(TAG, "run email: " + email);
+
+            driveService.permissions().delete(driveFolderId, email)
                     .setFields("id")
                     .queue(batch, callback);
         }

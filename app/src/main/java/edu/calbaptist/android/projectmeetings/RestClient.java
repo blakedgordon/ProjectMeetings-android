@@ -246,6 +246,8 @@ public class RestClient {
     }
 
     private static User jsonToUser(JSONObject json) throws JSONException{
+        Log.d(TAG, "jsonToUser: " + json.toString());
+
         User.UserBuilder builder = new User.UserBuilder()
                 .setUid(json.getString("u_id"))
                 .setEmail(json.getString("email"))
@@ -431,6 +433,8 @@ public class RestClient {
     public static void deleteMeeting(String mid, String token, Callback.RestClientJson callback) {
         try {
             URL url = new URL(PROTOCOL, HOST, PORT,  "/api/meeting/" + mid);
+
+            Log.d(TAG, "DELETE: " + mid + " " + url.toString() + " " + token);
 
             HttpURLConnection conn = getBasicHttpURLConnection(url);
             conn.setRequestMethod("DELETE");

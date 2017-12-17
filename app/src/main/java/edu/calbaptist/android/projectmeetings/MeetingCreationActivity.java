@@ -198,7 +198,8 @@ public class MeetingCreationActivity extends AppCompatActivity{
                                     new ArrayList<String>(Arrays.asList(add_invites.getText().toString().split("\\s*,\\s*")));
 
                             try {
-                                DriveFiles.getInstance().shareFolder(mDriveFolderId, invitationsToAdd);
+                                DriveFiles.getInstance()
+                                        .shareFolder(mDriveFolderId, invitationsToAdd);
                             } catch (GooglePlayServicesAvailabilityException e) {
                                 e.printStackTrace();
                             } catch (ChooseAccountException e) {

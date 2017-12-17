@@ -57,52 +57,64 @@ public class MeetingListActivity extends AppCompatActivity{
                     public void onComplete(@NonNull Task<GetTokenResult> task) {
                         if (task.isSuccessful()) {
                             String idToken = task.getResult().getToken();
-                            SharedPreferences settings = App.context.getSharedPreferences(
-                                    "edu.calbaptist.android.projectmeetings.Account_Name",
-                                    Context.MODE_PRIVATE);
-                            SharedPreferences.Editor editor = settings.edit();
+
+                            SharedPreferences.Editor editor = prefs.edit();
                             editor.putString("firebase_token", idToken);
                             editor.apply();
+
+                            final User newUser = new User.UserBuilder()
+                                    .setFirebaseToken(idToken)
+                                    .build();
+
                             AsyncTask.execute(new Runnable() {
                                 @Override
                                 public void run() {
                                     String uID = prefs.getString("u_id",null);
                                     Log.d(TAG, "run: " + uID);
                                     final String firebaseToken = prefs.getString("firebase_token",null);
-                                    RestClient.getUserByUid(uID, firebaseToken, new Callback.RestClientUser() {
+                                    RestClient.updateUser(newUser, firebaseToken, new Callback.RestClientUser() {
                                         @Override
                                         void onTaskExecuted(final User user) {
-                                            Log.d(TAG, "onTaskExecuted: " + user.getDisplayName());
+                                            Log.d(TAG, "onTaskExecuted: adfa " + user.getMeetings());
 
-                                            final User updatedUser = new User.UserBuilder()
-                                                    .setFirebaseToken(firebaseToken)
-                                                    .setGoogleToken(prefs.getString("google_token",null))
-                                                    .setInstanceId(FirebaseInstanceId.getInstance().getToken())
-                                                    .build();
+                                            SharedPreferences.Editor editor = prefs.edit();
+                                            editor.putString("firebase_token", user.getFirebaseToken());
+                                            editor.apply();
 
-                                            AsyncTask.execute(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    String firebaseToken = prefs.getString("firebase_token",null);
-                                                    RestClient.updateUser(updatedUser, firebaseToken, new Callback.RestClientUser() {
-                                                        @Override
-                                                        void onTaskExecuted(User user) {
-                                                            Log.d(TAG, "onTaskExecuted: " + user.getDisplayName());
-                                                        }
+                                            CurrentMeetingsFragment meetingListFragment =
+                                                    (CurrentMeetingsFragment) getFragmentManager()
+                                                            .findFragmentById(R.id.fragment_meeting_list);
+                                            meetingListFragment.updateList(user);
 
-                                                        @Override
-                                                        void onTaskFailed(RestClientException e) {
-                                                            Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
-                                                                    + ": " + e.getJson().toString());
-                                                        }
-
-                                                        @Override
-                                                        void onExceptionRaised(Exception e) {
-                                                            Log.d(TAG, "onExceptionRaised: " + e.getMessage());
-                                                        }
-                                                    });
-                                                }
-                                            });
+//                                            final User updatedUser = new User.UserBuilder()
+//                                                    .setFirebaseToken(firebaseToken)
+//                                                    .setGoogleToken(prefs.getString("google_token",null))
+//                                                    .setInstanceId(FirebaseInstanceId.getInstance().getToken())
+//                                                    .build();
+//
+//                                            AsyncTask.execute(new Runnable() {
+//                                                @Override
+//                                                public void run() {
+//                                                    String firebaseToken = prefs.getString("firebase_token",null);
+//                                                    RestClient.updateUser(updatedUser, firebaseToken, new Callback.RestClientUser() {
+//                                                        @Override
+//                                                        void onTaskExecuted(User user) {
+//                                                            Log.d(TAG, "onTaskExecuted: " + user.getDisplayName());
+//                                                        }
+//
+//                                                        @Override
+//                                                        void onTaskFailed(RestClientException e) {
+//                                                            Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
+//                                                                    + ": " + e.getJson().toString());
+//                                                        }
+//
+//                                                        @Override
+//                                                        void onExceptionRaised(Exception e) {
+//                                                            Log.d(TAG, "onExceptionRaised: " + e.getMessage());
+//                                                        }
+//                                                    });
+//                                                }
+//                                            });
                                         }
 
                                         @Override

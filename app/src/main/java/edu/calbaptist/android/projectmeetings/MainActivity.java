@@ -97,28 +97,31 @@ public class MainActivity extends AppCompatActivity
         if(prefs.getBoolean("signed_in",false)) {
             Log.d(TAG, "onCreate: cHEcKING");
             Intent intent = getIntent();
+            Bundle extras = intent.getExtras();
 
-            if (intent != null && intent.getExtras() != null) {
-                Bundle extras = intent.getExtras();
+            if (intent != null && extras != null) {
                 Log.d(TAG, "onCreate: " + extras.toString());
 
                 String type = extras.getString("type");
 
-                switch (type) {
-                    case "meeting_invite":
-                        Intent transfer = new Intent(this, MeetingListActivity.class);
-                        startActivity(transfer);
-                        break;
-                    case "meeting_warn":
-                        toMeetingActivity(extras.getString("m_id"));
-                        break;
-                    case "meeting_start":
-                        toMeetingActivity(extras.getString("m_id"));
-                        break;
+                if(type != null) {
+                    switch (type) {
+                        case "meeting_invite":
+                            Intent transfer = new Intent(this, MeetingListActivity.class);
+                            startActivity(transfer);
+                            break;
+                        case "meeting_warn":
+                            toMeetingActivity(extras.getString("m_id"));
+                            break;
+                        case "meeting_start":
+                            toMeetingActivity(extras.getString("m_id"));
+                            break;
+                    }
+                } else {
+                    Intent transfer = new Intent(this, MeetingListActivity.class);
+                    startActivity(transfer);
                 }
-//                String someData= extras.getString("someData");
-//                String someData2 = extras.getString("someData2");
-            } else if(intent.getExtras() == null){
+            } else {
                 Intent transfer = new Intent(this, MeetingListActivity.class);
                 startActivity(transfer);
             }

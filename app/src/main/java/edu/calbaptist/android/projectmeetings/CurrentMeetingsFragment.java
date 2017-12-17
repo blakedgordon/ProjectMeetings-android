@@ -58,128 +58,120 @@ public class CurrentMeetingsFragment extends ListFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        updateUser();
     }
 
-    private void updateUser(){
-        final FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
-        mUser.getToken(true)
-                .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
-                    public void onComplete(@NonNull final Task<GetTokenResult> task) {
-                        if (task.isSuccessful()) {
-//                            String idToken = task.getResult().getToken();
-//                            SharedPreferences settings = App.context.getSharedPreferences(
-//                                    "edu.calbaptist.android.projectmeetings.Account_Name",
-//                                    Context.MODE_PRIVATE);
-//                            SharedPreferences.Editor editor = settings.edit();
-//                            editor.putString("FirebaseToken", idToken);
-//                            editor.apply();
+    public void updateList(User user){
+        Log.d(TAG, "onTaskExecuted: " + user.getFirebaseToken());
 
-                            AsyncTask.execute(new Runnable() {
-                                @Override
-                                public void run() {
-                                    String uID = prefs.getString("u_id",null);
-                                    Log.d(TAG, "run: " + uID);
-                                    final String firebaseToken = prefs.getString("firebase_token",null);
-                                    RestClient.getUserByUid(uID, firebaseToken, new Callback.RestClientUser() {
-                                        @Override
-                                        void onTaskExecuted(final User user) {
-                                            Log.d(TAG, "onTaskExecuted: " + user.getFirebaseToken());
+        ArrayList<String> mids = new ArrayList<>();
 
-                                            SharedPreferences.Editor editor = prefs.edit();
-                                            editor.putString("u_id",user.getUid());
-                                            editor.putString("display_name",user.getDisplayName());
-                                            editor.putString("email",user.getEmail());
-                                            editor.putString("firebase_token", task.getResult().getToken());
-                                            editor.putString("google_token", user.getGoogleToken());
-                                            editor.putString("instance_id", user.getInstanceId());
-                                            editor.apply();
+        if(user.getMeetings() != null && user.getMeetings().size() > 0) {
+            mids.addAll(user.getMeetings());
 
-                                            ArrayList<String> mids = new ArrayList<>();
+        }
 
-                                            if(user.getMeetings() != null && user.getMeetings().size() > 0) {
-                                                mids.addAll(user.getMeetings());
+        if(user.getInvites() != null && user.getInvites().size() > 0) {
+            mids.addAll(user.getInvites());
 
-                                            }
+        }
 
-                                            if(user.getInvites() != null && user.getInvites().size() > 0) {
-                                                mids.addAll(user.getInvites());
+        final ProgressBar spinner = (ProgressBar) getActivity().findViewById(R.id.loadingMeetingsSpinner);
 
-                                            }
+        if(mids.size() > 0) {
+            DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
 
-                                            final ProgressBar spinner = (ProgressBar) getActivity().findViewById(R.id.loadingMeetingsSpinner);
+            Iterator iterator = mids.iterator();
 
-                                            if(mids.size() > 0) {
-                                                DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
+            while (iterator.hasNext()) {
+                String mid = (String) iterator.next();
 
-                                                Iterator iterator = mids.iterator();
+                Query query = reference.child("meetings/" + mid);
+                query.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        Log.d(TAG, "onDataChange: " + dataSnapshot.toString());
+                        if (dataSnapshot.exists()) {
+                            Log.d(TAG, "onDataChange: ISSUE " + dataSnapshot.child("name").getValue().toString());
 
-                                                while (iterator.hasNext()) {
-                                                    String mid = (String) iterator.next();
+                            Meeting m = new Meeting.MeetingBuilder()
+                                    .setName(dataSnapshot.child("name").getValue().toString())
+                                    .setObjective(dataSnapshot.child("objective").getValue().toString())
+                                    .setTime(Long.parseLong(dataSnapshot.child("time").getValue().toString()))
+                                    .setTimeLimit(Long.parseLong((dataSnapshot.child("time_limit").getValue().toString())))
+                                    .setDriveFolderId(dataSnapshot.child("drive_folder_id").getValue().toString())
+                                    .setMid(dataSnapshot.getKey())
+                                    .setUid(dataSnapshot.child("u_id").getValue().toString())
+                                    .build();
+                            Log.d(TAG, "onDataChange: NULL " + m.getUid());
 
-                                                    Query query = reference.child("meetings/" + mid);
-                                                    query.addListenerForSingleValueEvent(new ValueEventListener() {
-                                                        @Override
-                                                        public void onDataChange(DataSnapshot dataSnapshot) {
-                                                            Log.d(TAG, "onDataChange: " + dataSnapshot.toString());
-                                                            if (dataSnapshot.exists()) {
-                                                                Log.d(TAG, "onDataChange: ISSUE " + dataSnapshot.child("name").getValue().toString());
-
-                                                                Meeting m = new Meeting.MeetingBuilder()
-                                                                        .setName(dataSnapshot.child("name").getValue().toString())
-                                                                        .setObjective(dataSnapshot.child("objective").getValue().toString())
-                                                                        .setTime(Long.parseLong(dataSnapshot.child("time").getValue().toString()))
-                                                                        .setTimeLimit(Long.parseLong((dataSnapshot.child("time_limit").getValue().toString())))
-                                                                        .setDriveFolderId(dataSnapshot.child("drive_folder_id").getValue().toString())
-                                                                        .setMid(dataSnapshot.getKey())
-                                                                        .setUid(dataSnapshot.child("u_id").getValue().toString())
-                                                                        .build();
-                                                                Log.d(TAG, "onDataChange: NULL " + m.getUid());
-
-                                                                meetings.add(m);
-                                                            }
-
-                                                            spinner.setVisibility(View.GONE);
-
-                                                            ArrayAdapter adapter = new MeetingListAdapter(getActivity(), meetings);
-                                                            setListAdapter(adapter);
-                                                        }
-
-
-                                                        @Override
-                                                        public void onCancelled(DatabaseError databaseError) {
-
-                                                        }
-                                                    });
-                                                }
-                                            } else {
-                                                getActivity().runOnUiThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        RelativeLayout rel = getActivity().findViewById(R.id.no_meetings);
-                                                        rel.setVisibility(View.VISIBLE);
-                                                        spinner.setVisibility(View.GONE);
-                                                    }
-                                                });
-                                            }
-                                        }
-
-                                        @Override
-                                        void onTaskFailed(RestClientException e) {
-                                            Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
-                                                    + ": " + e.getJson().toString());
-                                        }
-
-                                        @Override
-                                        void onExceptionRaised(Exception e) {
-                                            Log.d(TAG, "onExceptionRaised: " + e.getMessage());
-                                        }
-                                    });
-                                }
-                            });
+                            meetings.add(m);
                         }
+
+                        spinner.setVisibility(View.GONE);
+
+                        ArrayAdapter adapter = new MeetingListAdapter(getActivity(), meetings);
+                        setListAdapter(adapter);
+                    }
+
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
                     }
                 });
+            }
+        } else {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    RelativeLayout rel = getActivity().findViewById(R.id.no_meetings);
+                    rel.setVisibility(View.VISIBLE);
+                    spinner.setVisibility(View.GONE);
+                }
+            });
+        }
+
+//        final FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+//        mUser.getToken(true)
+//                .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+//                    public void onComplete(@NonNull final Task<GetTokenResult> task) {
+//                        if (task.isSuccessful()) {
+////                            String idToken = task.getResult().getToken();
+////                            SharedPreferences settings = App.context.getSharedPreferences(
+////                                    "edu.calbaptist.android.projectmeetings.Account_Name",
+////                                    Context.MODE_PRIVATE);
+////                            SharedPreferences.Editor editor = settings.edit();
+////                            editor.putString("FirebaseToken", idToken);
+////                            editor.apply();
+//
+//                            AsyncTask.execute(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    String uID = prefs.getString("u_id",null);
+//                                    Log.d(TAG, "CurentMeetingsFragment run: " + uID);
+//                                    final String firebaseToken = prefs.getString("firebase_token",null);
+//                                    RestClient.getUserByUid(uID, firebaseToken, new Callback.RestClientUser() {
+//                                        @Override
+//                                        void onTaskExecuted(final User user) {
+//
+//                                        }
+//
+//                                        @Override
+//                                        void onTaskFailed(RestClientException e) {
+//                                            Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
+//                                                    + ": " + e.getJson().toString());
+//                                        }
+//
+//                                        @Override
+//                                        void onExceptionRaised(Exception e) {
+//                                            Log.d(TAG, "onExceptionRaised: " + e.getMessage());
+//                                        }
+//                                    });
+//                                }
+//                            });
+//                        }
+//                    }
+//                });
 
     }
 

@@ -65,6 +65,8 @@ public class EditMeetingActivity extends AppCompatActivity {
 
         meeting = (Meeting) getIntent().getExtras().getSerializable("meeting");
 
+        mDriveFolderId = meeting.getDriveFolderId();
+
         meetingName = findViewById(R.id.MeetingName);
         meetingName.setText(meeting.getName());
 
@@ -129,7 +131,7 @@ public class EditMeetingActivity extends AppCompatActivity {
             public void run() {
                 try {
                     String fileName = DriveFiles.getInstance().getDriveService()
-                            .files().get(meeting.getDriveFolderId()).execute().getName();
+                            .files().get(mDriveFolderId).execute().getName();
                     driveButton.setText(fileName);
                 } catch (GooglePlayServicesAvailabilityException e) {
                     e.printStackTrace();
@@ -213,6 +215,22 @@ public class EditMeetingActivity extends AppCompatActivity {
                 .setDriveFolderId(mDriveFolderId)
                 .build();
 
+        if(!add_invites.getText().toString().isEmpty()) {
+            final ArrayList invitationsToAdd =
+                    new ArrayList<String>(Arrays.asList(add_invites.getText().toString().split("\\s*,\\s*")));
+            if(invitationsToAdd.size() > 0) {
+                invite(m.getMid(), firebaseToken, invitationsToAdd);
+            }
+        }
+
+        if(!remove_invites.getText().toString().isEmpty()) {
+            final ArrayList invitationsToRemove =
+                    new ArrayList<String>(Arrays.asList(remove_invites.getText().toString().split("\\s*,\\s*")));
+            if(invitationsToRemove.size() > 0) {
+                uninvite(m.getMid(), firebaseToken, invitationsToRemove);
+            }
+        }
+
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -236,18 +254,6 @@ public class EditMeetingActivity extends AppCompatActivity {
                 });
             }
         });
-
-        final ArrayList invitationsToAdd =
-                new ArrayList<String>(Arrays.asList(add_invites.getText().toString().split("\\s*,\\s*")));
-        if(invitationsToAdd.size() > 0) {
-            invite(m.getMid(), firebaseToken, invitationsToAdd);
-        }
-
-        final ArrayList invitationsToRemove =
-                new ArrayList<String>(Arrays.asList(remove_invites.getText().toString().split("\\s*,\\s*")));
-        if(invitationsToAdd.size() > 0) {
-            uninvite(m.getMid(), firebaseToken, invitationsToRemove);
-        }
     }
 
     private void switchActivity(){
@@ -257,6 +263,20 @@ public class EditMeetingActivity extends AppCompatActivity {
     }
 
     private void invite(final String mId, final String token, final ArrayList<String> invitationsToAdd) {
+        try {
+            DriveFiles.getInstance().shareFolder(mDriveFolderId, invitationsToAdd);
+        } catch (GooglePlayServicesAvailabilityException e) {
+            e.printStackTrace();
+        } catch (ChooseAccountException e) {
+            e.printStackTrace();
+        } catch (RequestPermissionException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Log.d(TAG, "invite: " + invitationsToAdd);
+
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -289,6 +309,18 @@ public class EditMeetingActivity extends AppCompatActivity {
     }
 
     private void uninvite(final String mId, final String token, final ArrayList<String> invitationsToRemove) {
+        try {
+            DriveFiles.getInstance().unshareFolder(mDriveFolderId, invitationsToRemove);
+        } catch (GooglePlayServicesAvailabilityException e) {
+            e.printStackTrace();
+        } catch (ChooseAccountException e) {
+            e.printStackTrace();
+        } catch (RequestPermissionException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
