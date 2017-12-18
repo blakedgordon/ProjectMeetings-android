@@ -109,8 +109,10 @@ public class CurrentMeetingsFragment extends ListFragment {
 
                         spinner.setVisibility(View.GONE);
 
-                        ArrayAdapter adapter = new MeetingListAdapter(getActivity(), meetings);
-                        setListAdapter(adapter);
+                        if(getActivity() != null) {
+                            ArrayAdapter adapter = new MeetingListAdapter(getActivity(), meetings);
+                            setListAdapter(adapter);
+                        }
                     }
 
 

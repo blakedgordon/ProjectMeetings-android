@@ -41,7 +41,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
     ArrayList<Meeting> meetings;
 
     public MeetingListAdapter(@NonNull Context context, ArrayList<Meeting> meetings) {
-        super(context, 0, meetings);
+        super(context, R.layout.item_meeting, meetings);
 
         this.meetings = meetings;
     }

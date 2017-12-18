@@ -10,6 +10,8 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -18,6 +20,7 @@ import android.widget.EditText;
 import android.widget.NumberPicker;
 import android.widget.ProgressBar;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import org.json.JSONObject;
 
@@ -37,6 +40,11 @@ import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
  */
 
 public class EditMeetingActivity extends AppCompatActivity {
+    private static final String TAG = "EditMeetingActivity";
+    SharedPreferences prefs = App.context.getSharedPreferences(
+            "edu.calbaptist.android.projectmeetings.Account_Name",
+            Context.MODE_PRIVATE);
+
     Calendar c;
 
     EditText meetingName, meetingObjective, add_invites, remove_invites;
@@ -45,15 +53,17 @@ public class EditMeetingActivity extends AppCompatActivity {
     Button dateButton;
     Button driveButton;
 
+    ProgressBar progressBar;
+
     private String mDriveFolderId;
     private int mLengthMinutes;
 
-    Meeting meeting;
+    private boolean updateMeeting = false;
+    private boolean updatePending = true;
+    private boolean invitesPending = true;
+    private boolean uninvitesPending = true;
 
-    private static final String TAG = "EditMeetingActivity";
-    SharedPreferences prefs = App.context.getSharedPreferences(
-            "edu.calbaptist.android.projectmeetings.Account_Name",
-            Context.MODE_PRIVATE);
+    Meeting meeting;
 
     @SuppressLint("NewApi")
     @Override
@@ -69,9 +79,41 @@ public class EditMeetingActivity extends AppCompatActivity {
 
         meetingName = findViewById(R.id.MeetingName);
         meetingName.setText(meeting.getName());
+        meetingName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                updateMeeting = true;
+            }
+        });
 
         meetingObjective = findViewById(R.id.MeetingObjective);
         meetingObjective.setText(meeting.getObjective());
+        meetingObjective.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                updateMeeting = true;
+            }
+        });
 
         c = Calendar.getInstance();
         c.setTimeInMillis(meeting.getTime());
@@ -109,7 +151,6 @@ public class EditMeetingActivity extends AppCompatActivity {
                     public void onDateSet(DatePicker view, int year,
                                           int monthOfYear, int dayOfMonth) {
                         c.set(year, monthOfYear, dayOfMonth);
-
                         timePickerDialog.show();
 
                     }
@@ -120,6 +161,7 @@ public class EditMeetingActivity extends AppCompatActivity {
         dateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                updateMeeting = true;
                 datePickerDialog.show();
             }
         });
@@ -147,6 +189,7 @@ public class EditMeetingActivity extends AppCompatActivity {
         driveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                updateMeeting = true;
                 Intent intent = new Intent(getApplicationContext(), FolderViewActivity.class);
                 startActivityForResult(intent, 1);
             }
@@ -164,6 +207,7 @@ public class EditMeetingActivity extends AppCompatActivity {
             public void onValueChange(NumberPicker picker, int oldVal, int newVal){
                 //Display the newly selected number from picker
                 mLengthMinutes = newVal;
+                updateMeeting = true;
             }
         });
 
@@ -179,6 +223,8 @@ public class EditMeetingActivity extends AppCompatActivity {
                 editMeeting();
             }
         });
+
+        progressBar = (ProgressBar) findViewById(R.id.edit_meeting_spinner);
     }
 
     @Override
@@ -203,60 +249,71 @@ public class EditMeetingActivity extends AppCompatActivity {
         final String firebaseToken = prefs.getString("firebase_token",null);
         Log.d(TAG, "editMeeting: TOKEN " +firebaseToken);
 
-        ProgressBar progressBar = (ProgressBar) findViewById(R.id.edit_meeting_spinner);
         progressBar.setVisibility(View.VISIBLE);
 
-        final Meeting m = new Meeting.MeetingBuilder()
-                .setMid(meeting.getMid())
-                .setName(meetingName.getText().toString())
-                .setObjective(meetingObjective.getText().toString())
-                .setTime(millis)
-                .setTimeLimit(length)
-                .setDriveFolderId(mDriveFolderId)
-                .build();
+        if(updateMeeting) {
+            final Meeting m = new Meeting.MeetingBuilder()
+                    .setMid(meeting.getMid())
+                    .setName(meetingName.getText().toString())
+                    .setObjective(meetingObjective.getText().toString())
+                    .setTime(millis)
+                    .setTimeLimit(length)
+                    .setDriveFolderId(mDriveFolderId)
+                    .build();
+
+            AsyncTask.execute(new Runnable() {
+                @Override
+                public void run() {
+                    RestClient.updateMeeting(m, firebaseToken, new Callback.RestClientMeeting() {
+                        @Override
+                        void onTaskExecuted(final Meeting meeting) {
+                            Log.d(TAG, "onTaskExecuted: " + meeting.getName());
+                            updatePending = false;
+                            switchActivity();
+                        }
+
+                        @Override
+                        void onTaskFailed(RestClientException e) {
+                            Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
+                                    + ": " + e.getJson().toString());
+                            showError("Unable to update meeting");
+                        }
+
+                        @Override
+                        void onExceptionRaised(Exception e) {
+                            Log.d(TAG, "onExceptionRaised: " + e.getMessage());
+                            showError("Unable to update meeting");
+                        }
+                    });
+                }
+            });
+        } else {
+            Log.d(TAG, "editMeeting: NOT UPDATING");
+            updatePending = false;
+        }
 
         if(!add_invites.getText().toString().isEmpty()) {
             final ArrayList invitationsToAdd =
                     new ArrayList<String>(Arrays.asList(add_invites.getText().toString().split("\\s*,\\s*")));
-            if(invitationsToAdd.size() > 0) {
-                invite(m.getMid(), firebaseToken, invitationsToAdd);
-            }
+            invite(meeting.getMid(), firebaseToken, invitationsToAdd);
+        } else {
+            invitesPending = false;
         }
 
         if(!remove_invites.getText().toString().isEmpty()) {
             final ArrayList invitationsToRemove =
                     new ArrayList<String>(Arrays.asList(remove_invites.getText().toString().split("\\s*,\\s*")));
-            if(invitationsToRemove.size() > 0) {
-                uninvite(m.getMid(), firebaseToken, invitationsToRemove);
-            }
+            uninvite(meeting.getMid(), firebaseToken, invitationsToRemove);
+        } else {
+            uninvitesPending = false;
         }
-
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                RestClient.updateMeeting(m, firebaseToken, new Callback.RestClientMeeting() {
-                    @Override
-                    void onTaskExecuted(final Meeting meeting) {
-                        Log.d(TAG, "onTaskExecuted: " + meeting.getName());
-                        switchActivity();
-                    }
-
-                    @Override
-                    void onTaskFailed(RestClientException e) {
-                        Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
-                                + ": " + e.getJson().toString());
-                    }
-
-                    @Override
-                    void onExceptionRaised(Exception e) {
-                        Log.d(TAG, "onExceptionRaised: " + e.getMessage());
-                    }
-                });
-            }
-        });
     }
 
     private void switchActivity(){
+        if(updatePending || invitesPending || updatePending) {
+            return;
+        }
+
         Intent intent = new Intent(getApplicationContext(), MeetingListActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
@@ -287,6 +344,7 @@ public class EditMeetingActivity extends AppCompatActivity {
                             void onTaskExecuted(JSONObject json) {
                                 Log.d(TAG, "inviteToMeeting onTaskExecuted: "
                                         + json.toString());
+                                invitesPending = false;
                                 switchActivity();
                             }
 
@@ -295,6 +353,7 @@ public class EditMeetingActivity extends AppCompatActivity {
                                 Log.d(TAG, "inviteToMeeting onTaskFailed: "
                                         + e.getMessage());
                                 e.printStackTrace();
+                                showError("Unable to invite user(s)");
                             }
 
                             @Override
@@ -302,6 +361,7 @@ public class EditMeetingActivity extends AppCompatActivity {
                                 Log.d(TAG, "inviteToMeeting onExceptionRaised: "
                                         + e.getMessage());
                                 e.printStackTrace();
+                                showError("Unable to invite user(s)");
                             }
                         });
             }
@@ -331,6 +391,7 @@ public class EditMeetingActivity extends AppCompatActivity {
                             void onTaskExecuted(JSONObject json) {
                                 Log.d(TAG, "uninviteFromMeeting onTaskExecuted: "
                                         + json.toString());
+                                uninvitesPending = false;
                                 switchActivity();
                             }
 
@@ -339,6 +400,7 @@ public class EditMeetingActivity extends AppCompatActivity {
                                 Log.d(TAG, "uninviteFromMeeting onTaskFailed: "
                                         + e.getMessage());
                                 e.printStackTrace();
+                                showError("Unable to uninvite user(s)");
                             }
 
                             @Override
@@ -346,8 +408,19 @@ public class EditMeetingActivity extends AppCompatActivity {
                                 Log.d(TAG, "uninviteFromMeeting onExceptionRaised: "
                                         + e.getMessage());
                                 e.printStackTrace();
+                                showError("Unable to uninvite user(s)");
                             }
                         });
+            }
+        });
+    }
+
+    private void showError(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                progressBar.setVisibility(View.GONE);
+                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
             }
         });
     }
