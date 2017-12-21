@@ -1,13 +1,16 @@
 package edu.calbaptist.android.projectmeetings.exceptions;
 
 /**
- * Created by blakegordon on 10/31/17.
+ *  Choose Account Exception
+ *  Handles an exception which occurs when the app is unable to select the proper Google account.
+ *
+ *  @author Blake Gordon
+ *  @version 1.0.0 10/31/17
  */
 
 public class ChooseAccountException extends Exception {
+    /**
+     * Thrown when the app is unable to select the proper Google account.
+     */
     public ChooseAccountException() {}
-
-    public ChooseAccountException(String message) {
-        super(message);
-    }
 }

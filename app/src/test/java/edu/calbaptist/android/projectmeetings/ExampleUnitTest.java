@@ -5,13 +5,13 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.HashSet;
 
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.Channel;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.Envelope;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.IErrorCallback;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.IMessageCallback;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.ISocketCloseCallback;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.ISocketOpenCallback;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.Socket;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.Channel;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.Envelope;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.IErrorCallback;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.IMessageCallback;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.ISocketCloseCallback;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.ISocketOpenCallback;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.Socket;
 
 import static org.junit.Assert.*;
 

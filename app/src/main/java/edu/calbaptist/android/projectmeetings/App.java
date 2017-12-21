@@ -4,13 +4,21 @@ import android.app.Application;
 import android.content.Context;
 
 /**
- * Created by blakegordon on 10/30/17.
+ *  App
+ *  Initiates the App and its context.
+ *
+ *  @author Blake Gordon
+ *  @version 1.0.0 10/30/17
  */
 
 public class App extends Application {
     public static Context context;
 
-    @Override public void onCreate() {
+    /**
+     * Initiates the context of the app.
+     */
+    @Override
+    public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
     }

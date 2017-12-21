@@ -1,20 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#4106a0</color>
-    <color name="colorPrimaryDark">#210072</color>
-    <color name="colorAccent">#493fff</color>
-
-    <color name="colorWhite">#FFFFFF</color>
-
-    <color name="colorGrayDark">#2b2b2b</color>
-    <color name="colorGrayDarkTransparent20">#20000000</color>
-    <color name="colorGrayDarkTransparent60">#60000000</color>
-
-    <color name="colorBlackLight">#262626</color>
-
-    <color name="colorPurpleLight">#7931c6</color>
-    <color name="colorPurpleDark">#320059</color>
-
-    <color name="colorPrimaryAccentMix">#4f09e8</color>
-
+    <color name="color_primary">#4106a0</color>
+    <color name="color_primary_dark">#210072</color>
+    <color name="color_accent">#493fff</color>
+    <color name="color_primary_accent_mix">#4f09e8</color>
+    <color name="color_purple_light">#7931c6</color>
+    <color name="color_purple_dark">#320059</color>
+    <color name="color_white">#FFFFFF</color>
+    <color name="color_gray_dark">#2b2b2b</color>
+    <color name="color_gray_dark_transparency_20">#20000000</color>
+    <color name="color_gray_dark_transparency_60">#60000000</color>
+    <color name="color_black_light">#262626</color>
 </resources>

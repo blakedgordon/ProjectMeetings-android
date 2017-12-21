@@ -37,41 +37,52 @@ import java.util.Map;
 import edu.calbaptist.android.projectmeetings.exceptions.ChooseAccountException;
 import edu.calbaptist.android.projectmeetings.exceptions.GooglePlayServicesAvailabilityException;
 import edu.calbaptist.android.projectmeetings.exceptions.RequestPermissionException;
+import edu.calbaptist.android.projectmeetings.utils.DriveFiles;
 import pub.devrel.easypermissions.EasyPermissions;
 
-import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_ACCOUNT_PICKER;
-import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_GOOGLE_PLAY_SERVICES;
-import static edu.calbaptist.android.projectmeetings.MainActivity.REQUEST_PERMISSION_GET_ACCOUNTS;
+import static edu.calbaptist.android.projectmeetings.SignInActivity.REQUEST_ACCOUNT_PICKER;
+import static edu.calbaptist.android.projectmeetings.SignInActivity.REQUEST_GOOGLE_PLAY_SERVICES;
+import static edu.calbaptist.android.projectmeetings.SignInActivity.REQUEST_PERMISSION_GET_ACCOUNTS;
 
 /**
- * Created by Austin on 11/28/2017.
+ *  Folder List Fragment
+ *  Assists with letting the user select a Drive folder.
+ *
+ *  @author Austin Brinegar, Caleb Solorio
+ *  @version 1.0.0 12/20/17
  */
 
 public class FolderListFragment extends ListFragment
         implements GoogleApiClient.OnConnectionFailedListener, AdapterView.OnItemClickListener{
     private final String TAG = "FolderListFragment";
 
-    SharedPreferences prefs = App.context.getSharedPreferences(
-            "edu.calbaptist.android.projectmeetings.Account_Name",
-            Context.MODE_PRIVATE);
-
     GoogleAccountCredential mCredential;
     private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_FILE };
     Map<String,String> folders = new LinkedHashMap<>();
 
+    /**
+     * Initializes FolderListFragment.
+     * @param inflater The inflater in which to inflate the fragment.
+     * @param container The container in which the fragment belongs
+     * @param savedInstanceState Contains any data sent from the previous activity.
+     * @return the fragment View.
+     */
     @Override
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_folderview, container, false);
-
+        return inflater.inflate(R.layout.fragment_folder_list, container, false);
     }
 
+    /**
+     * Executes after the Activity's creation.
+     * @param savedInstanceState Contains any data sent from the previous activity.
+     */
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
         String accountName = App.context.getSharedPreferences(
-                "edu.calbaptist.android.projectmeetings.Account_Name", Context.MODE_PRIVATE)
+                App.context.getString(R.string.app_package), Context.MODE_PRIVATE)
                 .getString("accountName", null);
 
         mCredential = GoogleAccountCredential.usingOAuth2(
@@ -84,8 +95,11 @@ public class FolderListFragment extends ListFragment
         getListView().setOnItemClickListener(this);
     }
 
-    void showGooglePlayServicesAvailabilityErrorDialog(
-            final int connectionStatusCode) {
+    /**
+     * Shows an error dialog in the case of Google Play Services' unavailability.
+     * @param connectionStatusCode Specifies the type of error.
+     */
+    void showGooglePlayServicesAvailabilityErrorDialog(final int connectionStatusCode) {
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
         Dialog dialog = apiAvailability.getErrorDialog(
                 getActivity(),
@@ -94,33 +108,36 @@ public class FolderListFragment extends ListFragment
         dialog.show();
     }
 
+    /**
+     * Executes if the connection fails.
+     */
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {}
 
-    }
-
+    /**
+     * Executes when an item is clicked.
+     * @param parent The parent of the item.
+     * @param view The view of the item.
+     * @param position The position of the item.
+     * @param id The id of the item.
+     */
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         String folderName =  ((String) new ArrayList(folders.keySet()).get(position));
         String folderId = folders.get(folderName);
 
-        Log.d(TAG, "onItemClick: FOLDERID" + folderId);
-
-//        SharedPreferences.Editor editor = prefs.edit();
-//        editor.putString("DefaultFolder", folderId);
-//        editor.apply();
-
         Intent returnIntent = new Intent();
         returnIntent.putExtra("folder_name",
                 folderName.replace("\n", "").replace("\r", ""));
         returnIntent.putExtra("folder_id", folderId);
+
         getActivity().setResult(Activity.RESULT_OK, returnIntent);
         getActivity().finish();
-
-//        Intent transfer = new Intent(getActivity(), MeetingListActivity.class);
-//        startActivity(transfer);
     }
 
+    /**
+     * Initializes an asynchronous request to create a Drive folder.
+     */
     private class MakeRequestTask extends AsyncTask<Void, Void, Map<String,String>> {
         private com.google.api.services.drive.Drive mService = null;
         private Exception mLastError = null;
@@ -188,7 +205,8 @@ public class FolderListFragment extends ListFragment
             folders = output;
             ArrayList<String> folderArray = new ArrayList<>();
             folderArray.addAll(output.keySet());
-            ArrayAdapter adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, folderArray.toArray());
+            ArrayAdapter adapter = new ArrayAdapter<>(getActivity(),
+                    android.R.layout.simple_list_item_1, folderArray.toArray());
             setListAdapter(adapter);
         }
 
@@ -202,13 +220,12 @@ public class FolderListFragment extends ListFragment
                 } else if (mLastError instanceof UserRecoverableAuthIOException) {
                     startActivityForResult(
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
-                            MainActivity.REQUEST_AUTHORIZATION);
+                            SignInActivity.REQUEST_AUTHORIZATION);
                 } else {
-                    System.out.println("The following error occurred:\n"
-                            + mLastError.getMessage());
+                    Log.e(TAG, "onCancelled: ", mLastError);
                 }
             } else {
-                System.out.println("Request cancelled.");
+                Log.d(TAG, "Request cancelled.");
             }
         }
     }

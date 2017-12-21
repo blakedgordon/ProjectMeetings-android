@@ -3,11 +3,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/meeting_root_view"
+    android:id="@+id/layout_meeting_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="edu.calbaptist.android.projectmeetings.MeetingActivity"
-    android:background="@drawable/meeting_activity_root_gradient"
+    android:background="@drawable/gradient_activity_root_meeting"
     style="@style/ActivityMeetingTheme"
     >
 
@@ -17,10 +17,10 @@
         android:layout_alignParentTop="true" >
 
             <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar"
+                android:id="@+id/toolbar_meeting"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="@color/colorGrayDarkTransparent60"
+                android:background="@color/color_gray_dark_transparency_60"
                 android:theme="@style/AppTheme.AppBarOverlay"
                 app:popupTheme="@style/AppTheme.PopupOverlay"
                 >
@@ -51,27 +51,27 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:id="@+id/top">
+            android:id="@+id/layout_top">
         </FrameLayout>
 
         <TextView
             android:id="@+id/text_objective"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/top"
+            android:layout_below="@id/layout_top"
             android:text="Meeting Objective"
             android:textSize="30sp"
             android:padding="10dp"
             android:gravity="center_horizontal"/>
 
         <RelativeLayout
-            android:id="@+id/clock"
+            android:id="@+id/meeting_clock"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/text_objective">
 
             <TextView
-                android:id="@+id/textConnecting"
+                android:id="@+id/text_connecting"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
@@ -83,7 +83,7 @@
 
 
             <ProgressBar
-                android:id="@+id/progressBar"
+                android:id="@+id/progress_bar_meeting"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="235dp"
                 android:layout_height="235dp"
@@ -101,11 +101,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerInParent="true"
-                    android:id="@+id/clockInfo"
+                    android:id="@+id/meeting_clock_info"
                     android:visibility="gone">
 
                     <TextView
-                        android:id="@+id/textClockTime"
+                        android:id="@+id/text_clock_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentTop="true"
@@ -114,11 +114,11 @@
                         android:textSize="40sp" />
 
                     <TextView
-                        android:id="@+id/textClockHint"
+                        android:id="@+id/text_clock_hint"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
-                        android:layout_below="@+id/textClockTime"
+                        android:layout_below="@+id/text_clock_time"
                         android:text="Not Started"
                         android:textSize="20sp" />
 
@@ -129,11 +129,11 @@
         <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/form"
-            android:layout_below="@id/clock">
+            android:layout_above="@+id/layout_meeting_form"
+            android:layout_below="@id/meeting_clock">
 
             <android.support.v4.view.ViewPager
-                android:id="@+id/pager"
+                android:id="@+id/view_pager_meeting"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="30dp" />
@@ -146,10 +146,10 @@
                 android:gravity="center">
 
                 <ImageView
-                    android:id="@+id/applause_icon_1"
+                    android:id="@+id/ic_applause_1"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:src="@drawable/clapping_hands"
+                    android:src="@drawable/ic_clapping_hands"
                     android:visibility="gone"/>
 
             </RelativeLayout>
@@ -162,10 +162,10 @@
                 android:gravity="center">
 
                 <ImageView
-                    android:id="@+id/applause_icon_2"
+                    android:id="@+id/ic_applause_2"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:src="@drawable/clapping_hands"
+                    android:src="@drawable/ic_clapping_hands"
                     android:visibility="gone"/>
 
             </RelativeLayout>
@@ -178,10 +178,10 @@
                 android:gravity="center">
 
                 <ImageView
-                    android:id="@+id/applause_icon_3"
+                    android:id="@+id/ic_applause_3"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:src="@drawable/clapping_hands"
+                    android:src="@drawable/ic_clapping_hands"
                     android:visibility="gone"/>
 
             </RelativeLayout>
@@ -194,10 +194,10 @@
                 android:gravity="center">
 
                 <ImageView
-                    android:id="@+id/applause_icon_4"
+                    android:id="@+id/ic_applause_4"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:src="@drawable/clapping_hands"
+                    android:src="@drawable/ic_clapping_hands"
                     android:visibility="gone"/>
 
             </RelativeLayout>
@@ -210,10 +210,10 @@
                 android:gravity="center">
 
                 <ImageView
-                    android:id="@+id/applause_icon_5"
+                    android:id="@+id/ic_applause_5"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:src="@drawable/clapping_hands"
+                    android:src="@drawable/ic_clapping_hands"
                     android:visibility="gone" />
 
             </RelativeLayout>
@@ -226,10 +226,10 @@
                 android:gravity="center">
 
                 <ImageView
-                    android:id="@+id/applause_icon_6"
+                    android:id="@+id/ic_applause_6"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:src="@drawable/clapping_hands"
+                    android:src="@drawable/ic_clapping_hands"
                     android:visibility="gone" />
 
             </RelativeLayout>
@@ -242,10 +242,10 @@
                 android:gravity="center">
 
                 <ImageView
-                    android:id="@+id/applause_icon_7"
+                    android:id="@+id/ic_applause_7"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:src="@drawable/clapping_hands"
+                    android:src="@drawable/ic_clapping_hands"
                     android:visibility="gone" />
 
             </RelativeLayout>
@@ -258,10 +258,10 @@
                 android:gravity="center">
 
                 <ImageView
-                    android:id="@+id/applause_icon_8"
+                    android:id="@+id/ic_applause_8"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:src="@drawable/clapping_hands"
+                    android:src="@drawable/ic_clapping_hands"
                     android:visibility="gone" />
 
             </RelativeLayout>
@@ -274,10 +274,10 @@
                 android:gravity="center">
 
                 <ImageView
-                    android:id="@+id/applause_icon_9"
+                    android:id="@+id/ic_applause_9"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:src="@drawable/clapping_hands"
+                    android:src="@drawable/ic_clapping_hands"
                     android:visibility="gone" />
 
             </RelativeLayout>
@@ -290,10 +290,10 @@
                 android:gravity="center">
 
                 <ImageView
-                    android:id="@+id/applause_icon_10"
+                    android:id="@+id/ic_applause_10"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:src="@drawable/clapping_hands"
+                    android:src="@drawable/ic_clapping_hands"
                     android:visibility="gone" />
 
             </RelativeLayout>
@@ -301,11 +301,11 @@
         </FrameLayout>
 
         <RelativeLayout
-            android:id="@+id/form"
+            android:id="@+id/layout_meeting_form"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:background="@color/colorGrayDarkTransparent20"
+            android:background="@color/color_gray_dark_transparency_20"
             android:paddingTop="5dp"
             android:paddingBottom="5dp"
             android:descendantFocusability="beforeDescendants"
@@ -326,12 +326,12 @@
                     android:maxHeight="80dp"
                     android:minHeight="50dp"
                     android:layout_marginLeft="5dp"
-                    android:textColor="@color/colorWhite"
+                    android:textColor="@color/color_white"
                     android:backgroundTint="#ffffff"/>
 
                 <ImageButton
                     android:id="@+id/button_applause"
-                    android:background="@drawable/clapping_hands"
+                    android:background="@drawable/ic_clapping_hands"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_alignParentEnd="true"
@@ -340,7 +340,7 @@
 
                 <ImageButton
                     android:id="@+id/button_send_message"
-                    android:background="@drawable/send_message"
+                    android:background="@drawable/ic_send_message"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_alignParentEnd="true"

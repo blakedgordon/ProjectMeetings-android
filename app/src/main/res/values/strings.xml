@@ -1,9 +1,17 @@
 <resources>
+    <string name="app_package">edu.calbaptist.android.projectmeetings.Account_Name</string>
     <string name="app_name">QuickMeet</string>
     <string name="app_slogan">Level up your meetings.</string>
-    <string name="sign_out">Sign Out</string>
+
+    <string name="rest_protocol">http</string>
+    <string name="http_endpoint">ec2-34-226-155-228.compute-1.amazonaws.com</string>
+    <string name="ws_endpoint">ws://ec2-34-226-155-228.compute-1.amazonaws.com:8080/socket/websocket</string>
+    <string name="firebase_endpoint">https://projectmeeting-183706.firebaseio.com</string>
     <string name="google_oauth_client_id">711742704581-llerd66vh3u40pebn49ak4gggd7hbo05.apps.googleusercontent.com</string>
-    <string name="selectFolders">Select Default Folder</string>
+
+    <string name="sign_out">Sign Out</string>
+    <string name="connecting">Connecting</string>
+    <string name="select_folders">Select Default Folder</string>
     <string name="create_folder">Create New Folder</string>
     <string name="add_photo">Add Photo</string>
     <string name="add_recording">Add Recording</string>
@@ -13,22 +21,19 @@
     <string name="upcoming_meetings">Upcoming Meetings</string>
     <string name="past_meetings">Past Meetings</string>
     <string name="add_file">Add File</string>
-    <string name="filename">File Name</string>
+    <string name="file_name">File Name</string>
     <string name="notification_channel_id">fcm_channel</string>
     <string name="notification_channel_name">Project Meetings FCM Channel</string>
     <string name="notification_channel_description">This channel assists with deploying Firebase Cloud Messaging notifications.</string>
     <string name="title_activity_meeting">MeetingActivity</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="meetingName">Meeting Name</string>
-    <string name="meetingObjective">Meeting Objective</string>
+    <string name="meeting_name">Meeting Name</string>
+    <string name="meeting_objective">Meeting Objective</string>
     <string name="length">Enter length of meeting in minutes</string>
     <string name="submit">Submit</string>
-    <string name="createMeeting">Create Meeting</string>
-    <string name="noMeetingsFound">No meetings found!</string>
-    <string name="tableFlip">(ノ°Д°）ノ︵ ┻━┻</string>
+    <string name="create_meeting">Create Meeting</string>
+    <string name="no_meetings_found">No meetings found!</string>
+    <string name="table_flip">(ノ°Д°）ノ︵ ┻━┻</string>
     <string name="invites">You\'ve been invited to some meetings</string>
-    <string name="http_endpoint">http://ec2-34-226-155-228.compute-1.amazonaws.com:8080</string>
-    <string name="ws_endpoint">ws://ec2-34-226-155-228.compute-1.amazonaws.com:8080/socket/websocket</string>
-    <string name="firebase_endpoint">https://projectmeeting-183706.firebaseio.com</string>
-    <string name="EditMeeting">Edit Meeting</string>
+    <string name="edit_meeting">Edit Meeting</string>
 </resources>

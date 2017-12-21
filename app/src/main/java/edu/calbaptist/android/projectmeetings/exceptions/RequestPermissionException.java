@@ -1,14 +1,16 @@
 package edu.calbaptist.android.projectmeetings.exceptions;
 
 /**
- * Created by blakegordon on 10/31/17.
+ *  Request Permission Exception
+ *  Handles an exception which occurs when the app unsuccessfully requests permissions.
+ *
+ *  @author Blake Gordon
+ *  @version 1.0.0 10/31/17
  */
 
 public class RequestPermissionException extends Exception {
-    public RequestPermissionException() {
-    }
-
-    public RequestPermissionException(String message) {
-        super(message);
-    }
+    /**
+     * Thrown when the app unsuccessfully requests permissions.
+     */
+    public RequestPermissionException() {}
 }

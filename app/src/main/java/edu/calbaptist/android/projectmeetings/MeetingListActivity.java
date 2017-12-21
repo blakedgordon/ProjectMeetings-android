@@ -3,7 +3,6 @@ package edu.calbaptist.android.projectmeetings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -16,40 +15,64 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
-import com.google.firebase.iid.FirebaseInstanceId;
 
+import edu.calbaptist.android.projectmeetings.async.user.UpdateUserAsync;
 import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
+import edu.calbaptist.android.projectmeetings.models.User;
+import edu.calbaptist.android.projectmeetings.utils.rest.RestClientUserCallback;
 
 /**
- * Created by Austin on 11/30/2017.
+ *  Meeting List Activity
+ *  Shows the meetings the user is a part of.
+ *
+ *  @author Austin Brinegar, Caleb Solorio
+ *  @version 1.0.0 12/20/17
  */
 
-public class MeetingListActivity extends AppCompatActivity{
-
+public class MeetingListActivity extends AppCompatActivity
+        implements View.OnClickListener {
     private static final String TAG = "MeetingListActivity";
-    private FloatingActionButton newMeeting;
-    final static SharedPreferences prefs = App.context.getSharedPreferences(
-            "edu.calbaptist.android.projectmeetings.Account_Name",
-            Context.MODE_PRIVATE);
+    private static final SharedPreferences PREFERENCES = App.context.getSharedPreferences(
+            App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
 
+    private FloatingActionButton newMeeting;
+
+    /**
+     * Initializes MeetingListActivity
+     * @param savedInstanceState Contains any data sent from the previous activity.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         stashToken();
-        setContentView(R.layout.activity_meetinglist);
-        newMeeting = findViewById(R.id.CreateMeeting);
-        newMeeting.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v){
-                switchActivity(MeetingCreationActivity.class);
-            }
-        });
+        setContentView(R.layout.activity_meeting_list);
+        newMeeting = findViewById(R.id.fab_create_meeting);
+        newMeeting.setOnClickListener(this);
     }
 
+    /**
+     * Handles OnClick events.
+     * @param view the view in which the event occurred.
+     */
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.fab_create_meeting:
+                switchActivity(CreateMeetingActivity.class);
+                break;
+        }
+    }
+
+    /**
+     * Switches to another activity.
+     */
     private void switchActivity(Class activity){
         startActivity(new Intent(this, activity));
     }
 
+    /**
+     * Updates the user's Firebase token and sends it to the back end.
+     */
     private void stashToken(){
         final FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
         mUser.getToken(true)
@@ -58,7 +81,7 @@ public class MeetingListActivity extends AppCompatActivity{
                         if (task.isSuccessful()) {
                             String idToken = task.getResult().getToken();
 
-                            SharedPreferences.Editor editor = prefs.edit();
+                            SharedPreferences.Editor editor = PREFERENCES.edit();
                             editor.putString("firebase_token", idToken);
                             editor.apply();
 
@@ -66,82 +89,49 @@ public class MeetingListActivity extends AppCompatActivity{
                                     .setFirebaseToken(idToken)
                                     .build();
 
-                            AsyncTask.execute(new Runnable() {
-                                @Override
-                                public void run() {
-                                    String uID = prefs.getString("u_id",null);
-                                    Log.d(TAG, "run: " + uID);
-                                    final String firebaseToken = prefs.getString("firebase_token",null);
-                                    RestClient.updateUser(newUser, firebaseToken, new Callback.RestClientUser() {
-                                        @Override
-                                        void onTaskExecuted(final User user) {
-                                            Log.d(TAG, "onTaskExecuted: adfa " + user.getMeetings());
-
-                                            SharedPreferences.Editor editor = prefs.edit();
-                                            editor.putString("firebase_token", user.getFirebaseToken());
-                                            editor.apply();
-
-                                            CurrentMeetingsFragment meetingListFragment =
-                                                    (CurrentMeetingsFragment) getFragmentManager()
-                                                            .findFragmentById(R.id.fragment_meeting_list);
-                                            meetingListFragment.updateList(user);
-
-//                                            final User updatedUser = new User.UserBuilder()
-//                                                    .setFirebaseToken(firebaseToken)
-//                                                    .setGoogleToken(prefs.getString("google_token",null))
-//                                                    .setInstanceId(FirebaseInstanceId.getInstance().getToken())
-//                                                    .build();
-//
-//                                            AsyncTask.execute(new Runnable() {
-//                                                @Override
-//                                                public void run() {
-//                                                    String firebaseToken = prefs.getString("firebase_token",null);
-//                                                    RestClient.updateUser(updatedUser, firebaseToken, new Callback.RestClientUser() {
-//                                                        @Override
-//                                                        void onTaskExecuted(User user) {
-//                                                            Log.d(TAG, "onTaskExecuted: " + user.getDisplayName());
-//                                                        }
-//
-//                                                        @Override
-//                                                        void onTaskFailed(RestClientException e) {
-//                                                            Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
-//                                                                    + ": " + e.getJson().toString());
-//                                                        }
-//
-//                                                        @Override
-//                                                        void onExceptionRaised(Exception e) {
-//                                                            Log.d(TAG, "onExceptionRaised: " + e.getMessage());
-//                                                        }
-//                                                    });
-//                                                }
-//                                            });
-                                        }
-
-                                        @Override
-                                        void onTaskFailed(RestClientException e) {
-                                            Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
-                                                    + ": " + e.getJson().toString());
-                                        }
-
-                                        @Override
-                                        void onExceptionRaised(Exception e) {
-                                            Log.d(TAG, "onExceptionRaised: " + e.getMessage());
-                                        }
-                                    });
-                                }
-                            });
+                            new UpdateUserAsync(newUser, new AsyncUserCallback()).execute();
                         }
                     }
                 });
 
     }
 
+    /**
+     * Executes on the back button being pressed. Takes the user back to the SignInActivity.
+     */
     @Override
     public void onBackPressed() {
-        Log.d(TAG, "onBackPressed: ");
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent intent = new Intent(getApplicationContext(), SignInActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("type", "SignInActivity");
         startActivity(intent);
+    }
+
+    /**
+     * Specifies the RestClientUserCallback implementation after updating a user's token.
+     */
+    private class AsyncUserCallback implements RestClientUserCallback {
+        @Override
+        public void onTaskExecuted(final User user) {
+            SharedPreferences.Editor editor = PREFERENCES.edit();
+            editor.putString("firebase_token", user.getFirebaseToken());
+            editor.apply();
+
+            MeetingListFragment meetingListFragment =
+                    (MeetingListFragment) getFragmentManager()
+                            .findFragmentById(R.id.fragment_meeting_list);
+            meetingListFragment.updateList(user);
+        }
+
+        @Override
+        public void onTaskFailed(RestClientException e) {
+            Log.e(TAG, "onTaskFailed: ", e);
+        }
+
+        @Override
+        public void onExceptionRaised(Exception e) {
+            Log.e(TAG, "onExceptionRaised: ", e);
+        }
     }
 }
 

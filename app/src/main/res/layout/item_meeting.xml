@@ -12,11 +12,11 @@
         android:layout_margin="10dp">
 
         <LinearLayout
-            android:id="@+id/item_meeting_color_slit"
+            android:id="@+id/layout_item_meeting_color_slit"
             android:layout_width="4dp"
             android:layout_height="match_parent"
             android:layout_alignParentLeft="true"
-            android:background="@color/colorPrimary"
+            android:background="@color/color_primary"
             android:layout_marginEnd="8dp"
             android:visibility="gone"
             android:orientation="horizontal">
@@ -29,21 +29,21 @@
             android:layout_alignParentLeft="true"
             android:orientation="vertical">
             <TextView
-                android:id="@+id/meeting_title"
+                android:id="@+id/text_meeting_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Title"
                 android:textSize="20dp"/>
 
             <TextView
-                android:id="@+id/meeting_date"
+                android:id="@+id/text_meeting_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Date"
                 android:textSize="15dp"/>
 
             <TextView
-                android:id="@+id/item_meeting_time"
+                android:id="@+id/text_item_meeting_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Time"
@@ -58,17 +58,17 @@
         android:layout_alignParentRight="true"
         android:layout_margin="10dp">
         <ImageView
-            android:id="@+id/drive_button"
+            android:id="@+id/image_drive_button"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:src="@drawable/drive_logo"
+            android:src="@drawable/ic_drive"
             android:layout_marginEnd="10dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             tools:targetApi="lollipop"
             android:onClick="onClickDriveButton"/>
 
         <ImageView
-            android:id="@+id/edit_button"
+            android:id="@+id/image_edit_button"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/ic_edit_dark"
@@ -76,7 +76,7 @@
             tools:targetApi="lollipop" />
 
         <ImageView
-            android:id="@+id/remove_button"
+            android:id="@+id/image_remove_button"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/ic_remove_dark"
