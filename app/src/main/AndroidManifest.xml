@@ -19,16 +19,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".SignInActivity"
+            android:theme="@style/ActivityMainTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".FolderViewActivity"/>
+        <activity android:name=".FolderListActivity"/>
         <activity android:name=".MeetingListActivity"/>
-        <activity android:name=".MeetingCreationActivity"/>
+        <activity android:name=".CreateMeetingActivity"/>
         <activity android:name=".EditMeetingActivity"/>
         <activity
             android:name=".MeetingActivity"
@@ -36,12 +38,12 @@
             android:theme="@style/ActivityMeetingTheme"
             android:windowSoftInputMode="adjustPan"></activity>
 
-        <service android:name=".InstanceIdService">
+        <service android:name=".services.InstanceIdService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
             </intent-filter>
         </service>
-        <service android:name=".MessagingService">
+        <service android:name=".services.MessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
@@ -62,10 +64,10 @@
             android:value="@string/notification_channel_id"/>
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@drawable/common_google_signin_btn_icon_dark_focused"/>
+            android:resource="@drawable/ic_clapping_hands"/>
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@color/colorPrimary"/>
+            android:resource="@color/color_accent"/>
 
     </application>
 

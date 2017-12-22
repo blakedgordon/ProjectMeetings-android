@@ -14,6 +14,7 @@ import android.os.CountDownTimer;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v4.view.ViewPager;
@@ -29,7 +30,6 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.ScaleAnimation;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -39,23 +39,30 @@ import android.widget.TextView;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.api.client.http.FileContent;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import edu.calbaptist.android.projectmeetings.Exceptions.RestClientException;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.Channel;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.Envelope;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.IErrorCallback;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.IMessageCallback;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.ISocketCloseCallback;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.ISocketOpenCallback;
-import edu.calbaptist.android.projectmeetings.javaphoenixchannels.Socket;
+import edu.calbaptist.android.projectmeetings.async.user.GetUserAsync;
+import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.Channel;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.Envelope;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.IErrorCallback;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.IMessageCallback;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.ISocketCloseCallback;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.ISocketOpenCallback;
+import edu.calbaptist.android.projectmeetings.java_phoenix_channels.Socket;
+import edu.calbaptist.android.projectmeetings.models.Meeting;
+import edu.calbaptist.android.projectmeetings.models.User;
+import edu.calbaptist.android.projectmeetings.utils.DriveFiles;
+import edu.calbaptist.android.projectmeetings.utils.rest.RestClientUserCallback;
 
 /**
  *  Meeting Activity
@@ -64,10 +71,18 @@ import edu.calbaptist.android.projectmeetings.javaphoenixchannels.Socket;
  *  @author Caleb Solorio
  *  @version 0.7.0 12/3/17
  */
-public class MeetingActivity extends AppCompatActivity {
-    private final String TAG = "MeetingActivity";
-    private final String MEETING_KEY = "meeting";
-    private final String USER_KEY = "user";
+public class MeetingActivity extends AppCompatActivity
+        implements View.OnClickListener, ViewTreeObserver.OnGlobalLayoutListener {
+    private static final String TAG = "MeetingActivity";
+
+    public static final String MEETING_KEY = "meeting";
+    public static final String USER_KEY = "user";
+
+    private static final String EVENT_START_MEETING = "start_meeting";
+    private static final String EVENT_APPLAUSE= "applause";
+    private static final String EVENT_MESSAGE = "msg";
+    private static final String EVENT_PRESENCE_STATE = "presence_state";
+    private static final String EVENT_PRESENCE_DIFF = "presence_diff";
 
     private Socket socket;
     private Channel channel;
@@ -87,13 +102,16 @@ public class MeetingActivity extends AppCompatActivity {
     TextView textClockHint;
     TextView textConnecting;
 
-    MeetingMessagesPagerAdapter mPagerAdapter;
+    MeetingMessagePagerAdapter mPagerAdapter;
     ViewPager mViewPager;
 
     private boolean connecting = true;
     private boolean connectingAnimationFinished = false;
     private boolean started = false;
     CountDownTimer timer;
+
+    private StringBuilder stringBuilder;
+    private Iterator iterator;
 
     private int[] applauseIcons = new int[10];
     private ImageButton buttonApplause;
@@ -104,6 +122,8 @@ public class MeetingActivity extends AppCompatActivity {
     private MediaRecorder mMediaRecorder;
     private boolean mStartRecording = false;
     private static String mFilePath;
+
+    RelativeLayout rootView;
 
     // Requesting permission to RECORD_AUDIO and CAMERA
     private boolean permissionToRecordAccepted = false;
@@ -116,14 +136,6 @@ public class MeetingActivity extends AppCompatActivity {
     private static final int CAMERA_REQUEST = 1888;
     private String mCurrentPhotoPath;
     private String mCurrentPhotoName;
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (mStartRecording) {
-            recordPressed(mStartRecording);
-        }
-    }
 
     /**
      * Creates the view and assigns all initial properties.
@@ -139,14 +151,14 @@ public class MeetingActivity extends AppCompatActivity {
 
         connectToWebsocket();
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_meeting);
         toolbar.setNavigationIcon(R.drawable.ic_close_white);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        toolbar.setNavigationOnClickListener(new NavigationView.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finish();
+                onBackPressed();
             }
         });
 
@@ -156,69 +168,76 @@ public class MeetingActivity extends AppCompatActivity {
         textObjective = (TextView) findViewById(R.id.text_objective);
         textObjective.setText(meeting.getObjective());
 
-        textConnecting = findViewById(R.id.textConnecting);
+        textConnecting = findViewById(R.id.text_connecting);
 
         timeLimit = meeting.getTimeLimit();
 
-        textClockTime = (TextView) findViewById(R.id.textClockTime);
-        textClockHint = (TextView) findViewById(R.id.textClockHint);
+        textClockTime = (TextView) findViewById(R.id.text_clock_time);
+        textClockHint = (TextView) findViewById(R.id.text_clock_hint);
 
-        progressBar = findViewById(R.id.progressBar);
-        progressBar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(!started && user.getUid().equals(meeting.getUid())) {
-                    try {
-                        channel.push("start_meeting", null);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
+        progressBar = findViewById(R.id.progress_bar_meeting);
+        progressBar.setOnClickListener(this);
         progressBar.setProgress(100);
         startConnectionAnimation();
 
         // ViewPager and its adapters use support library
         // fragments, so use getSupportFragmentManager.
-        mPagerAdapter = new MeetingMessagesPagerAdapter(getSupportFragmentManager());
-        mViewPager = (ViewPager) findViewById(R.id.pager);
+        mPagerAdapter = new MeetingMessagePagerAdapter(getSupportFragmentManager());
+        mViewPager = (ViewPager) findViewById(R.id.view_pager_meeting);
         mViewPager.setAdapter(mPagerAdapter);
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_MULTIPLE_PERMISSION);
 
         buttonApplause = (ImageButton) findViewById(R.id.button_applause);
-        applauseIcons[0] = R.id.applause_icon_1;
-        applauseIcons[1] = R.id.applause_icon_2;
-        applauseIcons[2] = R.id.applause_icon_3;
-        applauseIcons[3] = R.id.applause_icon_4;
-        applauseIcons[4] = R.id.applause_icon_5;
-        applauseIcons[5] = R.id.applause_icon_6;
-        applauseIcons[6] = R.id.applause_icon_7;
-        applauseIcons[7] = R.id.applause_icon_8;
-        applauseIcons[8] = R.id.applause_icon_9;
-        applauseIcons[9] = R.id.applause_icon_10;
+        applauseIcons[0] = R.id.ic_applause_1;
+        applauseIcons[1] = R.id.ic_applause_2;
+        applauseIcons[2] = R.id.ic_applause_3;
+        applauseIcons[3] = R.id.ic_applause_4;
+        applauseIcons[4] = R.id.ic_applause_5;
+        applauseIcons[5] = R.id.ic_applause_6;
+        applauseIcons[6] = R.id.ic_applause_7;
+        applauseIcons[7] = R.id.ic_applause_8;
+        applauseIcons[8] = R.id.ic_applause_9;
+        applauseIcons[9] = R.id.ic_applause_10;
 
-        buttonApplause.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        buttonApplause.setOnClickListener(this);
+
+        buttonSendMessage = (ImageButton) findViewById(R.id.button_send_message);
+        buttonSendMessage.setOnClickListener(this);
+
+        rootView = (RelativeLayout) findViewById(R.id.layout_meeting_root);
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(this);
+    }
+
+    /**
+     * Handles OnClick events.
+     * @param view the view in which the event occurred.
+     */
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.progress_bar_meeting:
+                if(!started && user.getUid().equals(meeting.getUid())) {
+                    try {
+                        channel.push(EVENT_START_MEETING, null);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            case R.id.button_applause:
                 ScaleAnimation clapAnimation = new ScaleAnimation(1f, .8f, 1f, .8f,
                         Animation.RELATIVE_TO_SELF, .5f, Animation.RELATIVE_TO_SELF, 0.5f);
                 clapAnimation.setDuration(80);
                 buttonApplause.startAnimation(clapAnimation);
 
                 try {
-                    channel.push("applause");
+                    channel.push(EVENT_APPLAUSE);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
-        });
-
-        buttonSendMessage = (ImageButton) findViewById(R.id.button_send_message);
-        buttonSendMessage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.button_send_message:
                 EditText editText = findViewById(R.id.edit_text_message);
                 String text = editText.getText().toString();
 
@@ -234,7 +253,7 @@ public class MeetingActivity extends AppCompatActivity {
                             .put("msg", text);
 
                     try {
-                        channel.push("msg", node);
+                        channel.push(EVENT_MESSAGE, node);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -244,29 +263,48 @@ public class MeetingActivity extends AppCompatActivity {
                         Animation.RELATIVE_TO_SELF, .5f, Animation.RELATIVE_TO_SELF, 0.5f);
                 tapAnimation.setDuration(80);
                 buttonSendMessage.startAnimation(tapAnimation);
-            }
-        });
-
-        final RelativeLayout rootView = (RelativeLayout) findViewById(R.id.meeting_root_view);
-        rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                Rect r = new Rect();
-                rootView.getWindowVisibleDisplayFrame(r);
-                int screenHeight = rootView.getRootView().getHeight();
-                int keypadHeight = screenHeight - r.bottom;
-
-                if (keypadHeight > screenHeight * 0.15) {
-                    findViewById(R.id.button_applause).setVisibility(View.GONE);
-                    findViewById(R.id.button_send_message).setVisibility(View.VISIBLE);
-                } else {
-                    findViewById(R.id.button_send_message).setVisibility(View.GONE);
-                    findViewById(R.id.button_applause).setVisibility(View.VISIBLE);
-                }
-            }
-        });
+                break;
+        }
     }
 
+    /**
+     * Handles the back button being pressed.
+     */
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        try {
+            socket.disconnect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Handles the keyboard coming in and out of focus.
+     */
+    @Override
+    public void onGlobalLayout() {
+        Rect r = new Rect();
+        rootView.getWindowVisibleDisplayFrame(r);
+        int screenHeight = rootView.getRootView().getHeight();
+        int keypadHeight = screenHeight - r.bottom;
+
+        if (keypadHeight > screenHeight * 0.15) {
+            findViewById(R.id.button_applause).setVisibility(View.GONE);
+            findViewById(R.id.button_send_message).setVisibility(View.VISIBLE);
+        } else {
+            findViewById(R.id.button_send_message).setVisibility(View.GONE);
+            findViewById(R.id.button_applause).setVisibility(View.VISIBLE);
+        }
+    }
+
+    /**
+     * Executes on completion of a permission request.
+     * @param requestCode The code associated with the outcome of the request.
+     * @param permissions The permissions requested.
+     * @param grantResults The results of the permissions requested.
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
@@ -282,15 +320,25 @@ public class MeetingActivity extends AppCompatActivity {
     }
 
     /**
+     * Executes after a recording concludes.
+     */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mStartRecording) {
+            recordPressed(mStartRecording);
+        }
+    }
+
+    /**
      * Starts a timer and updates UI components accoordingly.
      * @param timeTotal
      */
     private void startTimer(final long timeTotal) {
         if(initialTimePassed < meeting.getTimeLimit()) {
-            Log.d(TAG, "startTimer: STSRTING TIMER");
             final int countdownInterval = 25;
 
-            textClockHint.setText("In Progress");
+            textClockHint.setText(App.context.getString(R.string.in_progress));
 
             timer = new CountDownTimer(timeTotal - initialTimePassed, countdownInterval) {
 
@@ -302,7 +350,8 @@ public class MeetingActivity extends AppCompatActivity {
                         minutes++;
                     }
 
-                    textClockTime.setText(String.format("%02d", minutes) + ":" + String.format("%02d", seconds));
+                    textClockTime.setText(String.format("%02d", minutes) +
+                            ":" + String.format("%02d", seconds));
 
                     if(connectingAnimationFinished) {
                         long progress = 1000 * millisUntilFinished / timeTotal;
@@ -325,7 +374,7 @@ public class MeetingActivity extends AppCompatActivity {
      * Creates a UI component for a new message.
      * @param message
      */
-    private void newMessage(MeetingMessage message) {
+    private void newMessage(String message) {
         int pos = mPagerAdapter.getCurrentPos();
         int count = mPagerAdapter.getCount();
 
@@ -340,13 +389,15 @@ public class MeetingActivity extends AppCompatActivity {
      * Initializes the connection animations.
      */
     private void startConnectionAnimation() {
-        final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress_bar_meeting);
 
-        final ObjectAnimator animationRtl = ObjectAnimator.ofInt(progressBar, "progress", 0);
+        final ObjectAnimator animationRtl = ObjectAnimator
+                .ofInt(progressBar, "progress", 0);
         animationRtl.setDuration(500); // 0.5 second
         animationRtl.setInterpolator(new DecelerateInterpolator());
 
-        final ObjectAnimator animationLtr = ObjectAnimator.ofInt(progressBar, "progress", 1000);
+        final ObjectAnimator animationLtr = ObjectAnimator
+                .ofInt(progressBar, "progress", 1000);
         animationLtr.setDuration(500); // 0.5 second
         animationLtr.setInterpolator(new DecelerateInterpolator());
 
@@ -366,8 +417,6 @@ public class MeetingActivity extends AppCompatActivity {
                     float ratio = initialTimePassed > 0 ?
                             (1 - (float)(initialTimePassed + duration)/meeting.getTimeLimit()) : 1;
                     int progress = ratio > 0 ? (int) (1000 * ratio) : 1000;
-
-                    Log.d(TAG, "onAnimationEnd: " + ratio + " " + progress);
 
                     animateProgressBar(progress, duration, true);
 
@@ -406,8 +455,9 @@ public class MeetingActivity extends AppCompatActivity {
         animationLtr.start();
 
         if(connecting) {
-            final RelativeLayout clockInfo = findViewById(R.id.clockInfo);
-            Animation shrinkAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.shrink_to_middle);
+            final RelativeLayout clockInfo = findViewById(R.id.meeting_clock_info);
+            Animation shrinkAnimation = AnimationUtils
+                    .loadAnimation(getApplicationContext(), R.anim.anim_shrink_to_middle);
             shrinkAnimation.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) { }
@@ -416,7 +466,8 @@ public class MeetingActivity extends AppCompatActivity {
                 public void onAnimationEnd(Animation animation) {
                     clockInfo.setVisibility(View.GONE);
                     textConnecting.setVisibility(View.VISIBLE);
-                    Animation growAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.grow_from_middle);
+                    Animation growAnimation = AnimationUtils
+                            .loadAnimation(getApplicationContext(), R.anim.anim_grow_from_middle);
                     textConnecting.startAnimation(growAnimation);
                 }
 
@@ -433,9 +484,10 @@ public class MeetingActivity extends AppCompatActivity {
      * Halts the connection animations.
      */
     private void stopConnectionAnimation() {
-        final RelativeLayout clockInfo = findViewById(R.id.clockInfo);
+        final RelativeLayout clockInfo = findViewById(R.id.meeting_clock_info);
 
-        Animation shrinkAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.shrink_to_middle);
+        Animation shrinkAnimation =
+                AnimationUtils.loadAnimation(getApplicationContext(), R.anim.anim_shrink_to_middle);
         shrinkAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) { }
@@ -444,7 +496,8 @@ public class MeetingActivity extends AppCompatActivity {
             public void onAnimationEnd(Animation animation) {
                 textConnecting.setVisibility(View.GONE);
                 clockInfo.setVisibility(View.VISIBLE);
-                Animation growAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.grow_from_middle);
+                Animation growAnimation = AnimationUtils
+                        .loadAnimation(getApplicationContext(), R.anim.anim_grow_from_middle);
                 clockInfo.startAnimation(growAnimation);
             }
 
@@ -466,7 +519,8 @@ public class MeetingActivity extends AppCompatActivity {
         progressBar.setRotation(-90);
         progressBar.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
 
-        final ObjectAnimator animation = ObjectAnimator.ofInt(progressBar, "progress", progress);
+        final ObjectAnimator animation = ObjectAnimator
+                .ofInt(progressBar, "progress", progress);
         animation.setDuration(duration);
         if(setInterpolator) {
             animation.setInterpolator(new DecelerateInterpolator());
@@ -496,8 +550,8 @@ public class MeetingActivity extends AppCompatActivity {
      */
     private void progressBarAnimateFinished() {
         animateProgressBar(1000, 500, false);
-        textClockTime.setText("00:00");
-        textClockHint.setText("Finished");
+        textClockTime.setText(App.context.getString(R.string.finsihed_time));
+        textClockHint.setText(App.context.getString(R.string.finished));
     }
 
     /**
@@ -510,7 +564,8 @@ public class MeetingActivity extends AppCompatActivity {
         final ImageView image = (ImageView) findViewById(applauseIcons[animIndex]);
         image.setVisibility(View.VISIBLE);
 
-        Animation fadeInAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.float_up);
+        Animation fadeInAnimation =
+                AnimationUtils.loadAnimation(getApplicationContext(), R.anim.anim_float_up);
         fadeInAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) { }
@@ -536,8 +591,8 @@ public class MeetingActivity extends AppCompatActivity {
         final String topic = "meeting:" + meeting.getMid();
 
         try {
+            // First connect to the websocket endpoint, then join the appropriate meeting channel.
             socket = new Socket(url);
-
             socket.onOpen(new ISocketOpenCallback() {
                 @Override
                 public void onOpen() {
@@ -547,8 +602,6 @@ public class MeetingActivity extends AppCompatActivity {
                         channel.join().receive("ok", new IMessageCallback() {
                             @Override
                             public void onMessage(final Envelope envelope) {
-                                Log.d(TAG, "JOINED with " + envelope.toString());
-
                                 connecting = false;
                                 started = envelope.getPayload()
                                         .get("response").get("in_progress").asBoolean();
@@ -564,7 +617,8 @@ public class MeetingActivity extends AppCompatActivity {
                                         } else {
                                             long minutes = timeLimit / 60000;
                                             long seconds = (timeLimit % 60000) / 1000;
-                                            textClockTime.setText(String.format("%02d", minutes) + ":" + String.format("%02d", seconds));
+                                            textClockTime.setText(String.format("%02d", minutes) +
+                                                    ":" + String.format("%02d", seconds));
                                         }
                                     }
                                 });
@@ -572,24 +626,27 @@ public class MeetingActivity extends AppCompatActivity {
                             }
                         });
 
-                        channel.on("msg", new IMessageCallback() {
+                        /*
+                        Channels will broadcast information to all listeners.
+                        The following specifies how to handle this information.
+                         */
+
+                        channel.on(EVENT_MESSAGE, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
-                                Log.d(TAG, "onMessage: " + envelope.toString());
                                 final String message = envelope.getPayload().get("msg").asText();
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        newMessage(new MeetingMessage(message, false));
+                                        newMessage(message);
                                     }
                                 });
                             }
                         });
 
-                        channel.on("applause", new IMessageCallback() {
+                        channel.on(EVENT_APPLAUSE, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
-                                Log.d(TAG, "onApplause: " + envelope.toString());
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -599,10 +656,9 @@ public class MeetingActivity extends AppCompatActivity {
                             }
                         });
 
-                        channel.on("start_meeting", new IMessageCallback() {
+                        channel.on(EVENT_START_MEETING, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
-                                Log.d(TAG, "on meeting start: " + envelope.toString());
                                 started = true;
                                 runOnUiThread(new Runnable() {
                                     @Override
@@ -613,73 +669,30 @@ public class MeetingActivity extends AppCompatActivity {
                             }
                         });
 
-                        channel.on("presence_state", new IMessageCallback() {
+                        channel.on(EVENT_PRESENCE_STATE, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
-                                Log.d(TAG, "presence_state: " + envelope.toString());
                                 connecting = false;
 
-                                final Iterator iterator = envelope.getPayload().fieldNames();
+                                stringBuilder = new StringBuilder("Welcome, " +
+                                        user.getDisplayName().split(" ")[0] + "!");
+
+                                iterator = envelope.getPayload().fieldNames();
 
                                 while(iterator.hasNext()) {
                                     final String uid = (String) iterator.next();
-                                    Log.d(TAG, "onMessage: UID " + (users == null));
 
                                     if(!users.containsKey(uid)) {
-                                        AsyncTask.execute(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                RestClient.getUserByUid(uid, user.getFirebaseToken(), new Callback.RestClientUser() {
-                                                    @Override
-                                                    void onTaskExecuted(User user) {
-                                                        users.put(uid, user);
-
-                                                        StringBuilder stringBuilder = new StringBuilder("Welcome, " +
-                                                                user.getDisplayName().split(" ")[0] + "!");
-
-                                                        if(!iterator.hasNext() && users.size() > 1) {
-                                                            stringBuilder.append(" Here's who else is here:\n");
-
-                                                            for(Object obj: users.entrySet().toArray()) {
-                                                                User u = (User) obj;
-
-                                                                if(u.getUid() != user.getUid()) {
-                                                                    stringBuilder.append(u.getDisplayName() + "\"");
-                                                                }
-                                                            }
-                                                        }
-
-                                                        final String message = stringBuilder.toString();
-                                                        runOnUiThread(new Runnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                newMessage(new MeetingMessage(message.toString(), false));
-                                                            }
-                                                        });
-                                                    }
-
-                                                    @Override
-                                                    void onTaskFailed(RestClientException e) {
-                                                        e.printStackTrace();
-                                                    }
-
-                                                    @Override
-                                                    void onExceptionRaised(Exception e) {
-                                                        e.printStackTrace();
-                                                    }
-                                                });
-                                            }
-                                        });
+                                        new GetUserAsync(GetUserAsync.GET_BY_U_ID,
+                                                uid, new AsyncPresenceStateCallback()).execute();
                                     }
                                 }
                             }
                         });
 
-                        channel.on("presence_diff", new IMessageCallback() {
+                        channel.on(EVENT_PRESENCE_DIFF, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
-                                Log.d(TAG, "presence_diff: " + envelope.toString());
-
                                 HashMap<String, Boolean> existingUsers = new HashMap<>();
                                 Iterator existingUsersIterator = users.keySet().iterator();
 
@@ -696,38 +709,8 @@ public class MeetingActivity extends AppCompatActivity {
                                     if(users.containsKey(uid)) {
                                         existingUsers.put(uid, true);
                                     } else {
-                                        AsyncTask.execute(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                RestClient.getUserByUid(uid, user.getFirebaseToken(), new Callback.RestClientUser() {
-                                                    @Override
-                                                    void onTaskExecuted(User user) {
-                                                        if(!users.containsKey(uid)){
-                                                            users.put(uid, user);
-                                                            final String message = user.getDisplayName().split(" ")[0]
-                                                                    + " joined the meeting!";
-
-                                                            runOnUiThread(new Runnable() {
-                                                                @Override
-                                                                public void run() {
-                                                                    newMessage(new MeetingMessage(message, false));
-                                                                }
-                                                            });
-                                                        }
-                                                    }
-
-                                                    @Override
-                                                    void onTaskFailed(RestClientException e) {
-                                                        e.printStackTrace();
-                                                    }
-
-                                                    @Override
-                                                    void onExceptionRaised(Exception e) {
-                                                        e.printStackTrace();
-                                                    }
-                                                });
-                                            }
-                                        });
+                                        new GetUserAsync(GetUserAsync.GET_BY_U_ID,
+                                                uid, new AsyncPresenceDiffCallback()).execute();
                                     }
                                 }
 
@@ -735,8 +718,9 @@ public class MeetingActivity extends AppCompatActivity {
                                 while (existingUsersIterator.hasNext()) {
                                     String uid = (String) existingUsersIterator.next();
                                     if(!existingUsers.get(uid)) {
-                                        String message = users.get(uid).getDisplayName() + " left the meeting";
-                                        newMessage(new MeetingMessage(message, false));
+                                        String message = users.get(uid)
+                                                .getDisplayName() + " left the meeting";
+                                        newMessage(message);
                                     }
                                 }
                             }
@@ -781,6 +765,11 @@ public class MeetingActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Called when a menu item is selected.
+     * @param item The meu item in question.
+     * @return true
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -813,6 +802,9 @@ public class MeetingActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Creates an image file for a new photo.
+     */
     private java.io.File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
@@ -830,23 +822,22 @@ public class MeetingActivity extends AppCompatActivity {
         return image;
     }
 
+    /**
+     * Handles the return data from an activity.
+     * @param requestCode The code associated with the request.
+     * @param resultCode The code specifying the outcome of the request.
+     * @param data The data returned from the request.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
-            java.io.File image = new java.io.File(mCurrentPhotoPath);
-            try {
-                DriveFiles.getInstance().uploadFileToDrive(image, mCurrentPhotoName, "image/jpeg");
-
-                ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
-                        .put("msg", user.getDisplayName() + " uploaded a photo to Google Drive!");
-
-                channel.push("msg", node);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            uploadToDrive(new java.io.File(mCurrentPhotoPath), "image/jpeg");
         }
     }
 
+    /**
+     * Initiate/stop a recording.
+     */
     private void recordPressed(boolean recording) {
         if (!recording) {
             Calendar c = Calendar.getInstance();
@@ -866,11 +857,10 @@ public class MeetingActivity extends AppCompatActivity {
             try {
                 mMediaRecorder.prepare();
             } catch (IOException e) {
-                Log.e(LOG_TAG, "prepare() failed");
+                Log.e(TAG, "recordPressed: ", e);
             }
 
             mMediaRecorder.start();
-
             mStartRecording = true;
         } else {
             mRecordButton.setIcon(R.drawable.ic_start_recording);
@@ -879,24 +869,135 @@ public class MeetingActivity extends AppCompatActivity {
             mMediaRecorder = null;
             mStartRecording = false;
 
-            String[] directories = mFilePath.split("/");
-            String fileName = directories[directories.length - 1];
-
             // Upload the file to Drive
-            File uploadFile = new File(mFilePath);
-            try {
-                DriveFiles.getInstance().uploadFileToDrive(uploadFile, fileName, "audio/x-aac");
-
-                ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
-                        .put("msg", user.getDisplayName()
-                                + " uploaded an audio recording to Google Drive!");
-
-                channel.push("msg", node);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            uploadToDrive(new File(mFilePath), "audio/*");
 
             mFilePath = null;
+        }
+    }
+
+    /**
+     * Upload a file to the appropriate Drive folder.
+     */
+    private void uploadToDrive(final java.io.File uploadFile, final String mimeType) {
+        final com.google.api.services.drive.model.File driveFile =
+                new com.google.api.services.drive.model.File();
+        driveFile.setName(user.getDisplayName()
+                .replace(" ", "_").concat(new Date().toString()));
+        driveFile.setParents(Collections.singletonList(meeting.getDriveFolderId()));
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    com.google.api.services.drive.model.File file =
+                            DriveFiles.getInstance().getDriveService().files()
+                                    .create(driveFile, new FileContent(mimeType, uploadFile))
+                                    .setFields("id, parents").execute();
+
+                    String text = user.getDisplayName();
+
+                    switch (mimeType) {
+                        case "audio/*":
+                            text += " uploaded an audio recording to Google Drive!";
+                            break;
+                        case "image/jpeg":
+                            text += " uploaded an image to Google Drive!";
+                    }
+
+                    ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
+                            .put("msg", text);
+
+                    channel.push(EVENT_MESSAGE, node);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
+     * Specifies the RestClientUserCallback implementation after getting users already in the meeting.
+     */
+    private class AsyncPresenceStateCallback implements RestClientUserCallback {
+        @Override
+        public void onTaskExecuted(User u) {
+            final StringBuilder stringBuilder = new StringBuilder("Welcome, " +
+                    user.getDisplayName().split(" ")[0] + "!");
+
+            users.put(u.getUid(), u);
+
+            if(!iterator.hasNext() && users.size() > 1) {
+                stringBuilder.append(" Here's who else is here:\n");
+
+                Iterator userIterator = users.values().iterator();
+
+                while (userIterator.hasNext()) {
+                    User iteratorUser = (User) userIterator.next();
+                    if(!iteratorUser.getUid().equals(user.getUid())) {
+                        stringBuilder.append(iteratorUser.getDisplayName() + "\n");
+                    }
+                }
+            }
+
+            final String message = stringBuilder.toString();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if(users.size() > 1) {
+                        newMessage(message);
+                    } else {
+                        ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
+                                .put("msg", user.getDisplayName() + " joined the meeting!");
+
+                        try {
+                            channel.push(EVENT_MESSAGE, node);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onTaskFailed(RestClientException e) {
+            e.printStackTrace();
+        }
+
+        @Override
+        public void onExceptionRaised(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Specifies the RestClientUserCallback implementation after getting users joining the meeting.
+     */
+    private class AsyncPresenceDiffCallback implements RestClientUserCallback {
+        @Override
+        public void onTaskExecuted(User u) {
+            if(!users.containsKey(u.getUid())){
+                users.put(u.getUid(), u);
+                final String message = u.getDisplayName().split(" ")[0]
+                        + " joined the meeting!";
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        newMessage(message);
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onTaskFailed(RestClientException e) {
+            e.printStackTrace();
+        }
+
+        @Override
+        public void onExceptionRaised(Exception e) {
+            e.printStackTrace();
         }
     }
 }

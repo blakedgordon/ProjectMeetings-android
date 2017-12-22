@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:theme="@style/AppTheme.NoActionBar"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="edu.calbaptist.android.projectmeetings.SignInActivity"
+    android:background="@drawable/gradient_activity_root_meeting">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:text="@string/app_name"
+            android:textSize="40dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:text="@string/app_slogan"
+            android:textSize="30dp"/>
+
+        <ImageView
+            android:layout_width="350dp"
+            android:layout_height="350dp"
+            android:layout_marginVertical="15dp"
+            android:src="@drawable/ic_round_table"/>
+
+        <LinearLayout
+            android:id="@+id/layout_button_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal">
+
+            <com.google.android.gms.common.SignInButton
+                android:id="@+id/button_sign_in"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"/>
+
+            <Button
+                android:id="@+id/button_sign_out"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:text="@string/sign_out"
+                style="@style/Widget.AppCompat.Button.Colored" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_main_connecting_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/text_main_welcome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/connecting"
+                android:textAlignment="center"
+                android:textSize="30dp"/>
+
+            <ProgressBar
+                android:id="@+id/progress_bar_meeting_list"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/layout_no_meetings"
+                android:layout_centerInParent="true"
+                android:indeterminate="true"
+                android:layout_margin="10dp"
+                style="?android:attr/progressBarStyle"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>

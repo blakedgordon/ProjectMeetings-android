@@ -2,10 +2,9 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorPrimaryDark">@color/color_primary_dark</item>
+        <item name="colorAccent">@color/color_accent</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -23,11 +22,14 @@
         <item name="android:width">40dp</item>
     </style>
 
+    <style name="ActivityMainTheme" parent="AppTheme.NoActionBar">
+        <item name="colorPrimaryDark">@color/color_primary_accent_mix</item>
+        <item name="android:textColor">@color/color_white</item>
+    </style>
+
     <style name="ActivityMeetingTheme" parent="AppTheme.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimaryDark">#210072</item>
-        <item name="android:textColor">@color/colorWhite</item>
-        <!--<item name="windowActionBar">false</item>-->
+        <item name="colorPrimaryDark">@color/color_primary_dark</item>
+        <item name="android:textColor">@color/color_white</item>
     </style>
 
     <style name="ActionButton" parent="@android:style/Widget.ActionButton">
