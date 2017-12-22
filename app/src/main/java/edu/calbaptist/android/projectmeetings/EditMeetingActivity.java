@@ -53,6 +53,8 @@ public class EditMeetingActivity extends AppCompatActivity
         TimePickerDialog.OnTimeSetListener, NumberPicker.OnValueChangeListener, TextWatcher{
     private static final String TAG = "EditMeetingActivity";
 
+    public static final String MEETING_KEY = "meeting";
+
     private EditText meetingName, meetingObjective, add_invites, remove_invites;
     private Button dateButton, driveButton, submit;
     private DatePickerDialog datePickerDialog;
@@ -82,9 +84,9 @@ public class EditMeetingActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_meeting);
 
-        getSupportActionBar().setTitle("Edit Meeting");
+        getSupportActionBar().setTitle(getString(R.string.edit_meeting));
 
-        meeting = (Meeting) getIntent().getExtras().getSerializable("meeting");
+        meeting = (Meeting) getIntent().getExtras().getSerializable(MEETING_KEY);
 
         mDriveFolderId = meeting.getDriveFolderId();
 
@@ -112,7 +114,7 @@ public class EditMeetingActivity extends AppCompatActivity
         dateButton.setOnClickListener(this);
 
         driveButton = findViewById(R.id.button_drive_folder);
-        driveButton.setText("Valid Folder");
+        driveButton.setText(App.context.getString(R.string.valid_folder));
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {

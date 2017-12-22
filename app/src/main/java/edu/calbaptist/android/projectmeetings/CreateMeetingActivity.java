@@ -64,7 +64,7 @@ public class CreateMeetingActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_meeting);
 
-        getSupportActionBar().setTitle("Create Meeting");
+        getSupportActionBar().setTitle(getString(R.string.create_meeting));
 
         meetingName = findViewById(R.id.edit_text_meeting_name);
         meetingObjective = findViewById(R.id.edit_text_meeting_objective);

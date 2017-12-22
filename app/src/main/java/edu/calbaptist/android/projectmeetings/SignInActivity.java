@@ -50,6 +50,7 @@ import edu.calbaptist.android.projectmeetings.async.user.UpdateUserAsync;
 import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
 import edu.calbaptist.android.projectmeetings.models.Meeting;
 import edu.calbaptist.android.projectmeetings.models.User;
+import edu.calbaptist.android.projectmeetings.services.MessagingService;
 import edu.calbaptist.android.projectmeetings.utils.rest.RestClientMeetingCallback;
 import edu.calbaptist.android.projectmeetings.utils.rest.RestClientUserCallback;
 
@@ -99,19 +100,19 @@ public class SignInActivity extends AppCompatActivity
             Bundle extras = intent.getExtras();
 
             if (intent != null && extras != null) {
-                String type = extras.getString("type");
+                String type = extras.getString(MessagingService.TYPE);
 
                 if(type != null) {
                     switch (type) {
-                        case "meeting_invite":
+                        case MessagingService.MEETING_INVITE:
                             Intent transfer = new Intent(this, MeetingListActivity.class);
                             startActivity(transfer);
                             break;
-                        case "meeting_warn":
-                            toMeetingActivity(extras.getString("m_id"));
+                        case MessagingService.MEETING_WARN:
+                            toMeetingActivity(extras.getString(MessagingService.M_ID));
                             break;
-                        case "meeting_start":
-                            toMeetingActivity(extras.getString("m_id"));
+                        case MessagingService.MEETING_START:
+                            toMeetingActivity(extras.getString(MessagingService.M_ID));
                             break;
                     }
                 } else {
@@ -454,8 +455,8 @@ public class SignInActivity extends AppCompatActivity
         public void onTaskExecuted(User user) {
             Intent transfer = new Intent(getApplicationContext(),
                     MeetingActivity.class);
-            transfer.putExtra("meeting", meeting);
-            transfer.putExtra("user", user);
+            transfer.putExtra(MeetingActivity.MEETING_KEY, meeting);
+            transfer.putExtra(MeetingActivity.USER_KEY, user);
 
             startActivity(transfer);
         }

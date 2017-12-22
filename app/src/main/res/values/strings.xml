@@ -36,4 +36,8 @@
     <string name="table_flip">(ノ°Д°）ノ︵ ┻━┻</string>
     <string name="invites">You\'ve been invited to some meetings</string>
     <string name="edit_meeting">Edit Meeting</string>
+    <string name="in_progress">In Progress</string>
+    <string name="valid_folder">Valid Folder</string>
+    <string name="finsihed_time">00:00</string>
+    <string name="finished">Finished</string>
 </resources>

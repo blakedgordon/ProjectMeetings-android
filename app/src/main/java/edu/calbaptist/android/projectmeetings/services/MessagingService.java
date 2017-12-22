@@ -33,6 +33,16 @@ import edu.calbaptist.android.projectmeetings.utils.FcmNotificationManager;
 public class MessagingService extends FirebaseMessagingService {
     private static final String TAG = "MessagingService";
 
+    public static final String MEETING_INVITE = "meeting_invite";
+    public static final String MEETING_WARN = "meeting_warn";
+    public static final String MEETING_START = "meeting_start";
+    public static final String TYPE = "type";
+    public static final String TITLE = "title";
+    public static final String BODY = "body";
+    public static final String M_ID = "m_id";
+
+
+
     private Meeting meeting;
     private String title;
     private String body;
@@ -45,22 +55,22 @@ public class MessagingService extends FirebaseMessagingService {
     public void handleIntent(Intent intent) {
         if (intent != null && intent.getExtras() != null) {
             Bundle extras = intent.getExtras();
-            String type = extras.getString("type");
+            String type = extras.getString(TYPE);
 
             switch (type) {
-                case "meeting_invite":
-                    notifyUserToMeetingListActvity(extras.getString("title"),
-                            extras.getString("body"));
+                case MEETING_INVITE:
+                    notifyUserToMeetingListActvity(extras.getString(TITLE),
+                            extras.getString(BODY));
                     break;
-                case "meeting_warn":
-                    notifyUserToMeetingActivity(extras.getString("title"),
-                            extras.getString("body"),
-                            extras.getString("m_id"));
+                case MEETING_WARN:
+                    notifyUserToMeetingActivity(extras.getString(TITLE),
+                            extras.getString(BODY),
+                            extras.getString(M_ID));
                     break;
-                case "meeting_start":
-                    notifyUserToMeetingActivity(extras.getString("title"),
-                            extras.getString("body"),
-                            extras.getString("m_id"));
+                case MEETING_START:
+                    notifyUserToMeetingActivity(extras.getString(TITLE),
+                            extras.getString(BODY),
+                            extras.getString(M_ID));
                     break;
             }
         }

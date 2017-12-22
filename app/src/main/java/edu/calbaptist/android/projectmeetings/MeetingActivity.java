@@ -78,6 +78,12 @@ public class MeetingActivity extends AppCompatActivity
     public static final String MEETING_KEY = "meeting";
     public static final String USER_KEY = "user";
 
+    private static final String EVENT_START_MEETING = "start_meeting";
+    private static final String EVENT_APPLAUSE= "applause";
+    private static final String EVENT_MESSAGE = "msg";
+    private static final String EVENT_PRESENCE_STATE = "presence_state";
+    private static final String EVENT_PRESENCE_DIFF = "presence_diff";
+
     private Socket socket;
     private Channel channel;
 
@@ -213,7 +219,7 @@ public class MeetingActivity extends AppCompatActivity
             case R.id.progress_bar_meeting:
                 if(!started && user.getUid().equals(meeting.getUid())) {
                     try {
-                        channel.push("start_meeting", null);
+                        channel.push(EVENT_START_MEETING, null);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -226,7 +232,7 @@ public class MeetingActivity extends AppCompatActivity
                 buttonApplause.startAnimation(clapAnimation);
 
                 try {
-                    channel.push("applause");
+                    channel.push(EVENT_APPLAUSE);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -247,7 +253,7 @@ public class MeetingActivity extends AppCompatActivity
                             .put("msg", text);
 
                     try {
-                        channel.push("msg", node);
+                        channel.push(EVENT_MESSAGE, node);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -332,7 +338,7 @@ public class MeetingActivity extends AppCompatActivity
         if(initialTimePassed < meeting.getTimeLimit()) {
             final int countdownInterval = 25;
 
-            textClockHint.setText("In Progress");
+            textClockHint.setText(App.context.getString(R.string.in_progress));
 
             timer = new CountDownTimer(timeTotal - initialTimePassed, countdownInterval) {
 
@@ -544,8 +550,8 @@ public class MeetingActivity extends AppCompatActivity
      */
     private void progressBarAnimateFinished() {
         animateProgressBar(1000, 500, false);
-        textClockTime.setText("00:00");
-        textClockHint.setText("Finished");
+        textClockTime.setText(App.context.getString(R.string.finsihed_time));
+        textClockHint.setText(App.context.getString(R.string.finished));
     }
 
     /**
@@ -625,7 +631,7 @@ public class MeetingActivity extends AppCompatActivity
                         The following specifies how to handle this information.
                          */
 
-                        channel.on("msg", new IMessageCallback() {
+                        channel.on(EVENT_MESSAGE, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
                                 final String message = envelope.getPayload().get("msg").asText();
@@ -638,7 +644,7 @@ public class MeetingActivity extends AppCompatActivity
                             }
                         });
 
-                        channel.on("applause", new IMessageCallback() {
+                        channel.on(EVENT_APPLAUSE, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
                                 runOnUiThread(new Runnable() {
@@ -650,7 +656,7 @@ public class MeetingActivity extends AppCompatActivity
                             }
                         });
 
-                        channel.on("start_meeting", new IMessageCallback() {
+                        channel.on(EVENT_START_MEETING, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
                                 started = true;
@@ -663,7 +669,7 @@ public class MeetingActivity extends AppCompatActivity
                             }
                         });
 
-                        channel.on("presence_state", new IMessageCallback() {
+                        channel.on(EVENT_PRESENCE_STATE, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
                                 connecting = false;
@@ -684,7 +690,7 @@ public class MeetingActivity extends AppCompatActivity
                             }
                         });
 
-                        channel.on("presence_diff", new IMessageCallback() {
+                        channel.on(EVENT_PRESENCE_DIFF, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
                                 HashMap<String, Boolean> existingUsers = new HashMap<>();
@@ -901,7 +907,7 @@ public class MeetingActivity extends AppCompatActivity
                     ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
                             .put("msg", text);
 
-                    channel.push("msg", node);
+                    channel.push(EVENT_MESSAGE, node);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -944,7 +950,7 @@ public class MeetingActivity extends AppCompatActivity
                                 .put("msg", user.getDisplayName() + " joined the meeting!");
 
                         try {
-                            channel.push("msg", node);
+                            channel.push(EVENT_MESSAGE, node);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

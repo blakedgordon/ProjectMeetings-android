@@ -88,14 +88,14 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getContext(), MeetingActivity.class);
-                intent.putExtra("meeting", meeting);
+                intent.putExtra(MeetingActivity.MEETING_KEY, meeting);
                 User user = new User.UserBuilder()
                         .setUid(PREFERENCES.getString("u_id",null))
                         .setDisplayName(PREFERENCES.getString("display_name",null))
                         .setFirebaseToken(PREFERENCES.getString("firebase_token",null))
                         .build();
 
-                intent.putExtra("user",user);
+                intent.putExtra(MeetingActivity.USER_KEY,user);
                 getContext().startActivity(intent);
             }
         });
@@ -116,7 +116,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
                 @Override
                 public void onClick(View view) {
                     Intent intent = new Intent(getContext(), EditMeetingActivity.class);
-                    intent.putExtra("meeting", meeting);
+                    intent.putExtra(EditMeetingActivity.MEETING_KEY, meeting);
                     getContext().startActivity(intent);
                 }
             });
@@ -156,7 +156,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
         if (inProgress) {
             LinearLayout slit = rowView.findViewById(R.id.layout_item_meeting_color_slit);
             slit.setVisibility(View.VISIBLE);
-            textTime.setText("In Progress");
+            textTime.setText(App.context.getString(R.string.in_progress));
         } else {
             int totalMinutes = (int) meeting.getTimeLimit() / 60000;
             StringBuilder builder = new StringBuilder();
