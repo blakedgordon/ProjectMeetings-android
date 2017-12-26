@@ -1,9 +1,7 @@
 package edu.calbaptist.android.projectmeetings;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -35,14 +33,11 @@ import static edu.calbaptist.android.projectmeetings.SignInActivity.REQUEST_AUTH
  */
 public class FolderListActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
-    private static final String TAG = "SignInActivity";
+    public static final String TAG = "SignInActivity";
 
-    private static final SharedPreferences PREFERENCES = App.context.getSharedPreferences(
-            App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
-
-    private EditText folderNameEditText;
-    private Button createFolderButton;
-    public Drive driveService;
+    private EditText mFolderNameEditText;
+    private Button mCreateFolderButton;
+    public Drive mDriveService;
 
     /**
      * Initializes FolderListActivity
@@ -56,12 +51,12 @@ public class FolderListActivity extends AppCompatActivity
         getSupportActionBar().setTitle("Drive Folder");
 
         // Create New Folder
-        folderNameEditText = findViewById(R.id.edit_text_folder_name);
-        createFolderButton = findViewById(R.id.button_create_folder);
-        createFolderButton.setOnClickListener(this);
+        mFolderNameEditText = findViewById(R.id.edit_text_folder_name);
+        mCreateFolderButton = findViewById(R.id.button_create_folder);
+        mCreateFolderButton.setOnClickListener(this);
 
         try {
-            driveService = DriveFiles.getInstance().getDriveService();
+            mDriveService = DriveFiles.getInstance().getDriveService();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -75,7 +70,7 @@ public class FolderListActivity extends AppCompatActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.button_create_folder:
-                new requestCreateFolder(folderNameEditText.getText().toString()).execute();
+                new requestCreateFolder(mFolderNameEditText.getText().toString()).execute();
                 break;
         }
     }
@@ -117,10 +112,10 @@ public class FolderListActivity extends AppCompatActivity
             File fileMetadata = new File();
             fileMetadata.setName(name);
             fileMetadata.setPermissionIds(Collections
-                    .singletonList(PREFERENCES.getString("email",null)));
+                    .singletonList(App.PREFERENCES.getString("email",null)));
             fileMetadata.setMimeType("application/vnd.google-apps.folder");
             try {
-                File file = driveService.files().create(fileMetadata)
+                File file = mDriveService.files().create(fileMetadata)
                         .setFields("id")
                         .execute();
 

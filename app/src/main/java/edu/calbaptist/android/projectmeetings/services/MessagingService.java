@@ -1,17 +1,13 @@
 package edu.calbaptist.android.projectmeetings.services;
 
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import edu.calbaptist.android.projectmeetings.App;
-import edu.calbaptist.android.projectmeetings.R;
 import edu.calbaptist.android.projectmeetings.async.meeting.GetMeetingAsync;
 import edu.calbaptist.android.projectmeetings.async.user.UpdateUserAsync;
 import edu.calbaptist.android.projectmeetings.utils.rest.RestClientMeetingCallback;
@@ -31,8 +27,7 @@ import edu.calbaptist.android.projectmeetings.utils.FcmNotificationManager;
  *  @version 0.4.0 11/15/17
  */
 public class MessagingService extends FirebaseMessagingService {
-    private static final String TAG = "MessagingService";
-
+    public static final String TAG = "MessagingService";
     public static final String MEETING_INVITE = "meeting_invite";
     public static final String MEETING_WARN = "meeting_warn";
     public static final String MEETING_START = "meeting_start";
@@ -41,11 +36,9 @@ public class MessagingService extends FirebaseMessagingService {
     public static final String BODY = "body";
     public static final String M_ID = "m_id";
 
-
-
-    private Meeting meeting;
-    private String title;
-    private String body;
+    private Meeting mMeeting;
+    private String mTitle;
+    private String mBody;
 
     /**
      * Called on recieving a new message, handle the data and notify the user.
@@ -130,8 +123,8 @@ public class MessagingService extends FirebaseMessagingService {
      * @param mId The id of the meeting
      */
     private void notifyUserToMeetingActivity(final String title, final String body, final String mId) {
-        this.title = title;
-        this.body = body;
+        this.mTitle = title;
+        this.mBody = body;
 
         new GetMeetingAsync(mId, new AsyncCallback()).execute();
     }
@@ -143,7 +136,7 @@ public class MessagingService extends FirebaseMessagingService {
     private class AsyncCallback implements RestClientMeetingCallback, RestClientUserCallback {
         @Override
         public void onTaskExecuted(Meeting m) {
-            meeting = m;
+            mMeeting = m;
             new UpdateUserAsync(new User.UserBuilder().build(), this);
         }
 
@@ -154,10 +147,10 @@ public class MessagingService extends FirebaseMessagingService {
 
             Intent transfer = new Intent(getApplicationContext(),
                     MeetingActivity.class);
-            transfer.putExtra(MeetingActivity.MEETING_KEY, meeting);
+            transfer.putExtra(MeetingActivity.MEETING_KEY, mMeeting);
             transfer.putExtra(MeetingActivity.USER_KEY, user);
 
-            mNotificationManager.showNotification(title, body, transfer);
+            mNotificationManager.showNotification(mTitle, mBody, transfer);
         }
 
         @Override

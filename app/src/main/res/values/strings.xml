@@ -36,7 +36,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="meeting_name">Meeting Name</string>
     <string name="meeting_objective">Meeting Objective</string>
-    <string name="length">Enter length of meeting in minutes</string>
+    <string name="length">Enter length of mMeeting in minutes</string>
     <string name="submit">Submit</string>
     <string name="create_meeting">Create Meeting</string>
     <string name="no_meetings_found">No meetings found!</string>

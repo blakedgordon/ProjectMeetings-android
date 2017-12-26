@@ -1,7 +1,6 @@
 package edu.calbaptist.android.projectmeetings.utils;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -13,7 +12,6 @@ import com.google.api.client.googleapis.batch.BatchRequest;
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.json.GoogleJsonError;
-import com.google.api.client.http.FileContent;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -21,13 +19,11 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.Permission;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import edu.calbaptist.android.projectmeetings.App;
@@ -47,13 +43,13 @@ import pub.devrel.easypermissions.EasyPermissions;
  */
 
 public class DriveFiles implements EasyPermissions.PermissionCallbacks {
-    private static final String TAG = "DriveFiles";
+    public static final String TAG = "DriveFiles";
+    public static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
+    public static final String PREF_ACCOUNT_NAME = "accountName";
 
-    private static DriveFiles instance = null;
-    private Drive driveService;
+    private static DriveFiles sInstance = null;
+    private Drive mDriveService;
     private GoogleAccountCredential mCredential;
-    private final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
-    private static final String PREF_ACCOUNT_NAME = "accountName";
 
     /**
      * Initiates a DriveFiles object.
@@ -66,11 +62,11 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
             ChooseAccountException, RequestPermissionException {
         final String[] SCOPES = { DriveScopes.DRIVE_METADATA_READONLY };
         mCredential = GoogleAccountCredential.usingOAuth2(
-                App.context, Arrays.asList(SCOPES))
+                App.CONTEXT, Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
 
-        String accountName = App.context.getSharedPreferences(
-                App.context.getString(R.string.app_package), Context.MODE_PRIVATE)
+        String accountName = App.CONTEXT.getSharedPreferences(
+                App.CONTEXT.getString(R.string.app_package), Context.MODE_PRIVATE)
                 .getString(PREF_ACCOUNT_NAME, null);
         if (accountName != null) {
             mCredential.setSelectedAccountName(accountName);
@@ -89,10 +85,10 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
     public static DriveFiles getInstance() throws
             GooglePlayServicesAvailabilityException,
             ChooseAccountException, RequestPermissionException {
-        if (instance == null) {
-            instance = new DriveFiles();
+        if (sInstance == null) {
+            sInstance = new DriveFiles();
         }
-        return instance;
+        return sInstance;
     }
 
     /**
@@ -100,7 +96,7 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
      * @return a Drive object.
      */
     public Drive getDriveService() {
-        return driveService;
+        return mDriveService;
     }
 
     /**
@@ -127,7 +123,7 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
             }
         };
 
-        final BatchRequest batch = driveService.batch();
+        final BatchRequest batch = mDriveService.batch();
 
         for(String email : invitationsToAdd.toArray(new String[0])) {
             Log.d(TAG, "run email: " + email);
@@ -138,7 +134,7 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
                     .setId(email)
                     .setEmailAddress(email);
 
-            driveService.permissions().create(driveFolderId, userPermission)
+            mDriveService.permissions().create(driveFolderId, userPermission)
                     .setFields("id")
                     .queue(batch, callback);
         }
@@ -177,12 +173,12 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
             }
         };
 
-        final BatchRequest batch = driveService.batch();
+        final BatchRequest batch = mDriveService.batch();
 
         for(String email : invitationsToRemove.toArray(new String[0])) {
             Log.d(TAG, "run email: " + email);
 
-            driveService.permissions().delete(driveFolderId, email)
+            mDriveService.permissions().delete(driveFolderId, email)
                     .setFields("id")
                     .queue(batch, callback);
         }
@@ -216,7 +212,7 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
         } else {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            driveService = new com.google.api.services.drive.Drive.Builder(
+            mDriveService = new com.google.api.services.drive.Drive.Builder(
                     transport, jsonFactory, mCredential)
                     .setApplicationName("Project Meetings")
                     .build();
@@ -238,8 +234,8 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
             ChooseAccountException, RequestPermissionException,
             GooglePlayServicesAvailabilityException {
         if (EasyPermissions.hasPermissions(
-                App.context, android.Manifest.permission.GET_ACCOUNTS)) {
-            String accountName = App.context.getSharedPreferences(
+                App.CONTEXT, android.Manifest.permission.GET_ACCOUNTS)) {
+            String accountName = App.CONTEXT.getSharedPreferences(
                     "edu.calbaptist.android.projectmeetings.Account_Name", Context.MODE_PRIVATE)
                     .getString(PREF_ACCOUNT_NAME, null);
             if (accountName != null) {
@@ -268,7 +264,7 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         EasyPermissions.onRequestPermissionsResult(
-                requestCode, permissions, grantResults, App.context);
+                requestCode, permissions, grantResults, App.CONTEXT);
     }
 
     /**
@@ -304,7 +300,7 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
         GoogleApiAvailability apiAvailability =
                 GoogleApiAvailability.getInstance();
         final int connectionStatusCode =
-                apiAvailability.isGooglePlayServicesAvailable(App.context);
+                apiAvailability.isGooglePlayServicesAvailable(App.CONTEXT);
         return connectionStatusCode == ConnectionResult.SUCCESS;
     }
 
@@ -316,7 +312,7 @@ public class DriveFiles implements EasyPermissions.PermissionCallbacks {
         GoogleApiAvailability apiAvailability =
                 GoogleApiAvailability.getInstance();
         final int connectionStatusCode =
-                apiAvailability.isGooglePlayServicesAvailable(App.context);
+                apiAvailability.isGooglePlayServicesAvailable(App.CONTEXT);
         if (apiAvailability.isUserResolvableError(connectionStatusCode)) {
             throw new GooglePlayServicesAvailabilityException(connectionStatusCode);
         }

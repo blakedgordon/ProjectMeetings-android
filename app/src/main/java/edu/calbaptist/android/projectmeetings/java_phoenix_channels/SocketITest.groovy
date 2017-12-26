@@ -5,7 +5,7 @@ import BlockingVariable
 
 class SocketSpec extends Specification {
 
-    def socket = new Socket("ws://localhost:4000/socket/websocket")
+    def socket = new Socket("ws://localhost:4000/mSocket/websocket")
 
     def socketOpenCallback = Mock(ISocketOpenCallback)
     def socketCloseCallback = Mock(ISocketCloseCallback)

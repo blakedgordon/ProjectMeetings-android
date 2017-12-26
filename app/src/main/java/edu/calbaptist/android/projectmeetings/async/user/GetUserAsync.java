@@ -1,11 +1,8 @@
 package edu.calbaptist.android.projectmeetings.async.user;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 
 import edu.calbaptist.android.projectmeetings.App;
-import edu.calbaptist.android.projectmeetings.R;
 import edu.calbaptist.android.projectmeetings.utils.rest.RestClientUserCallback;
 import edu.calbaptist.android.projectmeetings.utils.rest.RestClient;
 
@@ -22,12 +19,9 @@ public class GetUserAsync extends AsyncTask<Void, Void, Void> {
     public static final int GET_BY_U_ID = 0;
     public static final int GET_BY_EMAIL = 1;
 
-    private static final SharedPreferences PREFERENCES = App.context.getSharedPreferences(
-            App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
-
-    private int method;
-    private String key;
-    private RestClientUserCallback callback;
+    private int mMethod;
+    private String mKey;
+    private RestClientUserCallback mCallback;
 
     /**
      * The GetMeetingAsync constructor.
@@ -37,11 +31,11 @@ public class GetUserAsync extends AsyncTask<Void, Void, Void> {
      */
     public GetUserAsync(int method, String key, RestClientUserCallback callback) {
         if(method == GET_BY_U_ID || method == GET_BY_EMAIL) {
-            this.method = method;
-            this.key = key;
-            this.callback = callback;
+            this.mMethod = method;
+            this.mKey = key;
+            this.mCallback = callback;
         } else {
-            throw new IllegalArgumentException("Invalid method");
+            throw new IllegalArgumentException("Invalid mMethod");
         }
     }
 
@@ -52,14 +46,14 @@ public class GetUserAsync extends AsyncTask<Void, Void, Void> {
      */
     @Override
     protected Void doInBackground(Void... voids) {
-        final String token = PREFERENCES.getString("firebase_token", null);
+        final String token = App.PREFERENCES.getString("firebase_token", null);
 
-        switch (method) {
+        switch (mMethod) {
             case GET_BY_U_ID:
-                RestClient.getUserByUid(key, token, callback);
+                RestClient.getUserByUid(mKey, token, mCallback);
                 break;
             case GET_BY_EMAIL:
-                RestClient.getUserByEmail(key, token, callback);
+                RestClient.getUserByEmail(mKey, token, mCallback);
                 break;
         }
 

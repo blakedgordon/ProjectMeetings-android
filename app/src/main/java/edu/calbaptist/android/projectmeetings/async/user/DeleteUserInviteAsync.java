@@ -1,11 +1,8 @@
 package edu.calbaptist.android.projectmeetings.async.user;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 
 import edu.calbaptist.android.projectmeetings.App;
-import edu.calbaptist.android.projectmeetings.R;
 import edu.calbaptist.android.projectmeetings.utils.rest.RestClientJsonCallback;
 import edu.calbaptist.android.projectmeetings.utils.rest.RestClient;
 
@@ -19,11 +16,9 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClient;
 
 public class DeleteUserInviteAsync extends AsyncTask<Void, Void, Void> {
     private static final String TAG = "DeleteUserInviteAsync";
-    private static final SharedPreferences PREFERENCES = App.context.getSharedPreferences(
-            App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
 
     private String mId;
-    private RestClientJsonCallback callback;
+    private RestClientJsonCallback mCallback;
 
     /**
      * The DeleteUserAsync constructor.
@@ -32,7 +27,7 @@ public class DeleteUserInviteAsync extends AsyncTask<Void, Void, Void> {
      */
     public DeleteUserInviteAsync(String uId, RestClientJsonCallback callback) {
         this.mId = uId;
-        this.callback = callback;
+        this.mCallback = callback;
     }
 
     /**
@@ -43,7 +38,7 @@ public class DeleteUserInviteAsync extends AsyncTask<Void, Void, Void> {
     @Override
     protected Void doInBackground(Void... voids) {
         RestClient.deleteUserInvite(mId,
-                PREFERENCES.getString("firebase_token", null), callback);
+                App.PREFERENCES.getString("firebase_token", null), mCallback);
         return null;
     }
 }

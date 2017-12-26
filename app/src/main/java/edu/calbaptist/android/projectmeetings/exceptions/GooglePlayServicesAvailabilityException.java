@@ -9,13 +9,13 @@ package edu.calbaptist.android.projectmeetings.exceptions;
  */
 
 public class GooglePlayServicesAvailabilityException extends Exception {
-    public int connectionStatusCode;
+    public int mConnectionStatusCode;
 
     /**
      * Thrown when Google Play is unavailable.
      * @param connectionStatusCode The status code given by Google Play.
      */
     public GooglePlayServicesAvailabilityException(int connectionStatusCode) {
-        this.connectionStatusCode = connectionStatusCode;
+        this.mConnectionStatusCode = connectionStatusCode;
     }
 }

@@ -18,17 +18,16 @@ import edu.calbaptist.android.projectmeetings.R;
  */
 public class FcmNotificationManager {
     public static final String TAG = "FcmNotificationManager";
-
     public static final int NOTIFICATION_ID = 0;
 
-    private Context context;
+    private static Context sContext;
 
     /**
      * Constructs a new FcmNotificationManager object.
      * @param context The context the generated notification should reference.
      */
     public FcmNotificationManager(Context context) {
-        this.context = context;
+        this.sContext = context;
     }
 
     /**
@@ -41,17 +40,17 @@ public class FcmNotificationManager {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
-                context,
+                sContext,
                 NOTIFICATION_ID,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT
         );
 
         // Configure the notification builder
-        String channelId = context.getString(R.string.notification_channel_id);
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelId)
+        String channelId = sContext.getString(R.string.notification_channel_id);
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(sContext, channelId)
                 .setSmallIcon(R.drawable.ic_clapping_hands)
-                .setColor(ContextCompat.getColor(context, R.color.color_accent))
+                .setColor(ContextCompat.getColor(sContext, R.color.color_accent))
                 .setContentTitle(title)
                 .setContentText(body)
                 .setAutoCancel(true)
@@ -59,7 +58,7 @@ public class FcmNotificationManager {
 
         // Get an instance of the NotificationManager service
         NotificationManager mNotificationManager =
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                (NotificationManager) sContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
         // Build the notification and issues it.
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());

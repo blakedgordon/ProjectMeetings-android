@@ -42,7 +42,7 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClientMeetingCallba
 
 /**
  *  Edit Meeting Activity
- *  Assists the user with editing a meeting.
+ *  Assists the user with editing a mMeeting.
  *
  *  @author Austin Brinegar, Caleb Solorio
  *  @version 1.0.0 12/20/17
@@ -51,28 +51,27 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClientMeetingCallba
 public class EditMeetingActivity extends AppCompatActivity
         implements View.OnClickListener, DatePickerDialog.OnDateSetListener,
         TimePickerDialog.OnTimeSetListener, NumberPicker.OnValueChangeListener, TextWatcher{
-    private static final String TAG = "EditMeetingActivity";
-
+    public static final String TAG = "EditMeetingActivity";
     public static final String MEETING_KEY = "meeting";
 
-    private EditText meetingName, meetingObjective, add_invites, remove_invites;
-    private Button dateButton, driveButton, submit;
-    private DatePickerDialog datePickerDialog;
-    private TimePickerDialog timePickerDialog;
-    private ProgressBar progressBar;
+    private EditText mMeetingName, mMeetingObjective, mInvitesToAdd, mInvitesToRemove;
+    private Button mDateButton, mDriveButton, mSubmitButton;
+    private DatePickerDialog mDatePickerDialog;
+    private TimePickerDialog mTimePickerDialog;
+    private ProgressBar mProgressBar;
 
-    private Calendar c;
-    SimpleDateFormat dateFormatter;
+    private Calendar mCalendar;
+    SimpleDateFormat mDateFormatter;
 
     private String mDriveFolderId;
     private int mLengthMinutes;
 
-    private boolean updateMeeting = false;
-    private boolean updatePending = true;
-    private boolean invitesPending = true;
-    private boolean uninvitesPending = true;
+    private boolean mUpdateMeeting = false;
+    private boolean mUpdatePending = true;
+    private boolean mInvitesPending = true;
+    private boolean mUninvitesPending = true;
 
-    Meeting meeting;
+    private Meeting mMeeting;
 
     /**
      * Initializes EditMeetingActivity
@@ -86,42 +85,42 @@ public class EditMeetingActivity extends AppCompatActivity
 
         getSupportActionBar().setTitle(getString(R.string.edit_meeting));
 
-        meeting = (Meeting) getIntent().getExtras().getSerializable(MEETING_KEY);
+        mMeeting = (Meeting) getIntent().getExtras().getSerializable(MEETING_KEY);
 
-        mDriveFolderId = meeting.getDriveFolderId();
+        mDriveFolderId = mMeeting.getDriveFolderId();
 
-        meetingName = findViewById(R.id.edit_text_meeting_name);
-        meetingName.setText(meeting.getName());
-        meetingName.addTextChangedListener(this);
+        mMeetingName = findViewById(R.id.edit_text_meeting_name);
+        mMeetingName.setText(mMeeting.getName());
+        mMeetingName.addTextChangedListener(this);
 
-        meetingObjective = findViewById(R.id.edit_text_meeting_objective);
-        meetingObjective.setText(meeting.getObjective());
-        meetingObjective.addTextChangedListener(this);
+        mMeetingObjective = findViewById(R.id.edit_text_meeting_objective);
+        mMeetingObjective.setText(mMeeting.getObjective());
+        mMeetingObjective.addTextChangedListener(this);
 
-        c = Calendar.getInstance();
-        c.setTimeInMillis(meeting.getTime());
+        mCalendar = Calendar.getInstance();
+        mCalendar.setTimeInMillis(mMeeting.getTime());
 
-        dateFormatter = new SimpleDateFormat("h:mm a, MMM dd, YYYY");
+        mDateFormatter = new SimpleDateFormat("h:mm a, MMM dd, YYYY");
 
-        timePickerDialog = new TimePickerDialog(EditMeetingActivity.this, this,
-                c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), false);
+        mTimePickerDialog = new TimePickerDialog(EditMeetingActivity.this, this,
+                mCalendar.get(Calendar.HOUR_OF_DAY), mCalendar.get(Calendar.MINUTE), false);
 
-        datePickerDialog = new DatePickerDialog(EditMeetingActivity.this, this,
-                c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+        mDatePickerDialog = new DatePickerDialog(EditMeetingActivity.this, this,
+                mCalendar.get(Calendar.YEAR), mCalendar.get(Calendar.MONTH), mCalendar.get(Calendar.DAY_OF_MONTH));
 
-        dateButton = findViewById(R.id.button_date_picker);
-        dateButton.setText(dateFormatter.format(c.getTime()));
-        dateButton.setOnClickListener(this);
+        mDateButton = findViewById(R.id.button_date_picker);
+        mDateButton.setText(mDateFormatter.format(mCalendar.getTime()));
+        mDateButton.setOnClickListener(this);
 
-        driveButton = findViewById(R.id.button_drive_folder);
-        driveButton.setText(App.context.getString(R.string.valid_folder));
+        mDriveButton = findViewById(R.id.button_drive_folder);
+        mDriveButton.setText(App.CONTEXT.getString(R.string.valid_folder));
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
                 try {
                     String fileName = DriveFiles.getInstance().getDriveService()
                             .files().get(mDriveFolderId).execute().getName();
-                    driveButton.setText(fileName);
+                    mDriveButton.setText(fileName);
                 } catch (GooglePlayServicesAvailabilityException e) {
                     e.printStackTrace();
                 } catch (ChooseAccountException e) {
@@ -133,9 +132,9 @@ public class EditMeetingActivity extends AppCompatActivity
                 }
             }
         });
-        driveButton.setOnClickListener(this);
+        mDriveButton.setOnClickListener(this);
 
-        mLengthMinutes = (int) meeting.getTimeLimit()/60000;
+        mLengthMinutes = (int) mMeeting.getTimeLimit()/60000;
 
         NumberPicker np = (NumberPicker) findViewById(R.id.number_picker);
         np.setMinValue(1);
@@ -143,15 +142,15 @@ public class EditMeetingActivity extends AppCompatActivity
         np.setValue(mLengthMinutes);
         np.setOnValueChangedListener(this);
 
-        add_invites = findViewById(R.id.edit_text_add_invites);
+        mInvitesToAdd = findViewById(R.id.edit_text_add_invites);
 
-        remove_invites = findViewById(R.id.edit_text_remove_invites);
-        remove_invites.setVisibility(View.VISIBLE);
+        mInvitesToRemove = findViewById(R.id.edit_text_remove_invites);
+        mInvitesToRemove.setVisibility(View.VISIBLE);
 
-        submit = findViewById(R.id.button_submit);
-        submit.setOnClickListener(this);
+        mSubmitButton = findViewById(R.id.button_submit);
+        mSubmitButton.setOnClickListener(this);
 
-        progressBar = (ProgressBar) findViewById(R.id.progress_bar);
+        mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
     }
 
     /**
@@ -162,11 +161,11 @@ public class EditMeetingActivity extends AppCompatActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.button_date_picker:
-                updateMeeting = true;
-                datePickerDialog.show();
+                mUpdateMeeting = true;
+                mDatePickerDialog.show();
                 break;
             case R.id.button_drive_folder:
-                updateMeeting = true;
+                mUpdateMeeting = true;
                 Intent intent = new Intent(getApplicationContext(), FolderListActivity.class);
                 startActivityForResult(intent, 1);
                 break;
@@ -185,9 +184,9 @@ public class EditMeetingActivity extends AppCompatActivity
      */
     @Override
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-        c.set(year, monthOfYear, dayOfMonth);
-        timePickerDialog.show();
-        updateMeeting = true;
+        mCalendar.set(year, monthOfYear, dayOfMonth);
+        mTimePickerDialog.show();
+        mUpdateMeeting = true;
     }
 
     /**
@@ -199,7 +198,7 @@ public class EditMeetingActivity extends AppCompatActivity
     @Override
     public void onValueChange(NumberPicker picker, int oldVal, int newVal){
         mLengthMinutes = newVal;
-        updateMeeting = true;
+        mUpdateMeeting = true;
     }
 
     /**
@@ -211,14 +210,14 @@ public class EditMeetingActivity extends AppCompatActivity
     @Override
     public void onTimeSet(TimePicker view, int hour,
                           int minute) {
-        updateMeeting = true;
-        c.set(Calendar.HOUR_OF_DAY, hour);
-        c.set(Calendar.MINUTE, minute);
+        mUpdateMeeting = true;
+        mCalendar.set(Calendar.HOUR_OF_DAY, hour);
+        mCalendar.set(Calendar.MINUTE, minute);
 
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                dateButton.setText(dateFormatter.format(c.getTime()));
+                mDateButton.setText(mDateFormatter.format(mCalendar.getTime()));
             }
         });
     }
@@ -241,7 +240,7 @@ public class EditMeetingActivity extends AppCompatActivity
      */
     @Override
     public void afterTextChanged(Editable editable) {
-        updateMeeting = true;
+        mUpdateMeeting = true;
     }
 
     /**
@@ -254,7 +253,7 @@ public class EditMeetingActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) {
             if(resultCode == Activity.RESULT_OK){
-                driveButton.setText(data.getStringExtra("folder_name"));
+                mDriveButton.setText(data.getStringExtra("folder_name"));
                 mDriveFolderId = data.getStringExtra("folder_id");
             }
             if (resultCode == Activity.RESULT_CANCELED) {
@@ -267,16 +266,16 @@ public class EditMeetingActivity extends AppCompatActivity
      * Initializes the update of a Meeting.
      */
     private void editMeeting(){
-        final long millis = c.getTimeInMillis();
+        final long millis = mCalendar.getTimeInMillis();
         final long length = (long) mLengthMinutes * 60 * 1000;
 
-        progressBar.setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.VISIBLE);
 
-        if(updateMeeting) {
+        if(mUpdateMeeting) {
             final Meeting m = new Meeting.MeetingBuilder()
-                    .setMid(meeting.getMid())
-                    .setName(meetingName.getText().toString())
-                    .setObjective(meetingObjective.getText().toString())
+                    .setMId(mMeeting.getMId())
+                    .setName(mMeetingName.getText().toString())
+                    .setObjective(mMeetingObjective.getText().toString())
                     .setTime(millis)
                     .setTimeLimit(length)
                     .setDriveFolderId(mDriveFolderId)
@@ -284,25 +283,25 @@ public class EditMeetingActivity extends AppCompatActivity
 
             updateMeetingData(m);
         } else {
-            updatePending = false;
+            mUpdatePending = false;
         }
 
-        if(!add_invites.getText().toString().isEmpty()) {
+        if(!mInvitesToAdd.getText().toString().isEmpty()) {
             final ArrayList invitationsToAdd =
-                    new ArrayList<String>(Arrays.asList(add_invites.getText()
+                    new ArrayList<String>(Arrays.asList(mInvitesToAdd.getText()
                             .toString().split("\\s*,\\s*")));
-            invite(meeting.getMid(), invitationsToAdd);
+            invite(mMeeting.getMId(), invitationsToAdd);
         } else {
-            invitesPending = false;
+            mInvitesPending = false;
         }
 
-        if(!remove_invites.getText().toString().isEmpty()) {
+        if(!mInvitesToRemove.getText().toString().isEmpty()) {
             final ArrayList invitationsToRemove =
-                    new ArrayList<String>(Arrays.asList(remove_invites.getText()
+                    new ArrayList<String>(Arrays.asList(mInvitesToRemove.getText()
                             .toString().split("\\s*,\\s*")));
-            uninvite(meeting.getMid(), invitationsToRemove);
+            uninvite(mMeeting.getMId(), invitationsToRemove);
         } else {
-            uninvitesPending = false;
+            mUninvitesPending = false;
         }
     }
 
@@ -310,7 +309,7 @@ public class EditMeetingActivity extends AppCompatActivity
      * Handles the switching of activities to ensure smooth navigation.
      */
     private void switchActivity(){
-        if(updatePending || invitesPending || uninvitesPending) {
+        if(mUpdatePending || mInvitesPending || mUninvitesPending) {
             return;
         }
 
@@ -320,16 +319,16 @@ public class EditMeetingActivity extends AppCompatActivity
     }
 
     /**
-     * Initializes the update of a meeting.
-     * @param meeting The meeting to update.
+     * Initializes the update of a Meeting.
+     * @param meeting The Meeting to update.
      */
     private void updateMeetingData(Meeting meeting) {
         new UpdateMeetingAsync(meeting, new AsyncMeetingCallback()).execute();
     }
 
     /**
-     * Initializes new invitations to a meeting.
-     * @param mId Specifies the meeting.
+     * Initializes new invitations to a Meeting.
+     * @param mId Specifies the Meeting.
      * @param invitationsToAdd Contains the emails of the users to invite.
      */
     private void invite(final String mId, final ArrayList<String> invitationsToAdd) {
@@ -350,8 +349,8 @@ public class EditMeetingActivity extends AppCompatActivity
     }
 
     /**
-     * Initializes the removal of users from a meeting.
-     * @param mId Specifies the meeting.
+     * Initializes the removal of users from a Meeting.
+     * @param mId Specifies the Meeting.
      * @param invitationsToRemove Contains the emails of the users to remove.
      */
     private void uninvite(final String mId, final ArrayList<String> invitationsToRemove) {
@@ -378,7 +377,7 @@ public class EditMeetingActivity extends AppCompatActivity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                progressBar.setVisibility(View.GONE);
+                mProgressBar.setVisibility(View.GONE);
                 Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
             }
         });
@@ -397,66 +396,56 @@ public class EditMeetingActivity extends AppCompatActivity
     }
 
     /**
-     * Specifies the RestClientMeetingCallback implementation after updating a meeting.
+     * Specifies the RestClientMeetingCallback implementation after updating a Meeting.
      */
     private class AsyncMeetingCallback implements RestClientMeetingCallback {
         @Override
         public void onTaskExecuted(final Meeting meeting) {
-            Log.d(TAG, "onTaskExecuted: " + meeting.getName());
-            updatePending = false;
+            mUpdatePending = false;
             switchActivity();
         }
 
         @Override
         public void onTaskFailed(RestClientException e) {
-            Log.d(TAG, "onTaskFailed with " + e.getResponseCode()
-                    + ": " + e.getJson().toString());
-            showError("Unable to update meeting");
+            showError("Unable to update mMeeting");
         }
 
         @Override
         public void onExceptionRaised(Exception e) {
-            Log.d(TAG, "onExceptionRaised: " + e.getMessage());
-            showError("Unable to update meeting");
+            showError("Unable to update mMeeting");
         }
     }
 
     /**
-     * Specifies the RestClientJsonCallback implementation after inviting users to a meeting.
+     * Specifies the RestClientJsonCallback implementation after inviting users to a Meeting.
      */
     private class AsyncInviteCallback implements RestClientJsonCallback {
         @Override
         public void onTaskExecuted(JSONObject json) {
-            Log.d(TAG, "inviteToMeeting onTaskExecuted: "
-                    + json.toString());
-            invitesPending = false;
+            mInvitesPending = false;
             switchActivity();
         }
 
         @Override
         public void onTaskFailed(RestClientException e) {
-            Log.d(TAG, "inviteToMeeting onTaskFailed: "
-                    + e.getMessage());
             e.printStackTrace();
             showError("Unable to invite user(s)");
         }
 
         @Override
         public void onExceptionRaised(Exception e) {
-            Log.d(TAG, "inviteToMeeting onExceptionRaised: "
-                    + e.getMessage());
             e.printStackTrace();
             showError("Unable to invite user(s)");
         }
     }
 
     /**
-     * Specifies the RestClientJsonCallback implementation after uninviting users from a meeting.
+     * Specifies the RestClientJsonCallback implementation after uninviting users from a Meeting.
      */
     private class AsyncUninviteCallback implements RestClientJsonCallback {
         @Override
         public void onTaskExecuted(JSONObject json) {
-            uninvitesPending = false;
+            mUninvitesPending = false;
             switchActivity();
         }
 

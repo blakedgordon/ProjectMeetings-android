@@ -5,7 +5,6 @@ import android.app.Dialog;
 import android.app.ListFragment;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -54,11 +53,11 @@ import static edu.calbaptist.android.projectmeetings.SignInActivity.REQUEST_PERM
 
 public class FolderListFragment extends ListFragment
         implements GoogleApiClient.OnConnectionFailedListener, AdapterView.OnItemClickListener{
-    private final String TAG = "FolderListFragment";
+    public static final String TAG = "FolderListFragment";
+    public static final String[] SCOPES = { DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_FILE };
 
-    GoogleAccountCredential mCredential;
-    private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_FILE };
-    Map<String,String> folders = new LinkedHashMap<>();
+    private GoogleAccountCredential mCredential;
+    private Map<String,String> mFolders = new LinkedHashMap<>();
 
     /**
      * Initializes FolderListFragment.
@@ -81,8 +80,8 @@ public class FolderListFragment extends ListFragment
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        String accountName = App.context.getSharedPreferences(
-                App.context.getString(R.string.app_package), Context.MODE_PRIVATE)
+        String accountName = App.CONTEXT.getSharedPreferences(
+                App.CONTEXT.getString(R.string.app_package), Context.MODE_PRIVATE)
                 .getString("accountName", null);
 
         mCredential = GoogleAccountCredential.usingOAuth2(
@@ -123,8 +122,8 @@ public class FolderListFragment extends ListFragment
      */
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        String folderName =  ((String) new ArrayList(folders.keySet()).get(position));
-        String folderId = folders.get(folderName);
+        String folderName =  ((String) new ArrayList(mFolders.keySet()).get(position));
+        String folderId = mFolders.get(folderName);
 
         Intent returnIntent = new Intent();
         returnIntent.putExtra("folder_name",
@@ -146,7 +145,7 @@ public class FolderListFragment extends ListFragment
             try {
                 mService = DriveFiles.getInstance().getDriveService();
             } catch (GooglePlayServicesAvailabilityException e) {
-                showGooglePlayServicesAvailabilityErrorDialog(e.connectionStatusCode);
+                showGooglePlayServicesAvailabilityErrorDialog(e.mConnectionStatusCode);
             } catch (ChooseAccountException e) {
                 startActivityForResult(
                         mCredential.newChooseAccountIntent(),
@@ -188,7 +187,7 @@ public class FolderListFragment extends ListFragment
             FileList result = mService.files().list()
                     .setPageSize(10)
                     .setFields("nextPageToken, files(id, name)")
-                    .setQ("mimeType = \"application/vnd.google-apps.folder\"") //only display folders
+                    .setQ("mimeType = \"application/vnd.google-apps.folder\"")
                     .execute();
             List<File> files = result.getFiles();
             if (files != null) {
@@ -202,7 +201,7 @@ public class FolderListFragment extends ListFragment
 
         @Override
         protected void onPostExecute(Map<String, String> output) {
-            folders = output;
+            mFolders = output;
             ArrayList<String> folderArray = new ArrayList<>();
             folderArray.addAll(output.keySet());
             ArrayAdapter adapter = new ArrayAdapter<>(getActivity(),

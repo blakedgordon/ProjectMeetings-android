@@ -32,7 +32,7 @@ import edu.calbaptist.android.projectmeetings.utils.DriveFiles;
 
 /**
  *  Create Meeting Activity
- *  Assists the user with creating a meeting.
+ *  Assists the user with creating a mMeeting.
  *
  *  @author Austin Brinegar, Caleb Solorio
  *  @version 1.0.0 12/20/17
@@ -41,16 +41,16 @@ import edu.calbaptist.android.projectmeetings.utils.DriveFiles;
 public class CreateMeetingActivity extends AppCompatActivity
         implements View.OnClickListener, DatePickerDialog.OnDateSetListener,
         TimePickerDialog.OnTimeSetListener, NumberPicker.OnValueChangeListener {
-    private static final String TAG = "CreateMeetingActivity";
+    public static final String TAG = "CreateMeetingActivity";
 
-    private EditText meetingName, meetingObjective, add_invites;
-    private Button dateButton, driveButton, submit;
-    private DatePickerDialog datePickerDialog;
-    private TimePickerDialog timePickerDialog;
-    private ProgressBar progressBar;
+    private EditText mMeetingName, mMeetingObjective, mInvitesToAdd;
+    private Button mDateButton, mDriveButton, mSubmitButton;
+    private DatePickerDialog mDatePickerDialog;
+    private TimePickerDialog mTimePickerDialog;
+    private ProgressBar mProgressBar;
 
-    private Calendar c;
-    SimpleDateFormat dateFormatter;
+    private Calendar mCalendar;
+    private SimpleDateFormat mDateFormatter;
 
     private String mDriveFolderId;
     private int mLengthMinutes;
@@ -66,24 +66,26 @@ public class CreateMeetingActivity extends AppCompatActivity
 
         getSupportActionBar().setTitle(getString(R.string.create_meeting));
 
-        meetingName = findViewById(R.id.edit_text_meeting_name);
-        meetingObjective = findViewById(R.id.edit_text_meeting_objective);
+        mMeetingName = findViewById(R.id.edit_text_meeting_name);
+        mMeetingObjective = findViewById(R.id.edit_text_meeting_objective);
 
-        c = Calendar.getInstance();
-        dateFormatter = new SimpleDateFormat("h:mm a, MMM dd, YYYY");
+        mCalendar = Calendar.getInstance();
+        mDateFormatter = new SimpleDateFormat("h:mm a, MMM dd, YYYY");
 
-        timePickerDialog = new TimePickerDialog(CreateMeetingActivity.this, this,
-                c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), false);
+        mTimePickerDialog = new TimePickerDialog(CreateMeetingActivity.this, this,
+                mCalendar.get(Calendar.HOUR_OF_DAY), mCalendar.get(Calendar.MINUTE), false);
 
-        datePickerDialog = new DatePickerDialog(CreateMeetingActivity.this, this,
-                c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+        mDatePickerDialog = new DatePickerDialog(CreateMeetingActivity.this, this,
+                mCalendar.get(Calendar.YEAR),
+                mCalendar.get(Calendar.MONTH),
+                mCalendar.get(Calendar.DAY_OF_MONTH));
 
-        dateButton = findViewById(R.id.button_date_picker);
-        dateButton.setText(dateFormatter.format(c.getTime()));
-        dateButton.setOnClickListener(this);
+        mDateButton = findViewById(R.id.button_date_picker);
+        mDateButton.setText(mDateFormatter.format(mCalendar.getTime()));
+        mDateButton.setOnClickListener(this);
 
-        driveButton = findViewById(R.id.button_drive_folder);
-        driveButton.setOnClickListener(this);
+        mDriveButton = findViewById(R.id.button_drive_folder);
+        mDriveButton.setOnClickListener(this);
 
         mLengthMinutes = 1;
 
@@ -92,12 +94,12 @@ public class CreateMeetingActivity extends AppCompatActivity
         np.setMaxValue(60);
         np.setOnValueChangedListener(this);
 
-        add_invites = findViewById(R.id.edit_text_add_invites);
+        mInvitesToAdd = findViewById(R.id.edit_text_add_invites);
 
-        submit = findViewById(R.id.button_submit);
-        submit.setOnClickListener(this);
+        mSubmitButton = findViewById(R.id.button_submit);
+        mSubmitButton.setOnClickListener(this);
 
-        progressBar = (ProgressBar) findViewById(R.id.progress_bar);
+        mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
     }
 
     /**
@@ -108,7 +110,7 @@ public class CreateMeetingActivity extends AppCompatActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.button_date_picker:
-                datePickerDialog.show();
+                mDatePickerDialog.show();
                 break;
             case R.id.button_drive_folder:
                 Intent intent = new Intent(getApplicationContext(), FolderListActivity.class);
@@ -130,8 +132,8 @@ public class CreateMeetingActivity extends AppCompatActivity
      */
     @Override
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-        c.set(year, monthOfYear, dayOfMonth);
-        timePickerDialog.show();
+        mCalendar.set(year, monthOfYear, dayOfMonth);
+        mTimePickerDialog.show();
     }
 
     /**
@@ -155,13 +157,13 @@ public class CreateMeetingActivity extends AppCompatActivity
     @Override
     public void onTimeSet(TimePicker view, int hour,
                           int minute) {
-        c.set(Calendar.HOUR_OF_DAY, hour);
-        c.set(Calendar.MINUTE, minute);
+        mCalendar.set(Calendar.HOUR_OF_DAY, hour);
+        mCalendar.set(Calendar.MINUTE, minute);
 
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                dateButton.setText(dateFormatter.format(c.getTime()));
+                mDateButton.setText(mDateFormatter.format(mCalendar.getTime()));
             }
         });
     }
@@ -176,7 +178,7 @@ public class CreateMeetingActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) {
             if(resultCode == Activity.RESULT_OK){
-                driveButton.setText(data.getStringExtra("folder_name"));
+                mDriveButton.setText(data.getStringExtra("folder_name"));
                 mDriveFolderId = data.getStringExtra("folder_id");
             }
             if (resultCode == Activity.RESULT_CANCELED) {
@@ -189,13 +191,13 @@ public class CreateMeetingActivity extends AppCompatActivity
      * Initializes the creation of a new Meeting.
      */
     private void createMeeting(){
-        final long millis = c.getTimeInMillis();
+        final long millis = mCalendar.getTimeInMillis();
         final long length = (long) mLengthMinutes * 60 * 1000;
 
-        progressBar.setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.VISIBLE);
 
         final ArrayList invitationsToAdd =
-                new ArrayList<String>(Arrays.asList(add_invites
+                new ArrayList<String>(Arrays.asList(mInvitesToAdd
                         .getText().toString().split("\\s*,\\s*")));
 
         try {
@@ -212,8 +214,8 @@ public class CreateMeetingActivity extends AppCompatActivity
         }
 
         final Meeting meeting = new Meeting.MeetingBuilder()
-                .setName(meetingName.getText().toString())
-                .setObjective(meetingObjective.getText().toString())
+                .setName(mMeetingName.getText().toString())
+                .setObjective(mMeetingObjective.getText().toString())
                 .setTime(millis)
                 .setTimeLimit(length)
                 .setDriveFolderId(mDriveFolderId)
@@ -237,7 +239,7 @@ public class CreateMeetingActivity extends AppCompatActivity
 
     /**
      * Specifies the RestClientMeetingCallback and RestClientUserCallback
-     * implementation after creating a meeting.
+     * implementation after creating a mMeeting.
      */
     private class AsyncCallback implements RestClientMeetingCallback {
         public void onTaskExecuted(Meeting m) {
@@ -251,16 +253,16 @@ public class CreateMeetingActivity extends AppCompatActivity
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    progressBar.setVisibility(View.GONE);
+                    mProgressBar.setVisibility(View.GONE);
                 }
             });
             showToast("Whoops, make sure all the fields are filled out. "
-                    + "You must invite at least one user to the meeting.");
+                    + "You must invite at least one user to the mMeeting.");
         }
 
         @Override
         public void onExceptionRaised(Exception e) {
-            progressBar.setVisibility(View.GONE);
+            mProgressBar.setVisibility(View.GONE);
             showToast("Oh no, an unknown error occured :(");
         }
     }

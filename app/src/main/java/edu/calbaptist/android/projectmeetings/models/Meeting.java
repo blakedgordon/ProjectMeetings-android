@@ -11,90 +11,90 @@ import java.util.ArrayList;
  *  @version 0.4.0 11/27/17
  */
 public class Meeting implements Serializable{
-    private static final String TAG = "Meeting";
+    public static final String TAG = "Meeting";
 
-    private String mid;
-    private String uid;
-    private String name;
-    private String objective;
-    private long time;
-    private long timeLimit;
-    private String driveFolderId;
-    private ArrayList invites;
+    private String mId;
+    private String mUId;
+    private String mName;
+    private String mObjective;
+    private long mTime;
+    private long mTimeLimit;
+    private String mDriveFolderId;
+    private ArrayList mInvites;
 
     private Meeting(MeetingBuilder builder) {
-        this.mid = builder.mid;
-        this.uid = builder.uid;
-        this.name = builder.name;
-        this.objective = builder.objective;
-        this.time = builder.time;
-        this.timeLimit = builder.timeLimit;
-        this.driveFolderId = builder.driveFolderId;
-        this.invites = builder.invites;
+        this.mId = builder.mId;
+        this.mUId = builder.mUId;
+        this.mName = builder.mName;
+        this.mObjective = builder.mObjective;
+        this.mTime = builder.mTime;
+        this.mTimeLimit = builder.mTimeLimit;
+        this.mDriveFolderId = builder.mDriveFolderId;
+        this.mInvites = builder.mInvites;
     }
 
     /**
-     * Gets the meetings's mid.
-     * @return the mid string.
+     * Gets the meetings's mId.
+     * @return the mId string.
      */
-    public String getMid() {
-        return mid;
+    public String getMId() {
+        return mId;
     }
 
     /**
-     * Gets the meetings's uid.
-     * @return the uid string.
+     * Gets the meetings's uId.
+     * @return the mUId string.
      */
-    public String getUid() {
-        return uid;
+    public String getUId() {
+        return mUId;
     }
 
     /**
      * Gets the meetings's name.
-     * @return the name string.
+     * @return the mName string.
      */
     public String getName() {
-        return name;
+        return mName;
     }
 
     /**
      * Gets the meetings's objective.
-     * @return the objective string.
+     * @return the mObjective string.
      */
     public String getObjective() {
-        return objective;
+        return mObjective;
     }
 
     /**
      * Gets the meetings's time.
-     * @return the time.
+     * @return the mTime long.
      */
     public long getTime() {
-        return time;
+        return mTime;
     }
 
     /**
      * Gets the meetings's time limit.
-     * @return the time limit.
+     * @return the mTimeLimit long.
      */
     public long getTimeLimit() {
-        return timeLimit;
+        return mTimeLimit;
     }
 
     /**
      * Gets the meetings's drive folder id.
-     * @return the drive folder id string.
+     * @return the mDriveFolderId string.
      */
     public String getDriveFolderId() {
-        return driveFolderId;
+        return mDriveFolderId;
     }
 
     /**
-     * Gets the meetings's add_invites.
-     * @return the add_invites list
+     * Gets the meetings's invites.
+     * @return the mInvites list
      */
     public ArrayList getInvites() {
-        return invites;
+        return mInvites;
     }
 
     /**
@@ -105,72 +105,72 @@ public class Meeting implements Serializable{
      *  @version 0.4.0 11/27/17
      */
     public static class MeetingBuilder {
-        private String mid;
-        private String uid;
-        private String name;
-        private String objective;
-        private long time;
-        private long timeLimit;
-        private String driveFolderId;
-        private ArrayList invites;
+        private String mId;
+        private String mUId;
+        private String mName;
+        private String mObjective;
+        private long mTime;
+        private long mTimeLimit;
+        private String mDriveFolderId;
+        private ArrayList mInvites;
 
         /**
-         * Sets the builder's mid.
-         * @param mid the mid of the user.
+         * Sets the builder's mId.
+         * @param mid the mId of the user.
          * @return the new MeetingBuilder object.
          */
-        public MeetingBuilder setMid(String mid) {
-            this.mid = mid;
+        public MeetingBuilder setMId(String mid) {
+            this.mId = mid;
             return this;
         }
 
         /**
-         * Sets the builder's uid.
-         * @param uid the uid of the user.
+         * Sets the builder's mUId.
+         * @param uid the mUId of the user.
          * @return the new MeetingBuilder object.
          */
-        public MeetingBuilder setUid(String uid) {
-            this.uid = uid;
+        public MeetingBuilder setUId(String uid) {
+            this.mUId = uid;
             return this;
         }
 
         /**
-         * Sets the builder's name.
-         * @param name the name of the user.
+         * Sets the builder's mName.
+         * @param name the mName of the user.
          * @return the new MeetingBuilder object.
          */
         public MeetingBuilder setName(String name) {
-            this.name = name;
+            this.mName = name;
             return this;
         }
 
         /**
-         * Sets the builder's objective.
-         * @param objective the objective of the user.
+         * Sets the builder's mObjective.
+         * @param objective the mObjective of the user.
          * @return the new MeetingBuilder object.
          */
         public MeetingBuilder setObjective(String objective) {
-            this.objective = objective;
+            this.mObjective = objective;
             return this;
         }
 
         /**
-         * Sets the builder's time.
-         * @param time the time of the user.
+         * Sets the builder's mTime.
+         * @param time the mTime of the user.
          * @return the new MeetingBuilder object.
          */
         public MeetingBuilder setTime(long time) {
-            this.time = time;
+            this.mTime = time;
             return this;
         }
 
         /**
-         * Sets the builder's time limit.
-         * @param timeLimit the time limit of the user.
+         * Sets the builder's mTime limit.
+         * @param timeLimit the mTime limit of the user.
          * @return the new MeetingBuilder object.
          */
         public MeetingBuilder setTimeLimit(long timeLimit) {
-            this.timeLimit = timeLimit;
+            this.mTimeLimit = timeLimit;
             return this;
         }
 
@@ -180,17 +180,17 @@ public class Meeting implements Serializable{
          * @return the new MeetingBuilder object.
          */
         public MeetingBuilder setDriveFolderId(String driveFolderId) {
-            this.driveFolderId = driveFolderId;
+            this.mDriveFolderId = driveFolderId;
             return this;
         }
 
         /**
-         * Sets the builder's add_invites.
-         * @param invites the add_invites of the user.
+         * Sets the builder's mInvites.
+         * @param invites the mInvites of the user.
          * @return the new MeetingBuilder object.
          */
         public MeetingBuilder setInvites(ArrayList invites) {
-            this.invites = invites;
+            this.mInvites = invites;
             return this;
         }
 

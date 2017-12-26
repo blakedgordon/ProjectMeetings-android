@@ -33,10 +33,9 @@ import edu.calbaptist.android.projectmeetings.models.User;
  */
 public class RestClient {
     public static final String TAG = "RestClient";
-
-    private static final String PROTOCOL = App.context.getString(R.string.rest_protocol);
-    private static final String HOST = App.context.getString(R.string.http_endpoint);
-    private static final int PORT = App.context.getResources().getInteger(R.integer.endpoint_port);
+    public static final String PROTOCOL = App.CONTEXT.getString(R.string.rest_protocol);
+    public static final String HOST = App.CONTEXT.getString(R.string.http_endpoint);
+    public static final int PORT = App.CONTEXT.getResources().getInteger(R.integer.endpoint_port);
 
     /**
      * Creates a new User in Firebase.
@@ -375,7 +374,7 @@ public class RestClient {
                 json.put("drive_folder_id", driveFolderId);
             }
 
-            URL url = new URL(PROTOCOL, HOST, PORT,  "/api/meeting/" + meeting.getMid());
+            URL url = new URL(PROTOCOL, HOST, PORT,  "/api/meeting/" + meeting.getMId());
 
             HttpURLConnection conn = getBasicHttpURLConnection(url);
             conn.setRequestMethod("PUT");
@@ -591,8 +590,8 @@ public class RestClient {
      */
     private static Meeting jsonToMeeting(JSONObject json) throws JSONException{
         Meeting.MeetingBuilder builder = new Meeting.MeetingBuilder()
-                .setMid(json.getString("m_id"))
-                .setUid(json.getString("u_id"))
+                .setMId(json.getString("m_id"))
+                .setUId(json.getString("u_id"))
                 .setName(json.getString("name"))
                 .setObjective(json.getString("objective"))
                 .setTime(json.getLong("time"))

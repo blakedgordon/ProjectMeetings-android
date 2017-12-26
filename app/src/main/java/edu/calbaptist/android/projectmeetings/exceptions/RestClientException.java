@@ -10,8 +10,8 @@ import org.json.JSONObject;
  *  @version 0.4.0 11/27/17
  */
 public class RestClientException extends Exception {
-    private int responseCode;
-    private JSONObject json;
+    private int mResponseCode;
+    private JSONObject mJson;
 
     /**
      * Initializes a new RestClientException.
@@ -19,23 +19,23 @@ public class RestClientException extends Exception {
      * @param json the JSON given back by the API.
      */
     public RestClientException(int responseCode, JSONObject json) {
-        this.responseCode = responseCode;
-        this.json = json;
+        this.mResponseCode = responseCode;
+        this.mJson = json;
     }
 
     /**
      * Get the error code from the API's response.
-     * @return the responseCode attribute.
+     * @return the mResponseCode attribute.
      */
     public int getResponseCode() {
-        return responseCode;
+        return mResponseCode;
     }
 
     /**
      * Get the JSON from the API's response.
-     * @return the json attribute.
+     * @return the mJson attribute.
      */
     public JSONObject getJson() {
-        return json;
+        return mJson;
     }
 }

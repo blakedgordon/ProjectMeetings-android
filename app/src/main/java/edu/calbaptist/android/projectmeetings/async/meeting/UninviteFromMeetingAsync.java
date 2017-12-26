@@ -1,13 +1,10 @@
 package edu.calbaptist.android.projectmeetings.async.meeting;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 
 import java.util.ArrayList;
 
 import edu.calbaptist.android.projectmeetings.App;
-import edu.calbaptist.android.projectmeetings.R;
 import edu.calbaptist.android.projectmeetings.utils.rest.RestClient;
 import edu.calbaptist.android.projectmeetings.utils.rest.RestClientJsonCallback;
 
@@ -21,13 +18,10 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClientJsonCallback;
 
 public class UninviteFromMeetingAsync extends AsyncTask<Void, Void, Void> {
     private static final String TAG = "DeleteMeetingAsync";
-    private static final SharedPreferences PREFERENCES = App.context.getSharedPreferences(
-            App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
 
     private String mId;
-    private ArrayList<String> emails;
-    private String token;
-    private RestClientJsonCallback callback;
+    private ArrayList<String> mEmails;
+    private RestClientJsonCallback mCallback;
 
     /**
      * The UninviteToMeetingAsync constructor.
@@ -37,8 +31,8 @@ public class UninviteFromMeetingAsync extends AsyncTask<Void, Void, Void> {
      */
     public UninviteFromMeetingAsync(String mId, ArrayList<String> emails, RestClientJsonCallback callback) {
         this.mId = mId;
-        this.emails = emails;
-        this.callback = callback;
+        this.mEmails = emails;
+        this.mCallback = callback;
     }
 
     /**
@@ -48,8 +42,8 @@ public class UninviteFromMeetingAsync extends AsyncTask<Void, Void, Void> {
      */
     @Override
     protected Void doInBackground(Void... voids) {
-        RestClient.uninviteFromMeeting(mId, emails,
-                PREFERENCES.getString("firebase_token", null), callback);
+        RestClient.uninviteFromMeeting(mId, mEmails,
+                App.PREFERENCES.getString("firebase_token", null), mCallback);
         return null;
     }
 }

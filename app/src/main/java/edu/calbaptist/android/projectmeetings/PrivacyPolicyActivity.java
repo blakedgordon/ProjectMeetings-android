@@ -8,7 +8,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class PrivacyPolicyActivity extends AppCompatActivity {
-    private static final String TAG = "PrivacyPolicyActivity";
+    public static final String TAG = "PrivacyPolicyActivity";
 
     private WebView mWebView;
 

@@ -1,6 +1,5 @@
 package edu.calbaptist.android.projectmeetings;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -41,13 +40,10 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClientUserCallback;
 public class MeetingListActivity extends AppCompatActivity
         implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = "MeetingListActivity";
-    private static final SharedPreferences PREFERENCES = App.context.getSharedPreferences(
-            App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
 
     private GoogleApiClient mGoogleApiClient;
-
     private MenuItem mSettingsButton;
-    private FloatingActionButton newMeeting;
+    private FloatingActionButton mNewMeetingButton;
 
     /**
      * Initializes MeetingListActivity
@@ -58,8 +54,8 @@ public class MeetingListActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         stashToken();
         setContentView(R.layout.activity_meeting_list);
-        newMeeting = findViewById(R.id.fab_create_meeting);
-        newMeeting.setOnClickListener(this);
+        mNewMeetingButton = findViewById(R.id.fab_create_meeting);
+        mNewMeetingButton.setOnClickListener(this);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -134,7 +130,7 @@ public class MeetingListActivity extends AppCompatActivity
         Auth.GoogleSignInApi.signOut(client).setResultCallback(new ResultCallback<Status>() {
             @Override
             public void onResult(@NonNull Status status) {
-                PREFERENCES.edit().clear().commit();
+                App.PREFERENCES.edit().clear().commit();
 
                 Intent intent = new Intent(getApplicationContext(), SignInActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -174,7 +170,7 @@ public class MeetingListActivity extends AppCompatActivity
                         if (task.isSuccessful()) {
                             String idToken = task.getResult().getToken();
 
-                            SharedPreferences.Editor editor = PREFERENCES.edit();
+                            SharedPreferences.Editor editor = App.PREFERENCES.edit();
                             editor.putString("firebase_token", idToken);
                             editor.apply();
 
@@ -195,7 +191,7 @@ public class MeetingListActivity extends AppCompatActivity
     private class AsyncUserCallback implements RestClientUserCallback {
         @Override
         public void onTaskExecuted(final User user) {
-            SharedPreferences.Editor editor = PREFERENCES.edit();
+            SharedPreferences.Editor editor = App.PREFERENCES.edit();
             editor.putString("firebase_token", user.getFirebaseToken());
             editor.apply();
 

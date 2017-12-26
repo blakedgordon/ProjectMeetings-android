@@ -32,10 +32,10 @@ import edu.calbaptist.android.projectmeetings.models.User;
  */
 
 public class MeetingListFragment extends ListFragment implements ValueEventListener {
-    private static final String TAG = "MeetingListFragment";
+    public static final String TAG = "MeetingListFragment";
 
-    private ArrayList<Meeting> meetings;
-    private ProgressBar spinner;
+    private ArrayList<Meeting> mMeetings;
+    private ProgressBar mSpinner;
 
     /**
      * Initializes MeetingListFragment.
@@ -47,7 +47,7 @@ public class MeetingListFragment extends ListFragment implements ValueEventListe
     @Override
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        meetings = new ArrayList<>();
+        mMeetings = new ArrayList<>();
         return inflater.inflate(R.layout.fragment_meeting_list, container, false);
     }
 
@@ -77,7 +77,7 @@ public class MeetingListFragment extends ListFragment implements ValueEventListe
 
         }
 
-        spinner = (ProgressBar) getActivity().findViewById(R.id.progress_bar_meeting_list);
+        mSpinner = (ProgressBar) getActivity().findViewById(R.id.progress_bar_meeting_list);
 
         if(mIds.size() > 0) {
             DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
@@ -95,7 +95,7 @@ public class MeetingListFragment extends ListFragment implements ValueEventListe
                 public void run() {
                     RelativeLayout rel = getActivity().findViewById(R.id.layout_no_meetings);
                     rel.setVisibility(View.VISIBLE);
-                    spinner.setVisibility(View.GONE);
+                    mSpinner.setVisibility(View.GONE);
                 }
             });
         }
@@ -114,17 +114,17 @@ public class MeetingListFragment extends ListFragment implements ValueEventListe
                     .setTime(Long.parseLong(dataSnapshot.child("time").getValue().toString()))
                     .setTimeLimit(Long.parseLong((dataSnapshot.child("time_limit").getValue().toString())))
                     .setDriveFolderId(dataSnapshot.child("drive_folder_id").getValue().toString())
-                    .setMid(dataSnapshot.getKey())
-                    .setUid(dataSnapshot.child("u_id").getValue().toString())
+                    .setMId(dataSnapshot.getKey())
+                    .setUId(dataSnapshot.child("u_id").getValue().toString())
                     .build();
 
-            meetings.add(m);
+            mMeetings.add(m);
         }
 
-        spinner.setVisibility(View.GONE);
+        mSpinner.setVisibility(View.GONE);
 
         if(getActivity() != null) {
-            ArrayAdapter adapter = new MeetingListAdapter(getActivity(), meetings);
+            ArrayAdapter adapter = new MeetingListAdapter(getActivity(), mMeetings);
             setListAdapter(adapter);
         }
     }

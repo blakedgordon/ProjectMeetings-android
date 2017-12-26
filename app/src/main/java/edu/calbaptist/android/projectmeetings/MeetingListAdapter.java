@@ -3,7 +3,6 @@ package edu.calbaptist.android.projectmeetings;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -40,21 +39,19 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClientJsonCallback;
  */
 
 public class MeetingListAdapter extends ArrayAdapter<Meeting> {
-    private static final String TAG = "MeetingLstAdapter";
-    private static final SharedPreferences PREFERENCES = App.context.getSharedPreferences(
-            App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
+    public static final String TAG = "MeetingLstAdapter";
 
-    ArrayList<Meeting> meetings;
+    private ArrayList<Meeting> mMeetings;
 
     /**
      * Initializes the adapter.
      * @param context The context of the adapter in relation to the rest of the app.
-     * @param meetings The meetings for which the adapter is created.
+     * @param meetings The mMeetings for which the adapter is created.
      */
     public MeetingListAdapter(@NonNull Context context, ArrayList<Meeting> meetings) {
         super(context, R.layout.item_meeting, meetings);
 
-        this.meetings = meetings;
+        this.mMeetings = meetings;
     }
 
     /**
@@ -82,7 +79,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
 
         ViewHolder h = (ViewHolder) rowView.getTag();
 
-        final Meeting meeting = meetings.get(position);
+        final Meeting meeting = mMeetings.get(position);
 
         h.mItemMeeting.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,9 +87,9 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
                 Intent intent = new Intent(getContext(), MeetingActivity.class);
                 intent.putExtra(MeetingActivity.MEETING_KEY, meeting);
                 User user = new User.UserBuilder()
-                        .setUid(PREFERENCES.getString("u_id",null))
-                        .setDisplayName(PREFERENCES.getString("display_name",null))
-                        .setFirebaseToken(PREFERENCES.getString("firebase_token",null))
+                        .setUid(App.PREFERENCES.getString("u_id",null))
+                        .setDisplayName(App.PREFERENCES.getString("display_name",null))
+                        .setFirebaseToken(App.PREFERENCES.getString("firebase_token",null))
                         .build();
 
                 intent.putExtra(MeetingActivity.USER_KEY,user);
@@ -110,7 +107,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
             }
         });
 
-        if(meeting.getUid().equals(PREFERENCES.getString("u_id", null))) {
+        if(meeting.getUId().equals(App.PREFERENCES.getString("u_id", null))) {
             h.mEditButton.setVisibility(View.VISIBLE);
             h.mEditButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -124,7 +121,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
             h.mRemoveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    new DeleteMeetingAsync(meeting.getMid(),
+                    new DeleteMeetingAsync(meeting.getMId(),
                             new AsyncDeleteMeetingCallback()).execute();
                 }
             });
@@ -134,7 +131,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
             h.mRemoveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    new DeleteUserInviteAsync(meeting.getMid(),
+                    new DeleteUserInviteAsync(meeting.getMId(),
                             new AsyncDeleteInviteCallback()).execute();
                 }
             });
@@ -156,7 +153,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
         if (inProgress) {
             LinearLayout slit = rowView.findViewById(R.id.layout_item_meeting_color_slit);
             slit.setVisibility(View.VISIBLE);
-            textTime.setText(App.context.getString(R.string.in_progress));
+            textTime.setText(App.CONTEXT.getString(R.string.in_progress));
         } else {
             int totalMinutes = (int) meeting.getTimeLimit() / 60000;
             StringBuilder builder = new StringBuilder();
@@ -209,7 +206,7 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
     }
 
     /**
-     * Specifies the RestClientJsonCallback implementation after deleting a meeting.
+     * Specifies the RestClientJsonCallback implementation after deleting a mMeeting.
      */
     private class AsyncDeleteMeetingCallback implements RestClientJsonCallback {
         @Override
@@ -220,18 +217,18 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
         @Override
         public void onTaskFailed(RestClientException e) {
             Log.e(TAG, "onTaskFailed: ", e);
-            showToast("Error deleting meeting :(");
+            showToast("Error deleting mMeeting :(");
         }
 
         @Override
         public void onExceptionRaised(Exception e) {
             Log.e(TAG, "onExceptionRaised: ", e);
-            showToast("Error deleting meeting :(");
+            showToast("Error deleting mMeeting :(");
         }
     }
 
     /**
-     * Specifies the RestClientJsonCallback implementation after leaving a meeting.
+     * Specifies the RestClientJsonCallback implementation after leaving a mMeeting.
      */
     private class AsyncDeleteInviteCallback implements RestClientJsonCallback {
         @Override
@@ -242,13 +239,13 @@ public class MeetingListAdapter extends ArrayAdapter<Meeting> {
         @Override
         public void onTaskFailed(RestClientException e) {
             Log.e(TAG, "onTaskFailed: ", e);
-            showToast("Error leaving meeting :(");
+            showToast("Error leaving mMeeting :(");
         }
 
         @Override
         public void onExceptionRaised(Exception e) {
             Log.e(TAG, "onExceptionRaised: ", e);
-            showToast("Error leaving meeting :(");
+            showToast("Error leaving mMeeting :(");
         }
     }
 }

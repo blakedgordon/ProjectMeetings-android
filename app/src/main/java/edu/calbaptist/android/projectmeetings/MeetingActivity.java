@@ -73,67 +73,59 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClientUserCallback;
  */
 public class MeetingActivity extends AppCompatActivity
         implements View.OnClickListener, ViewTreeObserver.OnGlobalLayoutListener {
-    private static final String TAG = "MeetingActivity";
-
+    public static final String TAG = "MeetingActivity";
     public static final String MEETING_KEY = "meeting";
     public static final String USER_KEY = "user";
+    public static final String EVENT_START_MEETING = "start_meeting";
+    public static final String EVENT_APPLAUSE= "applause";
+    public static final String EVENT_MESSAGE = "msg";
+    public static final String EVENT_PRESENCE_STATE = "presence_state";
+    public static final String EVENT_PRESENCE_DIFF = "presence_diff";
 
-    private static final String EVENT_START_MEETING = "start_meeting";
-    private static final String EVENT_APPLAUSE= "applause";
-    private static final String EVENT_MESSAGE = "msg";
-    private static final String EVENT_PRESENCE_STATE = "presence_state";
-    private static final String EVENT_PRESENCE_DIFF = "presence_diff";
+    public static final String [] PERMISSIONS = {android.Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.CAMERA};
+    public static final int REQUEST_MULTIPLE_PERMISSION = 200;
+    public static final int CAMERA_REQUEST = 1888;
 
-    private Socket socket;
-    private Channel channel;
+    private Socket mSocket;
+    private Channel mChannel;
 
-    private Meeting meeting;
-    private User user;
-    private HashMap<String, User> users = new HashMap<>();
+    private Meeting mMeeting;
+    private User mUser;
+    private HashMap<String, User> mUsers = new HashMap<>();
 
-    TextView textToolbarTitle;
-    TextView textObjective;
+    private TextView mTextToolbarTitle, mTextObjective;
 
-    private long timeLimit;
-    private long initialTimePassed =0;
+    private long mTimeLimit, mInitialTimePassed = 0;
 
-    ProgressBar progressBar;
-    TextView textClockTime;
-    TextView textClockHint;
-    TextView textConnecting;
+    private ProgressBar mProgressBar;
+    TextView mTextClockTime, mTextClockHint, mTextConnecting;
 
     MeetingMessagePagerAdapter mPagerAdapter;
     ViewPager mViewPager;
 
-    private boolean connecting = true;
-    private boolean connectingAnimationFinished = false;
-    private boolean started = false;
-    CountDownTimer timer;
+    private boolean mConnecting = true;
+    private boolean mConnectingAnimationFinished = false;
+    private boolean mStarted = false;
 
-    private StringBuilder stringBuilder;
-    private Iterator iterator;
+    CountDownTimer mTimer;
 
-    private int[] applauseIcons = new int[10];
-    private ImageButton buttonApplause;
-    private ImageButton buttonSendMessage;
-    private int animIndex = 0;
+    private StringBuilder mStringBuilder;
+    private Iterator mIterator;
+
+    private int[] mApplauseIcons = new int[10];
+    private ImageButton mButtonApplause, mButtonSendMessage;
+    private int mAnimIndex = 0;
 
     private MenuItem mRecordButton;
     private MediaRecorder mMediaRecorder;
     private boolean mStartRecording = false;
     private static String mFilePath;
 
-    RelativeLayout rootView;
+    RelativeLayout mRootView;
 
-    // Requesting permission to RECORD_AUDIO and CAMERA
-    private boolean permissionToRecordAccepted = false;
-    private boolean permissionToTakePhotos = false;
-    private String [] permissions = {android.Manifest.permission.RECORD_AUDIO,
-                                        Manifest.permission.CAMERA};
-    private static final int REQUEST_MULTIPLE_PERMISSION = 200;
-    private static final String LOG_TAG = "AudioRecord";
-
-    private static final int CAMERA_REQUEST = 1888;
+    private boolean mPermissionToRecordAccepted = false;
+    private boolean mPermissionToTakePhotos = false;
     private String mCurrentPhotoPath;
     private String mCurrentPhotoName;
 
@@ -146,8 +138,8 @@ public class MeetingActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_meeting);
 
-        meeting = (Meeting) getIntent().getSerializableExtra(MEETING_KEY);
-        user = (User) getIntent().getSerializableExtra(USER_KEY);
+        mMeeting = (Meeting) getIntent().getSerializableExtra(MEETING_KEY);
+        mUser = (User) getIntent().getSerializableExtra(USER_KEY);
 
         connectToWebsocket();
 
@@ -162,22 +154,22 @@ public class MeetingActivity extends AppCompatActivity
             }
         });
 
-        textToolbarTitle = (TextView) findViewById(R.id.text_toolbar_title);
-        textToolbarTitle.setText(meeting.getName());
+        mTextToolbarTitle = (TextView) findViewById(R.id.text_toolbar_title);
+        mTextToolbarTitle.setText(mMeeting.getName());
 
-        textObjective = (TextView) findViewById(R.id.text_objective);
-        textObjective.setText(meeting.getObjective());
+        mTextObjective = (TextView) findViewById(R.id.text_objective);
+        mTextObjective.setText(mMeeting.getObjective());
 
-        textConnecting = findViewById(R.id.text_connecting);
+        mTextConnecting = findViewById(R.id.text_connecting);
 
-        timeLimit = meeting.getTimeLimit();
+        mTimeLimit = mMeeting.getTimeLimit();
 
-        textClockTime = (TextView) findViewById(R.id.text_clock_time);
-        textClockHint = (TextView) findViewById(R.id.text_clock_hint);
+        mTextClockTime = (TextView) findViewById(R.id.text_clock_time);
+        mTextClockHint = (TextView) findViewById(R.id.text_clock_hint);
 
-        progressBar = findViewById(R.id.progress_bar_meeting);
-        progressBar.setOnClickListener(this);
-        progressBar.setProgress(100);
+        mProgressBar = findViewById(R.id.progress_bar_meeting);
+        mProgressBar.setOnClickListener(this);
+        mProgressBar.setProgress(100);
         startConnectionAnimation();
 
         // ViewPager and its adapters use support library
@@ -186,27 +178,27 @@ public class MeetingActivity extends AppCompatActivity
         mViewPager = (ViewPager) findViewById(R.id.view_pager_meeting);
         mViewPager.setAdapter(mPagerAdapter);
 
-        ActivityCompat.requestPermissions(this, permissions, REQUEST_MULTIPLE_PERMISSION);
+        ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_MULTIPLE_PERMISSION);
 
-        buttonApplause = (ImageButton) findViewById(R.id.button_applause);
-        applauseIcons[0] = R.id.ic_applause_1;
-        applauseIcons[1] = R.id.ic_applause_2;
-        applauseIcons[2] = R.id.ic_applause_3;
-        applauseIcons[3] = R.id.ic_applause_4;
-        applauseIcons[4] = R.id.ic_applause_5;
-        applauseIcons[5] = R.id.ic_applause_6;
-        applauseIcons[6] = R.id.ic_applause_7;
-        applauseIcons[7] = R.id.ic_applause_8;
-        applauseIcons[8] = R.id.ic_applause_9;
-        applauseIcons[9] = R.id.ic_applause_10;
+        mButtonApplause = (ImageButton) findViewById(R.id.button_applause);
+        mApplauseIcons[0] = R.id.ic_applause_1;
+        mApplauseIcons[1] = R.id.ic_applause_2;
+        mApplauseIcons[2] = R.id.ic_applause_3;
+        mApplauseIcons[3] = R.id.ic_applause_4;
+        mApplauseIcons[4] = R.id.ic_applause_5;
+        mApplauseIcons[5] = R.id.ic_applause_6;
+        mApplauseIcons[6] = R.id.ic_applause_7;
+        mApplauseIcons[7] = R.id.ic_applause_8;
+        mApplauseIcons[8] = R.id.ic_applause_9;
+        mApplauseIcons[9] = R.id.ic_applause_10;
 
-        buttonApplause.setOnClickListener(this);
+        mButtonApplause.setOnClickListener(this);
 
-        buttonSendMessage = (ImageButton) findViewById(R.id.button_send_message);
-        buttonSendMessage.setOnClickListener(this);
+        mButtonSendMessage = (ImageButton) findViewById(R.id.button_send_message);
+        mButtonSendMessage.setOnClickListener(this);
 
-        rootView = (RelativeLayout) findViewById(R.id.layout_meeting_root);
-        rootView.getViewTreeObserver().addOnGlobalLayoutListener(this);
+        mRootView = (RelativeLayout) findViewById(R.id.layout_meeting_root);
+        mRootView.getViewTreeObserver().addOnGlobalLayoutListener(this);
     }
 
     /**
@@ -217,9 +209,9 @@ public class MeetingActivity extends AppCompatActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.progress_bar_meeting:
-                if(!started && user.getUid().equals(meeting.getUid())) {
+                if(!mStarted && mUser.getUId().equals(mMeeting.getUId())) {
                     try {
-                        channel.push(EVENT_START_MEETING, null);
+                        mChannel.push(EVENT_START_MEETING, null);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -229,10 +221,10 @@ public class MeetingActivity extends AppCompatActivity
                 ScaleAnimation clapAnimation = new ScaleAnimation(1f, .8f, 1f, .8f,
                         Animation.RELATIVE_TO_SELF, .5f, Animation.RELATIVE_TO_SELF, 0.5f);
                 clapAnimation.setDuration(80);
-                buttonApplause.startAnimation(clapAnimation);
+                mButtonApplause.startAnimation(clapAnimation);
 
                 try {
-                    channel.push(EVENT_APPLAUSE);
+                    mChannel.push(EVENT_APPLAUSE);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -253,7 +245,7 @@ public class MeetingActivity extends AppCompatActivity
                             .put("msg", text);
 
                     try {
-                        channel.push(EVENT_MESSAGE, node);
+                        mChannel.push(EVENT_MESSAGE, node);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -262,7 +254,7 @@ public class MeetingActivity extends AppCompatActivity
                 ScaleAnimation tapAnimation = new ScaleAnimation(1f, .8f, 1f, .8f,
                         Animation.RELATIVE_TO_SELF, .5f, Animation.RELATIVE_TO_SELF, 0.5f);
                 tapAnimation.setDuration(80);
-                buttonSendMessage.startAnimation(tapAnimation);
+                mButtonSendMessage.startAnimation(tapAnimation);
                 break;
         }
     }
@@ -274,7 +266,7 @@ public class MeetingActivity extends AppCompatActivity
     public void onBackPressed() {
         super.onBackPressed();
         try {
-            socket.disconnect();
+            mSocket.disconnect();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -286,8 +278,8 @@ public class MeetingActivity extends AppCompatActivity
     @Override
     public void onGlobalLayout() {
         Rect r = new Rect();
-        rootView.getWindowVisibleDisplayFrame(r);
-        int screenHeight = rootView.getRootView().getHeight();
+        mRootView.getWindowVisibleDisplayFrame(r);
+        int screenHeight = mRootView.getRootView().getHeight();
         int keypadHeight = screenHeight - r.bottom;
 
         if (keypadHeight > screenHeight * 0.15) {
@@ -312,11 +304,11 @@ public class MeetingActivity extends AppCompatActivity
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode){
             case REQUEST_MULTIPLE_PERMISSION:
-                permissionToRecordAccepted  = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-                permissionToTakePhotos = grantResults[1] == PackageManager.PERMISSION_GRANTED;
+                mPermissionToRecordAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                mPermissionToTakePhotos = grantResults[1] == PackageManager.PERMISSION_GRANTED;
                 break;
         }
-        if (!permissionToRecordAccepted && !permissionToTakePhotos ) finish();
+        if (!mPermissionToRecordAccepted && !mPermissionToTakePhotos) finish();
     }
 
     /**
@@ -331,16 +323,16 @@ public class MeetingActivity extends AppCompatActivity
     }
 
     /**
-     * Starts a timer and updates UI components accoordingly.
+     * Starts mTimer and updates UI components accoordingly.
      * @param timeTotal
      */
     private void startTimer(final long timeTotal) {
-        if(initialTimePassed < meeting.getTimeLimit()) {
+        if(mInitialTimePassed < mMeeting.getTimeLimit()) {
             final int countdownInterval = 25;
 
-            textClockHint.setText(App.context.getString(R.string.in_progress));
+            mTextClockHint.setText(App.CONTEXT.getString(R.string.in_progress));
 
-            timer = new CountDownTimer(timeTotal - initialTimePassed, countdownInterval) {
+            mTimer = new CountDownTimer(timeTotal - mInitialTimePassed, countdownInterval) {
 
                 public void onTick(long millisUntilFinished) {
                     long minutes = millisUntilFinished / 60000;
@@ -350,10 +342,10 @@ public class MeetingActivity extends AppCompatActivity
                         minutes++;
                     }
 
-                    textClockTime.setText(String.format("%02d", minutes) +
+                    mTextClockTime.setText(String.format("%02d", minutes) +
                             ":" + String.format("%02d", seconds));
 
-                    if(connectingAnimationFinished) {
+                    if(mConnectingAnimationFinished) {
                         long progress = 1000 * millisUntilFinished / timeTotal;
                         animateProgressBar((int) progress, countdownInterval, false);
                     } else {
@@ -410,17 +402,17 @@ public class MeetingActivity extends AppCompatActivity
 
             @Override
             public void onAnimationEnd(Animator animator) {
-                if(connecting) {
+                if(mConnecting) {
                     animationLtr.start();
                 } else {
                     int duration = 500;
-                    float ratio = initialTimePassed > 0 ?
-                            (1 - (float)(initialTimePassed + duration)/meeting.getTimeLimit()) : 1;
+                    float ratio = mInitialTimePassed > 0 ?
+                            (1 - (float)(mInitialTimePassed + duration)/ mMeeting.getTimeLimit()) : 1;
                     int progress = ratio > 0 ? (int) (1000 * ratio) : 1000;
 
                     animateProgressBar(progress, duration, true);
 
-                    if(textConnecting.getVisibility() == View.VISIBLE) {
+                    if(mTextConnecting.getVisibility() == View.VISIBLE) {
                         stopConnectionAnimation();
                     }
                 }
@@ -454,7 +446,7 @@ public class MeetingActivity extends AppCompatActivity
 
         animationLtr.start();
 
-        if(connecting) {
+        if(mConnecting) {
             final RelativeLayout clockInfo = findViewById(R.id.meeting_clock_info);
             Animation shrinkAnimation = AnimationUtils
                     .loadAnimation(getApplicationContext(), R.anim.anim_shrink_to_middle);
@@ -465,10 +457,10 @@ public class MeetingActivity extends AppCompatActivity
                 @Override
                 public void onAnimationEnd(Animation animation) {
                     clockInfo.setVisibility(View.GONE);
-                    textConnecting.setVisibility(View.VISIBLE);
+                    mTextConnecting.setVisibility(View.VISIBLE);
                     Animation growAnimation = AnimationUtils
                             .loadAnimation(getApplicationContext(), R.anim.anim_grow_from_middle);
-                    textConnecting.startAnimation(growAnimation);
+                    mTextConnecting.startAnimation(growAnimation);
                 }
 
                 @Override
@@ -494,7 +486,7 @@ public class MeetingActivity extends AppCompatActivity
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                textConnecting.setVisibility(View.GONE);
+                mTextConnecting.setVisibility(View.GONE);
                 clockInfo.setVisibility(View.VISIBLE);
                 Animation growAnimation = AnimationUtils
                         .loadAnimation(getApplicationContext(), R.anim.anim_grow_from_middle);
@@ -506,7 +498,7 @@ public class MeetingActivity extends AppCompatActivity
 
             }
         });
-        textConnecting.startAnimation(shrinkAnimation);
+        mTextConnecting.startAnimation(shrinkAnimation);
     }
 
     /**
@@ -516,11 +508,11 @@ public class MeetingActivity extends AppCompatActivity
      * @param setInterpolator sets whether or not to use an interpolator.
      */
     private void animateProgressBar(int progress, int duration, boolean setInterpolator) {
-        progressBar.setRotation(-90);
-        progressBar.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        mProgressBar.setRotation(-90);
+        mProgressBar.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
 
         final ObjectAnimator animation = ObjectAnimator
-                .ofInt(progressBar, "progress", progress);
+                .ofInt(mProgressBar, "progress", progress);
         animation.setDuration(duration);
         if(setInterpolator) {
             animation.setInterpolator(new DecelerateInterpolator());
@@ -532,7 +524,7 @@ public class MeetingActivity extends AppCompatActivity
 
             @Override
             public void onAnimationEnd(Animator animator) {
-                connectingAnimationFinished = true;
+                mConnectingAnimationFinished = true;
             }
 
             @Override
@@ -550,18 +542,18 @@ public class MeetingActivity extends AppCompatActivity
      */
     private void progressBarAnimateFinished() {
         animateProgressBar(1000, 500, false);
-        textClockTime.setText(App.context.getString(R.string.finsihed_time));
-        textClockHint.setText(App.context.getString(R.string.finished));
+        mTextClockTime.setText(App.CONTEXT.getString(R.string.finsihed_time));
+        mTextClockHint.setText(App.CONTEXT.getString(R.string.finished));
     }
 
     /**
      * Initializes a UI component to show applause.
      */
     private void showApplause() {
-        if (animIndex >= applauseIcons.length) {
-            animIndex = 0;
+        if (mAnimIndex >= mApplauseIcons.length) {
+            mAnimIndex = 0;
         }
-        final ImageView image = (ImageView) findViewById(applauseIcons[animIndex]);
+        final ImageView image = (ImageView) findViewById(mApplauseIcons[mAnimIndex]);
         image.setVisibility(View.VISIBLE);
 
         Animation fadeInAnimation =
@@ -579,7 +571,7 @@ public class MeetingActivity extends AppCompatActivity
             public void onAnimationRepeat(Animation animation) { }
         });
         image.startAnimation(fadeInAnimation);
-        animIndex++;
+        mAnimIndex++;
     }
 
     /**
@@ -587,37 +579,37 @@ public class MeetingActivity extends AppCompatActivity
      */
     private void connectToWebsocket() {
         final String url = getString(R.string.ws_endpoint)
-                + "?token=" + user.getFirebaseToken();
-        final String topic = "meeting:" + meeting.getMid();
+                + "?token=" + mUser.getFirebaseToken();
+        final String topic = "meeting:" + mMeeting.getMId();
 
         try {
             // First connect to the websocket endpoint, then join the appropriate meeting channel.
-            socket = new Socket(url);
-            socket.onOpen(new ISocketOpenCallback() {
+            mSocket = new Socket(url);
+            mSocket.onOpen(new ISocketOpenCallback() {
                 @Override
                 public void onOpen() {
-                    channel = socket.chan(topic, null);
+                    mChannel = mSocket.chan(topic, null);
 
                     try {
-                        channel.join().receive("ok", new IMessageCallback() {
+                        mChannel.join().receive("ok", new IMessageCallback() {
                             @Override
                             public void onMessage(final Envelope envelope) {
-                                connecting = false;
-                                started = envelope.getPayload()
+                                mConnecting = false;
+                                mStarted = envelope.getPayload()
                                         .get("response").get("in_progress").asBoolean();
 
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
                                         stopConnectionAnimation();
-                                        if(started) {
-                                            initialTimePassed = envelope.getPayload()
+                                        if(mStarted) {
+                                            mInitialTimePassed = envelope.getPayload()
                                                     .get("response").get("time_passed").asLong();
-                                            startTimer(meeting.getTimeLimit());
+                                            startTimer(mMeeting.getTimeLimit());
                                         } else {
-                                            long minutes = timeLimit / 60000;
-                                            long seconds = (timeLimit % 60000) / 1000;
-                                            textClockTime.setText(String.format("%02d", minutes) +
+                                            long minutes = mTimeLimit / 60000;
+                                            long seconds = (mTimeLimit % 60000) / 1000;
+                                            mTextClockTime.setText(String.format("%02d", minutes) +
                                                     ":" + String.format("%02d", seconds));
                                         }
                                     }
@@ -631,7 +623,7 @@ public class MeetingActivity extends AppCompatActivity
                         The following specifies how to handle this information.
                          */
 
-                        channel.on(EVENT_MESSAGE, new IMessageCallback() {
+                        mChannel.on(EVENT_MESSAGE, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
                                 final String message = envelope.getPayload().get("msg").asText();
@@ -644,7 +636,7 @@ public class MeetingActivity extends AppCompatActivity
                             }
                         });
 
-                        channel.on(EVENT_APPLAUSE, new IMessageCallback() {
+                        mChannel.on(EVENT_APPLAUSE, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
                                 runOnUiThread(new Runnable() {
@@ -656,33 +648,33 @@ public class MeetingActivity extends AppCompatActivity
                             }
                         });
 
-                        channel.on(EVENT_START_MEETING, new IMessageCallback() {
+                        mChannel.on(EVENT_START_MEETING, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
-                                started = true;
+                                mStarted = true;
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        startTimer(meeting.getTimeLimit());
+                                        startTimer(mMeeting.getTimeLimit());
                                     }
                                 });
                             }
                         });
 
-                        channel.on(EVENT_PRESENCE_STATE, new IMessageCallback() {
+                        mChannel.on(EVENT_PRESENCE_STATE, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
-                                connecting = false;
+                                mConnecting = false;
 
-                                stringBuilder = new StringBuilder("Welcome, " +
-                                        user.getDisplayName().split(" ")[0] + "!");
+                                mStringBuilder = new StringBuilder("Welcome, " +
+                                        mUser.getDisplayName().split(" ")[0] + "!");
 
-                                iterator = envelope.getPayload().fieldNames();
+                                mIterator = envelope.getPayload().fieldNames();
 
-                                while(iterator.hasNext()) {
-                                    final String uid = (String) iterator.next();
+                                while(mIterator.hasNext()) {
+                                    final String uid = (String) mIterator.next();
 
-                                    if(!users.containsKey(uid)) {
+                                    if(!mUsers.containsKey(uid)) {
                                         new GetUserAsync(GetUserAsync.GET_BY_U_ID,
                                                 uid, new AsyncPresenceStateCallback()).execute();
                                     }
@@ -690,11 +682,11 @@ public class MeetingActivity extends AppCompatActivity
                             }
                         });
 
-                        channel.on(EVENT_PRESENCE_DIFF, new IMessageCallback() {
+                        mChannel.on(EVENT_PRESENCE_DIFF, new IMessageCallback() {
                             @Override
                             public void onMessage(Envelope envelope) {
                                 HashMap<String, Boolean> existingUsers = new HashMap<>();
-                                Iterator existingUsersIterator = users.keySet().iterator();
+                                Iterator existingUsersIterator = mUsers.keySet().iterator();
 
                                 while (existingUsersIterator.hasNext()) {
                                     String uid = (String) existingUsersIterator.next();
@@ -706,7 +698,7 @@ public class MeetingActivity extends AppCompatActivity
                                 while(iterator.hasNext()) {
                                     final String uid = (String) iterator.next();
 
-                                    if(users.containsKey(uid)) {
+                                    if(mUsers.containsKey(uid)) {
                                         existingUsers.put(uid, true);
                                     } else {
                                         new GetUserAsync(GetUserAsync.GET_BY_U_ID,
@@ -718,7 +710,7 @@ public class MeetingActivity extends AppCompatActivity
                                 while (existingUsersIterator.hasNext()) {
                                     String uid = (String) existingUsersIterator.next();
                                     if(!existingUsers.get(uid)) {
-                                        String message = users.get(uid)
+                                        String message = mUsers.get(uid)
                                                 .getDisplayName() + " left the meeting";
                                         newMessage(message);
                                     }
@@ -734,13 +726,13 @@ public class MeetingActivity extends AppCompatActivity
                     .onClose(new ISocketCloseCallback() {
                         @Override
                         public void onClose() {
-                            Log.d(TAG, "onClose: Closed Websocket Connection");
+                            Log.d(TAG, "onClose: Closed WebSocket Connection");
                         }
                     })
                     .onError(new IErrorCallback() {
                         @Override
                         public void onError(final String reason) {
-                            Log.d(TAG, "Error connecting to websocket: " + reason);
+                            Log.d(TAG, "Error connecting to WebSocket: " + reason);
                         }
                     })
                     .connect();
@@ -760,7 +752,7 @@ public class MeetingActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.menu_meeting, menu);
 
         mRecordButton = menu.findItem(R.id.record);
-        mRecordButton.setVisible(user.getUid().equals(meeting.getUid()));
+        mRecordButton.setVisible(mUser.getUId().equals(mMeeting.getUId()));
 
         return true;
     }
@@ -882,9 +874,9 @@ public class MeetingActivity extends AppCompatActivity
     private void uploadToDrive(final java.io.File uploadFile, final String mimeType) {
         final com.google.api.services.drive.model.File driveFile =
                 new com.google.api.services.drive.model.File();
-        driveFile.setName(user.getDisplayName()
+        driveFile.setName(mUser.getDisplayName()
                 .replace(" ", "_").concat(new Date().toString()));
-        driveFile.setParents(Collections.singletonList(meeting.getDriveFolderId()));
+        driveFile.setParents(Collections.singletonList(mMeeting.getDriveFolderId()));
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -894,7 +886,7 @@ public class MeetingActivity extends AppCompatActivity
                                     .create(driveFile, new FileContent(mimeType, uploadFile))
                                     .setFields("id, parents").execute();
 
-                    String text = user.getDisplayName();
+                    String text = mUser.getDisplayName();
 
                     switch (mimeType) {
                         case "audio/*":
@@ -907,7 +899,7 @@ public class MeetingActivity extends AppCompatActivity
                     ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
                             .put("msg", text);
 
-                    channel.push(EVENT_MESSAGE, node);
+                    mChannel.push(EVENT_MESSAGE, node);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -922,18 +914,18 @@ public class MeetingActivity extends AppCompatActivity
         @Override
         public void onTaskExecuted(User u) {
             final StringBuilder stringBuilder = new StringBuilder("Welcome, " +
-                    user.getDisplayName().split(" ")[0] + "!");
+                    mUser.getDisplayName().split(" ")[0] + "!");
 
-            users.put(u.getUid(), u);
+            mUsers.put(u.getUId(), u);
 
-            if(!iterator.hasNext() && users.size() > 1) {
+            if(!mIterator.hasNext() && mUsers.size() > 1) {
                 stringBuilder.append(" Here's who else is here:\n");
 
-                Iterator userIterator = users.values().iterator();
+                Iterator userIterator = mUsers.values().iterator();
 
                 while (userIterator.hasNext()) {
                     User iteratorUser = (User) userIterator.next();
-                    if(!iteratorUser.getUid().equals(user.getUid())) {
+                    if(!iteratorUser.getUId().equals(mUser.getUId())) {
                         stringBuilder.append(iteratorUser.getDisplayName() + "\n");
                     }
                 }
@@ -943,14 +935,14 @@ public class MeetingActivity extends AppCompatActivity
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if(users.size() > 1) {
+                    if(mUsers.size() > 1) {
                         newMessage(message);
                     } else {
                         ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
-                                .put("msg", user.getDisplayName() + " joined the meeting!");
+                                .put("msg", mUser.getDisplayName() + " joined the meeting!");
 
                         try {
-                            channel.push(EVENT_MESSAGE, node);
+                            mChannel.push(EVENT_MESSAGE, node);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -976,8 +968,8 @@ public class MeetingActivity extends AppCompatActivity
     private class AsyncPresenceDiffCallback implements RestClientUserCallback {
         @Override
         public void onTaskExecuted(User u) {
-            if(!users.containsKey(u.getUid())){
-                users.put(u.getUid(), u);
+            if(!mUsers.containsKey(u.getUId())){
+                mUsers.put(u.getUId(), u);
                 final String message = u.getDisplayName().split(" ")[0]
                         + " joined the meeting!";
 

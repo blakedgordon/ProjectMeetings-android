@@ -15,8 +15,8 @@ import java.util.ArrayList;
  *  @version 0.7.0 12/20/17
  */
 public class MeetingMessagePagerAdapter extends FragmentStatePagerAdapter {
-    private int currentPos;
-    ArrayList<String> messages;
+    private int mCurrentPos;
+    private ArrayList<String> mMessages;
 
     /**
      * Initializes the MeetingMessagePagerAdapter.
@@ -24,7 +24,7 @@ public class MeetingMessagePagerAdapter extends FragmentStatePagerAdapter {
      */
     public MeetingMessagePagerAdapter(FragmentManager fm) {
         super(fm);
-        this.messages = new ArrayList<>();
+        this.mMessages = new ArrayList<>();
     }
 
     /**
@@ -34,12 +34,12 @@ public class MeetingMessagePagerAdapter extends FragmentStatePagerAdapter {
      */
     @Override
     public Fragment getItem(int position) {
-        currentPos = position;
+        mCurrentPos = position;
 
         Fragment fragment = new MeetingMessageFragment();
         Bundle args = new Bundle();
         args.putInt(MeetingMessageFragment.ARG_OBJECT, position + 1);
-        args.putString(MeetingMessageFragment.MESSAGE, messages.get(position));
+        args.putString(MeetingMessageFragment.MESSAGE, mMessages.get(position));
         fragment.setArguments(args);
         return fragment;
     }
@@ -50,7 +50,7 @@ public class MeetingMessagePagerAdapter extends FragmentStatePagerAdapter {
      */
     @Override
     public int getCount() {
-        return messages.size();
+        return mMessages.size();
     }
 
     /**
@@ -58,7 +58,7 @@ public class MeetingMessagePagerAdapter extends FragmentStatePagerAdapter {
      * @return an integer specifying the user's current position.
      */
     public int getCurrentPos() {
-        return currentPos;
+        return mCurrentPos;
     }
 
     /**
@@ -66,7 +66,7 @@ public class MeetingMessagePagerAdapter extends FragmentStatePagerAdapter {
      * @param message The message to add.
      */
     public void addMessage(String message) {
-        messages.add(message);
+        mMessages.add(message);
         notifyDataSetChanged();
     }
 }

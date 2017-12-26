@@ -4,7 +4,6 @@ import android.accounts.AccountManager;
 import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -12,7 +11,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -62,25 +60,23 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClientUserCallback;
 
 public class SignInActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
-    private static final String TAG = "SignInActivity";
-    private final static SharedPreferences PREFERENCES = App.context.getSharedPreferences(
-            App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
+    public static final String TAG = "SignInActivity";
+    public static final String PREF_ACCOUNT_NAME = "accountName";
+    public static final String[] SCOPES = { DriveScopes.DRIVE_METADATA_READONLY };
+    public static final int GOOGLE_SIGN_IN = 9001;
+    public static final int REQUEST_ACCOUNT_PICKER = 1000;
+    public static final int REQUEST_AUTHORIZATION = 1001;
+    public static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
+    public static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
     private GoogleAccountCredential mCredential;
-    private static final String PREF_ACCOUNT_NAME = "accountName";
-    private static final String[] SCOPES = { DriveScopes.DRIVE_METADATA_READONLY };
-    private static final int GOOGLE_SIGN_IN = 9001;
-    static final int REQUEST_ACCOUNT_PICKER = 1000;
-    static final int REQUEST_AUTHORIZATION = 1001;
-    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
-    private SignInButton signInButton;
-    private LinearLayout connectingContainer;
-    private TextView welcomeText;
+    private SignInButton mSignInButton;
+    private LinearLayout mConnectingContainer;
+    private TextView mWelcomeText;
     private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth mAuth;
-    private Meeting meeting;
+    private Meeting mMeeting;
 
     /**
      * Initializes SignInActivity.
@@ -105,11 +101,11 @@ public class SignInActivity extends AppCompatActivity
 
         mAuth = FirebaseAuth.getInstance();
 
-        signInButton = (SignInButton) findViewById(R.id.button_sign_in);
-        signInButton.setOnClickListener(this);
+        mSignInButton = (SignInButton) findViewById(R.id.button_sign_in);
+        mSignInButton.setOnClickListener(this);
 
-        connectingContainer = (LinearLayout) findViewById(R.id.layout_main_connecting_container);
-        welcomeText = (TextView) findViewById(R.id.text_main_welcome);
+        mConnectingContainer = (LinearLayout) findViewById(R.id.layout_main_connecting_container);
+        mWelcomeText = (TextView) findViewById(R.id.text_main_welcome);
 
         // Initialize credentials and service object.
         mCredential = GoogleAccountCredential.usingOAuth2(
@@ -129,8 +125,11 @@ public class SignInActivity extends AppCompatActivity
 
     }
 
+    /**
+     * Parse any FCM notifications associated with the intent and act accordingly.
+     */
     private void getMessage() {
-        if(PREFERENCES.getBoolean("signed_in",false)) {
+        if(App.PREFERENCES.getBoolean("signed_in",false)) {
             Intent intent = getIntent();
             Bundle extras = intent.getExtras();
 
@@ -190,6 +189,7 @@ public class SignInActivity extends AppCompatActivity
      * Initializes the Google sign-in activity.
      */
     private void signIn() {
+        mSignInButton.setEnabled(false);
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         startActivityForResult(signInIntent, GOOGLE_SIGN_IN);
     }
@@ -232,7 +232,7 @@ public class SignInActivity extends AppCompatActivity
                             data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
 
                     if (accountName != null) {
-                        SharedPreferences.Editor editor = PREFERENCES.edit();
+                        SharedPreferences.Editor editor = App.PREFERENCES.edit();
                         editor.putString(PREF_ACCOUNT_NAME, accountName);
                         editor.putBoolean("signed_in", true);
                         editor.apply();
@@ -254,8 +254,9 @@ public class SignInActivity extends AppCompatActivity
             firebaseAuthWithGoogle(user);
 
             assert user != null;
-            PREFERENCES.edit().putString("google_token", user.getIdToken()).apply();
+            App.PREFERENCES.edit().putString("google_token", user.getIdToken()).apply();
         } else {
+            mSignInButton.setEnabled(true);
             showToast("Sign in with Google failed :(");
         }
     }
@@ -326,9 +327,9 @@ public class SignInActivity extends AppCompatActivity
      * Creates a new user.
      */
     private void createUser(final String displayName, final String email, final String gToken) throws IOException, GoogleAuthException {
-        signInButton.setVisibility(View.GONE);
-        connectingContainer.setVisibility(View.VISIBLE);
-        welcomeText.setText("Welcome, " + displayName + "!");
+        mSignInButton.setVisibility(View.GONE);
+        mConnectingContainer.setVisibility(View.VISIBLE);
+        mWelcomeText.setText("Welcome, " + displayName + "!");
 
         FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
         assert mUser != null;
@@ -352,8 +353,8 @@ public class SignInActivity extends AppCompatActivity
     }
 
     /**
-     * Get's the meeting asynchronously.
-     * @param mId Specifies the meeting to get.
+     * Get's the mMeeting asynchronously.
+     * @param mId Specifies the mMeeting to get.
      */
     private void toMeetingActivity(final String mId) {
         new GetMeetingAsync(mId, new AsyncMeetingCallback()).execute();
@@ -378,8 +379,8 @@ public class SignInActivity extends AppCompatActivity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                signInButton.setVisibility(View.VISIBLE);
-                connectingContainer.setVisibility(View.GONE);
+                mSignInButton.setVisibility(View.VISIBLE);
+                mConnectingContainer.setVisibility(View.GONE);
             }
         });
     }
@@ -390,10 +391,10 @@ public class SignInActivity extends AppCompatActivity
     private class AsyncCreateUserCallback implements RestClientUserCallback {
         @Override
         public void onTaskExecuted(User user) {
-            SharedPreferences.Editor editor = PREFERENCES.edit();
+            SharedPreferences.Editor editor = App.PREFERENCES.edit();
             editor.putString(PREF_ACCOUNT_NAME, user.getEmail());
             editor.putBoolean("signed_in", true);
-            editor.putString("u_id",user.getUid());
+            editor.putString("u_id",user.getUId());
             editor.putString("display_name",user.getDisplayName());
             editor.putString("email",user.getEmail());
             editor.putString("firebase_token", user.getFirebaseToken());
@@ -427,7 +428,7 @@ public class SignInActivity extends AppCompatActivity
         public void onTaskExecuted(User user) {
             Intent transfer = new Intent(getApplicationContext(),
                     MeetingActivity.class);
-            transfer.putExtra(MeetingActivity.MEETING_KEY, meeting);
+            transfer.putExtra(MeetingActivity.MEETING_KEY, mMeeting);
             transfer.putExtra(MeetingActivity.USER_KEY, user);
 
             startActivity(transfer);
@@ -445,24 +446,24 @@ public class SignInActivity extends AppCompatActivity
     }
 
     /**
-     * Specifies the RestClientMeetingCallback implementation after updating a meeting's data.
+     * Specifies the RestClientMeetingCallback implementation after updating a mMeeting's data.
      */
     private class AsyncMeetingCallback implements RestClientMeetingCallback {
         @Override
         public void onTaskExecuted(final Meeting m) {
-            meeting = m;
+            mMeeting = m;
             new UpdateUserAsync(new User.UserBuilder().build(),
                     new AsyncUpdateUserCallback()).execute();
         }
 
         @Override
         public void onTaskFailed(RestClientException e) {
-            showToast("Unable to get meeting info.");
+            showToast("Unable to get mMeeting info.");
         }
 
         @Override
         public void onExceptionRaised(Exception e) {
-            showToast("Unable to get meeting info.");
+            showToast("Unable to get mMeeting info.");
         }
     }
 }

@@ -8,7 +8,7 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClient;
 
 /**
  *  Create User Async
- *  Handles the creation of a user asynchronously.
+ *  Handles the creation of a User asynchronously.
  *
  *  @author Caleb Solorio
  *  @version 1.0.0 12/18/17
@@ -17,21 +17,21 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClient;
 public class CreateUserAsync extends AsyncTask<Void, Void, Void> {
     private static final String TAG = "CreateUserAsync";
 
-    private User user;
-    private RestClientUserCallback callback;
+    private User mUser;
+    private RestClientUserCallback mCallback;
 
     /**
      * The CreateUserAsync constructor.
-     * @param user The user to create.
-     * @param callback Executes after creating the user.
+     * @param user The User to create.
+     * @param callback Executes after creating the User.
      */
     public CreateUserAsync(User user, RestClientUserCallback callback) {
-        this.user = user;
-        this.callback = callback;
+        this.mUser = user;
+        this.mCallback = callback;
     }
 
     /**
-     * Creates a user in the background.
+     * Creates a User in the background.
      * @param voids Will not be called.
      * @return null
      */
@@ -42,7 +42,7 @@ public class CreateUserAsync extends AsyncTask<Void, Void, Void> {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        RestClient.createUser(user, callback);
+        RestClient.createUser(mUser, mCallback);
         return null;
     }
 }

@@ -36,7 +36,7 @@ public class ExampleUnitTest {
             socket.onOpen(new ISocketOpenCallback() {
                 @Override
                 public void onOpen() {
-                    final Channel channel = socket.chan("meeting:073b72e1-f6d8-4cb8-b237-a78c3f4a9fba", null);
+                    final Channel channel = socket.chan("mMeeting:073b72e1-f6d8-4cb8-b237-a78c3f4a9fba", null);
 
                     try {
                         channel.join()

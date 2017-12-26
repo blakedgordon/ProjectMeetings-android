@@ -19,12 +19,10 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClient;
  */
 
 public class CreateMeetingAsync extends AsyncTask<Void, Void, Void> {
-    private static final String TAG = "CreateMeetingAsync";
-    private static final SharedPreferences PREFERENCES = App.context.getSharedPreferences(
-            App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
+    public static final String TAG = "CreateMeetingAsync";
 
-    private Meeting meeting;
-    private RestClientMeetingCallback callback;
+    private Meeting mMeeting;
+    private RestClientMeetingCallback mCallback;
 
     /**
      * The CreateMeetingAsync constructor.
@@ -32,8 +30,8 @@ public class CreateMeetingAsync extends AsyncTask<Void, Void, Void> {
      * @param callback Executes after creating the meeting.
      */
     public CreateMeetingAsync(Meeting meeting, RestClientMeetingCallback callback) {
-        this.meeting = meeting;
-        this.callback = callback;
+        this.mMeeting = meeting;
+        this.mCallback = callback;
     }
 
     /**
@@ -43,8 +41,8 @@ public class CreateMeetingAsync extends AsyncTask<Void, Void, Void> {
      */
     @Override
     protected Void doInBackground(Void... voids) {
-        RestClient.createMeeting(meeting,
-                PREFERENCES.getString("firebase_token", null), callback);
+        RestClient.createMeeting(mMeeting,
+                App.PREFERENCES.getString("firebase_token", null), mCallback);
         return null;
     }
 }

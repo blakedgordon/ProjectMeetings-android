@@ -23,9 +23,7 @@ import edu.calbaptist.android.projectmeetings.exceptions.RestClientException;
  */
 
 public class InstanceIdService extends FirebaseInstanceIdService {
-    private static final String TAG = "InstanceIdService";
-    private final static SharedPreferences PREFERENCES = App.context.getSharedPreferences(
-            App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
+    public static final String TAG = "InstanceIdService";
 
     /**
      * Called when the user's instance id updates. Sends the new token server-side.
@@ -38,7 +36,7 @@ public class InstanceIdService extends FirebaseInstanceIdService {
 
     // Send the new instance id to the backend.
     private void sendRegistrationToServer(String refreshedId) {
-        SharedPreferences.Editor editor = PREFERENCES.edit();
+        SharedPreferences.Editor editor = App.PREFERENCES.edit();
         editor.putString("instance_id", refreshedId);
         editor.apply();
 
@@ -46,7 +44,8 @@ public class InstanceIdService extends FirebaseInstanceIdService {
                 .setInstanceId(refreshedId)
                 .build();
 
-        RestClient.updateUser(user, PREFERENCES.getString("firebase_token", null), new AsyncCallback());
+        RestClient.updateUser(user,
+                App.PREFERENCES.getString("firebase_token", null), new AsyncCallback());
     }
 
     /**

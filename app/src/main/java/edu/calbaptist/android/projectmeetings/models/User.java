@@ -11,42 +11,42 @@ import java.util.ArrayList;
  *  @version 0.4.0 11/27/17
  */
 public class User implements Serializable {
-    private static final String TAG = "User";
+    public static final String TAG = "User";
 
-    private String uid;
-    private String email;
-    private String displayName;
-    private String firebaseToken;
-    private String googleToken;
-    private String instanceId;
-    private ArrayList invites;
-    private ArrayList meetings;
+    private String mUID;
+    private String mEmail;
+    private String mDisplayName;
+    private String mFirebaseToken;
+    private String mGoogleToken;
+    private String mInstanceId;
+    private ArrayList mInvites;
+    private ArrayList mMeetings;
 
     private User(UserBuilder builder) {
-        this.uid = builder.uid;
-        this.email = builder.email;
-        this.displayName = builder.displayName;
-        this.firebaseToken = builder.firebaseToken;
-        this.googleToken = builder.googleToken;
-        this.instanceId = builder.instanceId;
-        this.invites = builder.invites;
-        this.meetings = builder.meetings;
+        this.mUID = builder.mUId;
+        this.mEmail = builder.mEmail;
+        this.mDisplayName = builder.mDisplayName;
+        this.mFirebaseToken = builder.mFirebaseToken;
+        this.mGoogleToken = builder.mGoogleToken;
+        this.mInstanceId = builder.mInstanceId;
+        this.mInvites = builder.mInvites;
+        this.mMeetings = builder.mMeetings;
     }
 
     /**
-     * Gets the user's uid.
-     * @return the uid string
+     * Gets the user's mUId.
+     * @return the mUID string
      */
-    public String getUid() {
-        return uid;
+    public String getUId() {
+        return mUID;
     }
 
     /**
-     * Gets the user's email.
-     * @return the email string.
+     * Gets the user's mEmail.
+     * @return the mEmail string.
      */
     public String getEmail() {
-        return email;
+        return mEmail;
     }
 
     /**
@@ -54,7 +54,7 @@ public class User implements Serializable {
      * @return the display name string.
      */
     public String getDisplayName() {
-        return displayName;
+        return mDisplayName;
     }
 
     /**
@@ -62,7 +62,7 @@ public class User implements Serializable {
      * @return the Firebase authentication token string.
      */
     public String getFirebaseToken() {
-        return firebaseToken;
+        return mFirebaseToken;
     }
 
     /**
@@ -70,7 +70,7 @@ public class User implements Serializable {
      * @return the Google authentication token. string.
      */
     public String getGoogleToken() {
-        return googleToken;
+        return mGoogleToken;
     }
 
     /**
@@ -78,23 +78,23 @@ public class User implements Serializable {
      * @return the instance id string.
      */
     public String getInstanceId() {
-        return instanceId;
+        return mInstanceId;
     }
 
     /**
-     * Gets the user's add_invites.
-     * @return the add_invites list.
+     * Gets the user's mInvites.
+     * @return the mInvites list.
      */
     public ArrayList getInvites() {
-        return invites;
+        return mInvites;
     }
 
     /**
-     * Gets the user's meetings.
-     * @return the meetings list.
+     * Gets the user's mMeetings.
+     * @return the mMeetings list.
      */
     public ArrayList getMeetings() {
-        return meetings;
+        return mMeetings;
     }
 
     /**
@@ -105,33 +105,33 @@ public class User implements Serializable {
      *  @version 0.4.0 11/27/17
      */
     public static class UserBuilder {
-        private String uid;
-        private String email;
-        private String displayName;
+        private String mUId;
+        private String mEmail;
+        private String mDisplayName;
 
-        private String firebaseToken;
-        private String googleToken;
-        private String instanceId;
-        private ArrayList invites;
-        private ArrayList meetings;
+        private String mFirebaseToken;
+        private String mGoogleToken;
+        private String mInstanceId;
+        private ArrayList mInvites;
+        private ArrayList mMeetings;
 
         /**
          * Sets the builder's uid.
-         * @param uid the uid of the user.
+         * @param uid the mUID of the user.
          * @return the new UserBuilder object.
          */
         public UserBuilder setUid(String uid) {
-            this.uid = uid;
+            this.mUId = uid;
             return this;
         }
 
         /**
          * Sets the builder's email.
-         * @param email the email of the user.
+         * @param email the mEmail of the user.
          * @return the new UserBuilder object.
          */
         public UserBuilder setEmail(String email) {
-            this.email = email;
+            this.mEmail = email;
             return this;
         }
 
@@ -141,7 +141,7 @@ public class User implements Serializable {
          * @return the new UserBuilder object.
          */
         public UserBuilder setDisplayName(String displayName) {
-            this.displayName = displayName;
+            this.mDisplayName = displayName;
             return this;
         }
 
@@ -151,7 +151,7 @@ public class User implements Serializable {
          * @return the new UserBuilder object.
          */
         public UserBuilder setFirebaseToken(String firebaseToken) {
-            this.firebaseToken = firebaseToken;
+            this.mFirebaseToken = firebaseToken;
             return this;
         }
 
@@ -161,7 +161,7 @@ public class User implements Serializable {
          * @return the new UserBuilder object.
          */
         public UserBuilder setGoogleToken(String googleToken) {
-            this.googleToken = googleToken;
+            this.mGoogleToken = googleToken;
             return this;
         }
 
@@ -171,27 +171,27 @@ public class User implements Serializable {
          * @return the new UserBuilder object.
          */
         public UserBuilder setInstanceId(String instanceId) {
-            this.instanceId = instanceId;
+            this.mInstanceId = instanceId;
             return this;
         }
 
         /**
-         * Sets the builder's add_invites.
-         * @param invites the add_invites of the user.
+         * Sets the builder's invites.
+         * @param invites the mInvites of the user.
          * @return the new UserBuilder object.
          */
         public UserBuilder setInvites(ArrayList invites) {
-            this.invites = invites;
+            this.mInvites = invites;
             return this;
         }
 
         /**
          * Sets the builder's meetings.
-         * @param meetings the meetings of the user.
+         * @param meetings the mMeetings of the user.
          * @return the new UserBuilder object.
          */
         public UserBuilder setMeetings(ArrayList meetings) {
-            this.meetings = meetings;
+            this.mMeetings = meetings;
             return this;
         }
 
