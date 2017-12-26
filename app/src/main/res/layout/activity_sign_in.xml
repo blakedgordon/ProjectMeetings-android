@@ -34,26 +34,11 @@
             android:layout_marginVertical="15dp"
             android:src="@drawable/ic_round_table"/>
 
-        <LinearLayout
-            android:id="@+id/layout_button_container"
-            android:layout_width="match_parent"
+        <com.google.android.gms.common.SignInButton
+            android:id="@+id/button_sign_in"
+            android:layout_width="150dp"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal">
-
-            <com.google.android.gms.common.SignInButton
-                android:id="@+id/button_sign_in"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"/>
-
-            <Button
-                android:id="@+id/button_sign_out"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:text="@string/sign_out"
-                style="@style/Widget.AppCompat.Button.Colored" />
-
-        </LinearLayout>
+            android:layout_gravity="center_horizontal"/>
 
         <LinearLayout
             android:id="@+id/layout_main_connecting_container"
@@ -69,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/connecting"
                 android:textAlignment="center"
-                android:textSize="30dp"/>
+                android:textSize="25dp"/>
 
             <ProgressBar
                 android:id="@+id/progress_bar_meeting_list"

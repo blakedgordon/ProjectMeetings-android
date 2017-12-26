@@ -26,8 +26,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -66,8 +64,7 @@ public class SignInActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
     private static final String TAG = "SignInActivity";
     private final static SharedPreferences PREFERENCES = App.context.getSharedPreferences(
-            "edu.calbaptist.android.projectmeetings.Account_Name",
-            Context.MODE_PRIVATE);
+            App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
 
     private GoogleAccountCredential mCredential;
     private static final String PREF_ACCOUNT_NAME = "accountName";
@@ -78,9 +75,7 @@ public class SignInActivity extends AppCompatActivity
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
-    private LinearLayout buttonContainer;
     private SignInButton signInButton;
-    private Button signOutButton;
     private LinearLayout connectingContainer;
     private TextView welcomeText;
     private GoogleApiClient mGoogleApiClient;
@@ -95,36 +90,7 @@ public class SignInActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if(PREFERENCES.getBoolean("signed_in",false)) {
-            Intent intent = getIntent();
-            Bundle extras = intent.getExtras();
-
-            if (intent != null && extras != null) {
-                String type = extras.getString(MessagingService.TYPE);
-
-                if(type != null) {
-                    switch (type) {
-                        case MessagingService.MEETING_INVITE:
-                            Intent transfer = new Intent(this, MeetingListActivity.class);
-                            startActivity(transfer);
-                            break;
-                        case MessagingService.MEETING_WARN:
-                            toMeetingActivity(extras.getString(MessagingService.M_ID));
-                            break;
-                        case MessagingService.MEETING_START:
-                            toMeetingActivity(extras.getString(MessagingService.M_ID));
-                            break;
-                    }
-                } else {
-                    Intent transfer = new Intent(this, MeetingListActivity.class);
-                    startActivity(transfer);
-                }
-            } else {
-                Intent transfer = new Intent(this, MeetingListActivity.class);
-                startActivity(transfer);
-            }
-        }
-
+        getMessage();
         setContentView(R.layout.activity_sign_in);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -139,17 +105,8 @@ public class SignInActivity extends AppCompatActivity
 
         mAuth = FirebaseAuth.getInstance();
 
-        buttonContainer = (LinearLayout) findViewById(R.id.layout_button_container);
-
         signInButton = (SignInButton) findViewById(R.id.button_sign_in);
         signInButton.setOnClickListener(this);
-
-        signOutButton = (Button) findViewById(R.id.button_sign_out);
-        signOutButton.setOnClickListener(this);
-
-        if(PREFERENCES.getString("firebase_token", null) == null) {
-            signOutButton.setEnabled(false);
-        }
 
         connectingContainer = (LinearLayout) findViewById(R.id.layout_main_connecting_container);
         welcomeText = (TextView) findViewById(R.id.text_main_welcome);
@@ -172,6 +129,41 @@ public class SignInActivity extends AppCompatActivity
 
     }
 
+    private void getMessage() {
+        if(PREFERENCES.getBoolean("signed_in",false)) {
+            Intent intent = getIntent();
+            Bundle extras = intent.getExtras();
+
+            if (intent != null && extras != null) {
+                String type = extras.getString(MessagingService.TYPE);
+
+                if(type != null) {
+                    switch (type) {
+                        case MessagingService.MEETING_INVITE:
+                            Intent transfer = new Intent(this, MeetingListActivity.class);
+                            transfer.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(transfer);
+                            break;
+                        case MessagingService.MEETING_WARN:
+                            toMeetingActivity(extras.getString(MessagingService.M_ID));
+                            break;
+                        case MessagingService.MEETING_START:
+                            toMeetingActivity(extras.getString(MessagingService.M_ID));
+                            break;
+                    }
+                } else {
+                    Intent transfer = new Intent(this, MeetingListActivity.class);
+                    transfer.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(transfer);
+                }
+            } else {
+                Intent transfer = new Intent(this, MeetingListActivity.class);
+                transfer.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(transfer);
+            }
+        }
+    }
+
     /**
      * Executes on activity start.
      */
@@ -189,9 +181,6 @@ public class SignInActivity extends AppCompatActivity
         switch (view.getId()) {
             case R.id.button_sign_in:
                 signIn();
-                break;
-            case R.id.button_sign_out:
-                signOut();
                 break;
         }
 
@@ -319,19 +308,6 @@ public class SignInActivity extends AppCompatActivity
     }
 
     /**
-     * Signs the user out of the app.
-     */
-    private void signOut() {
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
-            @Override
-            public void onResult(@NonNull Status status) {
-                PREFERENCES.edit().clear().commit();
-                signOutButton.setEnabled(false);
-            }
-        });
-    }
-
-    /**
      * Display an error dialog showing that Google Play Services is missing
      * or out of date.
      * @param connectionStatusCode code describing the presence (or lack of)
@@ -350,7 +326,7 @@ public class SignInActivity extends AppCompatActivity
      * Creates a new user.
      */
     private void createUser(final String displayName, final String email, final String gToken) throws IOException, GoogleAuthException {
-        buttonContainer.setVisibility(View.GONE);
+        signInButton.setVisibility(View.GONE);
         connectingContainer.setVisibility(View.VISIBLE);
         welcomeText.setText("Welcome, " + displayName + "!");
 
@@ -398,16 +374,12 @@ public class SignInActivity extends AppCompatActivity
     /**
      * Shows the sign-in buttons to the user.
      */
-    private void showSignInButtons() {
+    private void showSignInButton() {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                buttonContainer.setVisibility(View.VISIBLE);
+                signInButton.setVisibility(View.VISIBLE);
                 connectingContainer.setVisibility(View.GONE);
-
-                if(PREFERENCES.getString("firebase_token", null) != null) {
-                    signOutButton.setEnabled(true);
-                }
             }
         });
     }
@@ -429,21 +401,21 @@ public class SignInActivity extends AppCompatActivity
             editor.putString("instance_id", user.getInstanceId());
             editor.apply();
 
-            showSignInButtons();
-
-            startActivity(new Intent(getApplicationContext(), MeetingListActivity.class));
+            Intent intent = new Intent(getApplicationContext(), MeetingListActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
         }
 
         @Override
         public void onTaskFailed(RestClientException e) {
             showToast("Uh oh, an unknown error occured :(");
-            showSignInButtons();
+            showSignInButton();
         }
 
         @Override
         public void onExceptionRaised(Exception e) {
             showToast("An unknown error occured :(");
-            showSignInButtons();
+            showSignInButton();
         }
     }
 

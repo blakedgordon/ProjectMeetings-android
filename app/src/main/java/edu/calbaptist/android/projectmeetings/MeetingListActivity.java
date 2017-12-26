@@ -8,8 +8,17 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,11 +39,14 @@ import edu.calbaptist.android.projectmeetings.utils.rest.RestClientUserCallback;
  */
 
 public class MeetingListActivity extends AppCompatActivity
-        implements View.OnClickListener {
+        implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = "MeetingListActivity";
     private static final SharedPreferences PREFERENCES = App.context.getSharedPreferences(
             App.context.getString(R.string.app_package), Context.MODE_PRIVATE);
 
+    private GoogleApiClient mGoogleApiClient;
+
+    private MenuItem mSettingsButton;
     private FloatingActionButton newMeeting;
 
     /**
@@ -48,6 +60,16 @@ public class MeetingListActivity extends AppCompatActivity
         setContentView(R.layout.activity_meeting_list);
         newMeeting = findViewById(R.id.fab_create_meeting);
         newMeeting.setOnClickListener(this);
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
     }
 
     /**
@@ -61,6 +83,77 @@ public class MeetingListActivity extends AppCompatActivity
                 switchActivity(CreateMeetingActivity.class);
                 break;
         }
+    }
+
+    /**
+     * Initializes the activity's menu.
+     * @param menu the menu to initialize.
+     * @return true
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_meeting_list, menu);
+        mSettingsButton = menu.findItem(R.id.item_settings);
+        mSettingsButton.setVisible(true);
+        return true;
+    }
+
+    /**
+     * Called when a menu item is selected.
+     * @param item The menu item in question.
+     * @return true
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.item_privacy_policy:
+                switchActivity(PrivacyPolicyActivity.class);
+                return true;
+            case R.id.item_sign_out:
+                signOut(mGoogleApiClient);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    /**
+     * Executes on failure to connect with Google.
+     * @param connectionResult Contains data on the connection attempt.
+     */
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        showToast("Failed to Sign Out :(");
+    }
+
+    /**
+     * Signs the user out of the app.
+     */
+    private void signOut(GoogleApiClient client) {
+        Auth.GoogleSignInApi.signOut(client).setResultCallback(new ResultCallback<Status>() {
+            @Override
+            public void onResult(@NonNull Status status) {
+                PREFERENCES.edit().clear().commit();
+
+                Intent intent = new Intent(getApplicationContext(), SignInActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                startActivity(intent);
+            }
+        });
+    }
+
+    /**
+     * Shows the given string in a short Toast.
+     */
+    private void showToast(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /**
@@ -94,17 +187,6 @@ public class MeetingListActivity extends AppCompatActivity
                     }
                 });
 
-    }
-
-    /**
-     * Executes on the back button being pressed. Takes the user back to the SignInActivity.
-     */
-    @Override
-    public void onBackPressed() {
-        Intent intent = new Intent(getApplicationContext(), SignInActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("type", "SignInActivity");
-        startActivity(intent);
     }
 
     /**
